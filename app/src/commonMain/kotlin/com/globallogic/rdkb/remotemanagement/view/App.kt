@@ -1,4 +1,4 @@
-package com.globallogic.rdkb.remotemanagement
+package com.globallogic.rdkb.remotemanagement.view
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
