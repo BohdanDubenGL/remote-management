@@ -44,12 +44,11 @@ kotlin {
         commonMain.dependencies {
             implementation(libs.kotlinx.coroutines.core)
         }
+        commonTest.dependencies {
+//            implementation(libs.test.kotlin.junit)
+        }
         jvmMain.dependencies {
 
         }
     }
-}
-
-dependencies {
-    commonTestImplementation(libs.test.kotlin.junit)
 }

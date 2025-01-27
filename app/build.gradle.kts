@@ -8,6 +8,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.compose.multiplatform)
     alias(libs.plugins.compose.compiler)
+    kotlin("plugin.serialization")
 }
 
 kotlin {
@@ -59,14 +60,23 @@ kotlin {
         commonMain.dependencies {
             implementation(projects.domain)
 
+            implementation(libs.kotlin.serialization.json)
+
             implementation(compose.runtime)
             implementation(compose.foundation)
             implementation(compose.material)
+            implementation(compose.material3)
+            implementation(compose.materialIconsExtended)
             implementation(compose.ui)
             implementation(compose.components.resources)
             implementation(compose.components.uiToolingPreview)
             implementation(libs.androidx.lifecycle.viewmodel)
             implementation(libs.androidx.lifecycle.runtime.compose)
+            implementation(libs.androidx.navigation.compose)
+            implementation(libs.koin.core)
+            implementation(libs.koin.compose)
+            implementation(libs.koin.compose.viewmodel)
+            implementation(libs.koin.compose.navigation)
         }
         desktopMain.dependencies {
             implementation(libs.kotlinx.coroutines.swing)
