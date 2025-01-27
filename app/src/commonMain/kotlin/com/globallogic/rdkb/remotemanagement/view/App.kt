@@ -1,37 +1,29 @@
 package com.globallogic.rdkb.remotemanagement.view
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material.Button
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
-import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import org.jetbrains.compose.resources.painterResource
-import org.jetbrains.compose.ui.tooling.preview.Preview
-
-import rdkbremotemanagement.app.generated.resources.Res
-import rdkbremotemanagement.app.generated.resources.compose_multiplatform
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.rememberNavController
+import com.globallogic.rdkb.remotemanagement.view.component.AppBottomNavigation
+import org.koin.compose.KoinContext
 
 @Composable
-@Preview
 fun App() {
     MaterialTheme {
-        var showContent by remember { mutableStateOf(false) }
+        KoinContext {
+            val bottomBarController = appScaffoldController()
+            val navController = rememberNavController()
+            val navGraph = rememberApplicationNavGraph(navController)
 
-        Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-            Button(onClick = { showContent = !showContent }) {
-                Text("Click me!")
-            }
-            AnimatedVisibility(showContent) {
-                val greeting = remember { "Hello, world" }
-                Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-                    Image(painterResource(Res.drawable.compose_multiplatform), null)
-                    Text("Compose: $greeting")
-                }
+            Scaffold(
+                bottomBar = { AppBottomNavigation(navController, bottomBarController) },
+                modifier = Modifier.fillMaxSize()
+            ) { innerPadding ->
+                NavHost(navController, navGraph, Modifier.padding(innerPadding))
             }
         }
     }
