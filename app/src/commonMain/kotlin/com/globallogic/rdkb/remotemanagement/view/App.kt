@@ -1,4 +1,4 @@
-package com.globallogic.rdkb.remotemanagement
+package com.globallogic.rdkb.remotemanagement.view
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -8,9 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
-import com.globallogic.rdkb.remotemanagement.view.appScaffoldController
 import com.globallogic.rdkb.remotemanagement.view.component.AppBottomNavigation
-import com.globallogic.rdkb.remotemanagement.view.rememberApplicationNavGraph
 
 @Composable
 fun App() {
