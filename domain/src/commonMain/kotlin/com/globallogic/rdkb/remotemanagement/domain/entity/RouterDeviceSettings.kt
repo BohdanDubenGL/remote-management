@@ -1,3 +1,11 @@
 package com.globallogic.rdkb.remotemanagement.domain.entity
 
-class RouterDeviceSettings
+data class RouterDeviceSettings(
+    val bands: List<BandSettings>
+)
+
+data class BandSettings(
+    val frequency: String,
+    val ssid: String,
+    val password: String
+)

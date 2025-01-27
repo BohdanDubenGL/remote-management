@@ -1,3 +1,7 @@
 package com.globallogic.rdkb.remotemanagement.domain.entity
 
-class FoundRouterDevice
+data class FoundRouterDevice(
+    val name: String,
+    val ip: String,
+    val macAddress: String
+)
