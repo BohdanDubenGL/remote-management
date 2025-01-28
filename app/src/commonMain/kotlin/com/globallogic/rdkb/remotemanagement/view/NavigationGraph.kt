@@ -7,14 +7,13 @@ import androidx.navigation.NavGraph
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
 import androidx.navigation.createGraph
-import com.globallogic.rdkb.remotemanagement.view.screen.SplashScreen
+import com.globallogic.rdkb.remotemanagement.view.screen.splash.SplashScreen
 import com.globallogic.rdkb.remotemanagement.view.screen.connection.ConnectRouterDeviceScreen
 import com.globallogic.rdkb.remotemanagement.view.screen.connection.SearchRouterDeviceScreen
 import com.globallogic.rdkb.remotemanagement.view.screen.home.RouterDeviceListScreen
 import com.globallogic.rdkb.remotemanagement.view.screen.home.SettingsScreen
 import com.globallogic.rdkb.remotemanagement.view.screen.home.TopographyScreen
-import com.globallogic.rdkb.remotemanagement.view.screen.login.LoginScreen
-import com.globallogic.rdkb.remotemanagement.view.screen.login.RegistrationScreen
+import com.globallogic.rdkb.remotemanagement.view.screen.authentication.AuthenticationScreen
 import com.globallogic.rdkb.remotemanagement.view.screen.routerdevice.ConnectedDeviceListScreen
 import com.globallogic.rdkb.remotemanagement.view.screen.routerdevice.RouterDeviceScreen
 import com.globallogic.rdkb.remotemanagement.view.screen.routerdevice.RouterSettingsScreen
@@ -25,10 +24,7 @@ fun rememberApplicationNavGraph(navController: NavController): NavGraph {
     return remember(navController) {
         navController.createGraph(route = Screen.RootGraph::class, startDestination = Screen.Splash) {
             composable<Screen.Splash> { SplashScreen(navController) }
-            navigation<Screen.AutorizationGraph>(startDestination = Screen.AutorizationGraph.Login) {
-                composable<Screen.AutorizationGraph.Login> { LoginScreen(navController) }
-                composable<Screen.AutorizationGraph.Registration> { RegistrationScreen(navController) }
-            }
+            composable<Screen.Authentication> { AuthenticationScreen(navController) }
             navigation<Screen.ConnectionGraph>(startDestination = Screen.ConnectionGraph.SearchRouterDevice) {
                 composable<Screen.ConnectionGraph.SearchRouterDevice> { SearchRouterDeviceScreen(navController) }
                 composable<Screen.ConnectionGraph.ConnectRouterDevice> { ConnectRouterDeviceScreen(navController) }

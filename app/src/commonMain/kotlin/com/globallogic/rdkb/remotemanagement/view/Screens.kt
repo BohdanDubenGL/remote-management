@@ -8,12 +8,7 @@ interface Screen {
     @Serializable data object RootGraph : Graph
 
     @Serializable data object Splash : Screen
-
-    @Serializable
-    data object AutorizationGraph : Graph {
-        @Serializable data object Login : Screen
-        @Serializable data object Registration : Screen
-    }
+    @Serializable data object Authentication : Screen
 
     @Serializable
     data object ConnectionGraph : Graph {

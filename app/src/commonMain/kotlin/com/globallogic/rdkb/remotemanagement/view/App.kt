@@ -9,18 +9,19 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
 import com.globallogic.rdkb.remotemanagement.view.component.AppBottomNavigation
+import com.globallogic.rdkb.remotemanagement.view.component.AppTopBar
 import org.koin.compose.KoinContext
 
 @Composable
 fun App() {
     MaterialTheme {
         KoinContext {
-            val bottomBarController = appScaffoldController()
+            val scaffoldController = appScaffoldController()
             val navController = rememberNavController()
             val navGraph = rememberApplicationNavGraph(navController)
 
             Scaffold(
-                bottomBar = { AppBottomNavigation(navController, bottomBarController) },
+                bottomBar = { AppBottomNavigation(navController, scaffoldController) },
                 modifier = Modifier.fillMaxSize()
             ) { innerPadding ->
                 NavHost(navController, navGraph, Modifier.padding(innerPadding))

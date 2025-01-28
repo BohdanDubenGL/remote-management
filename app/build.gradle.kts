@@ -62,6 +62,7 @@ kotlin {
         commonMain.dependencies {
             implementation(projects.domain)
 
+            implementation(libs.kotlinx.coroutines.core)
             implementation(libs.kotlin.serialization.json)
 
             implementation(compose.runtime)

@@ -12,7 +12,6 @@ class ScaffoldController(
     private val routes: Map<String, List<BottomBarRoute<Screen>>> = routes.mapKeys { it.key::class.qualifiedName.orEmpty() }
 
     fun bottomBarItemsFor(graphName: String): List<BottomBarRoute<Screen>> = routes.getOrElse(graphName, ::emptyList)
-        .also { println("bottomBarItemsFor: $graphName $it $routes") }
 }
 
 data class BottomBarRoute<T : Any>(val name: String, val route: T, val icon: ImageVector) {
