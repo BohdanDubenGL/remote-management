@@ -1,5 +1,6 @@
 package com.globallogic.rdkb.remotemanagement.data.repository.fake
 
+import com.globallogic.rdkb.remotemanagement.domain.entity.ChangeAccountSettingsData
 import com.globallogic.rdkb.remotemanagement.domain.entity.LoginData
 import com.globallogic.rdkb.remotemanagement.domain.entity.RegistrationData
 import com.globallogic.rdkb.remotemanagement.domain.entity.User
@@ -17,6 +18,12 @@ class FakeUserRepository
     override suspend fun currentLoggedInUser(): User = currentUser
 
     @OptIn(ExperimentalUuidApi::class)
+    override suspend fun changeAccountSettings(settingsData: ChangeAccountSettingsData): User {
+        currentUser = User(currentUser.uuid, settingsData.email, settingsData.password)
+        return currentUser
+    }
+
+    @OptIn(ExperimentalUuidApi::class)
     override suspend fun register(registrationData: RegistrationData): User {
         if (registrationData.email in users) return User.empty
         val user = User(Uuid.random(), registrationData.username, registrationData.email)
@@ -32,7 +39,8 @@ class FakeUserRepository
         return user
     }
 
-    override suspend fun logout() {
+    override suspend fun logout(): Boolean {
         currentUser = User.empty
+        return true
     }
 }

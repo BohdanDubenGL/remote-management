@@ -5,7 +5,7 @@ import com.globallogic.rdkb.remotemanagement.domain.repository.UserRepository
 class LogoutUseCase(
     private val userRepository: UserRepository
 ) {
-    suspend operator fun invoke(): Unit = logout()
+    suspend operator fun invoke(): Boolean = logout()
 
-    suspend fun logout(): Unit = userRepository.logout()
+    suspend fun logout(): Boolean = userRepository.logout()
 }

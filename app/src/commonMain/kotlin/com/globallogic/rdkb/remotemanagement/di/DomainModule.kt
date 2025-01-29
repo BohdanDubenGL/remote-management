@@ -12,6 +12,7 @@ import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.SetupRo
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdeviceconnection.ConnectToRouterDeviceUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdeviceconnection.GetRouterDeviceListUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdeviceconnection.SearchRouterDevicesUseCase
+import com.globallogic.rdkb.remotemanagement.domain.usecase.user.ChangeAccountSettingsUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.user.GetCurrentLoggedInUserUseCase
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.factoryOf
@@ -22,6 +23,7 @@ val domainModule: Module = module {
     factoryOf(::RegistrationUseCase)
     factoryOf(::LogoutUseCase)
     factoryOf(::GetCurrentLoggedInUserUseCase)
+    factoryOf(::ChangeAccountSettingsUseCase)
 
     factoryOf(::FactoryResetRouterDeviceUseCase)
     factoryOf(::GetRouterDeviceConnectedDevicesUseCase)

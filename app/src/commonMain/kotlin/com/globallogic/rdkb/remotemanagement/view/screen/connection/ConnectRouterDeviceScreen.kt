@@ -6,12 +6,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavController
 import com.globallogic.rdkb.remotemanagement.view.Screen
-import org.jetbrains.compose.ui.tooling.preview.Preview
 
 @Composable
 fun ConnectRouterDeviceScreen(navController: NavController) {
     ConnectRouterDevice(
-        onRouterDeviceConnected = { navController.navigate(Screen.HomeGraph) }
+        onRouterDeviceConnected = { navController.navigate(Screen.HomeGraph.Topology) }
     )
 }
 
@@ -26,10 +25,4 @@ private fun ConnectRouterDevice(
             content = { Text(text = "Home") }
         )
     }
-}
-
-@Preview
-@Composable
-private fun ConnectRouterDevicePreview() {
-    ConnectRouterDevice(onRouterDeviceConnected = { })
 }

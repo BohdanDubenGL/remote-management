@@ -12,11 +12,21 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
+import com.globallogic.rdkb.remotemanagement.domain.entity.LoginData
+import com.globallogic.rdkb.remotemanagement.domain.entity.RegistrationData
 import com.globallogic.rdkb.remotemanagement.domain.entity.User
+import com.globallogic.rdkb.remotemanagement.domain.usecase.user.LoginUseCase
+import com.globallogic.rdkb.remotemanagement.domain.usecase.user.RegistrationUseCase
 import com.globallogic.rdkb.remotemanagement.view.Screen
-import org.jetbrains.compose.ui.tooling.preview.Preview
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
@@ -34,7 +44,7 @@ fun AuthenticationScreen(
         onAuthenticateClick = authenticationViewModel::onAuthenticateClick,
         onEnterClick = authenticationViewModel::onEnterClick,
         onLoggedIn = { loggedInUser ->
-            navController.navigate(Screen.HomeGraph) {
+            navController.navigate(Screen.HomeGraph.Topology) {
                 popUpTo<Screen.RootGraph>()
             }
         }
@@ -97,16 +107,53 @@ fun Authentication(
     }
 }
 
-@Preview
-@Composable
-private fun AuthenticationPreview() {
-    Authentication(
-        uiState = AuthenticationUiState(),
-        onEmailEntered = { },
-        onPasswordEntered = { },
-        onConfirmPasswordEntered = { },
-        onAuthenticateClick = { },
-        onEnterClick = { },
-        onLoggedIn = { },
-    )
+class AuthenticationViewModel(
+    private val login: LoginUseCase,
+    private val registration: RegistrationUseCase
+) : ViewModel() {
+    private val _uiState: MutableStateFlow<AuthenticationUiState> = MutableStateFlow(AuthenticationUiState())
+    val uiState: StateFlow<AuthenticationUiState> get() = _uiState.asStateFlow()
+
+    fun onEmailEntered(email: String) {
+        _uiState.update { it.copy(email = email) }
+    }
+
+    fun onPasswordEntered(password: String) {
+        _uiState.update { it.copy(password = password) }
+    }
+
+    fun onConfirmPasswordEntered(confirmPassword: String) {
+        _uiState.update { it.copy(confirmPassword = confirmPassword) }
+    }
+
+    fun onEnterClick() {
+        val email = _uiState.value.email
+        val userExists = email == "user@user.com"
+        when {
+            userExists -> _uiState.update { it.copy(isEmailEditable = false, showPasswordInput = true) }
+            else -> _uiState.update { it.copy(isEmailEditable = false, showPasswordInput = true, showConfirmPasswordInput = true, isRegistering = true) }
+        }
+    }
+
+    fun onAuthenticateClick() {
+        viewModelScope.launch {
+            val state = _uiState.value
+            val user = when {
+                state.isRegistering -> registration(RegistrationData(state.email, state.email, state.password, state.confirmPassword))
+                else -> login(LoginData(state.email, state.email, state.password))
+            }
+            _uiState.update { it.copy(loggedInUser = user) }
+        }
+    }
 }
+
+data class AuthenticationUiState(
+    val email: String = "",
+    val password: String = "",
+    val confirmPassword: String = "",
+    val isEmailEditable: Boolean = true,
+    val showPasswordInput: Boolean = false,
+    val showConfirmPasswordInput: Boolean = false,
+    val isRegistering: Boolean = false,
+    val loggedInUser: User = User.empty
+)

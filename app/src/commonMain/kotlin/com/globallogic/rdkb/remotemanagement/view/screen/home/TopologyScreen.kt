@@ -6,25 +6,24 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavController
 import com.globallogic.rdkb.remotemanagement.view.Screen
-import org.jetbrains.compose.ui.tooling.preview.Preview
 
 @Composable
-fun TopographyScreen(navController: NavController) {
-    Topography(
-        onRouterDeviceSelected = { navController.navigate(Screen.RouterDeviceGraph) },
+fun TopologyScreen(navController: NavController) {
+    Topology(
+        onRouterDeviceSelected = { navController.navigate(Screen.RouterDeviceGraph.RouterDevice("")) },
         onRouterDeviceList = { navController.navigate(Screen.HomeGraph.RouterDeviceList) },
         onSettings = { navController.navigate(Screen.HomeGraph.Settings) }
     )
 }
 
 @Composable
-private fun Topography(
+private fun Topology(
     onRouterDeviceSelected: () -> Unit,
     onRouterDeviceList: () -> Unit,
     onSettings: () -> Unit
 ) {
     Column {
-        Text(text = "Topography")
+        Text(text = "Topology")
         Button(
             onClick = onRouterDeviceSelected,
             content = { Text(text = "RouterDetails") }
@@ -38,10 +37,4 @@ private fun Topography(
             content = { Text(text = "Settings") }
         )
     }
-}
-
-@Preview
-@Composable
-private fun TopographyPreview() {
-    Topography(onRouterDeviceSelected = { }, onRouterDeviceList = { }, onSettings = { })
 }

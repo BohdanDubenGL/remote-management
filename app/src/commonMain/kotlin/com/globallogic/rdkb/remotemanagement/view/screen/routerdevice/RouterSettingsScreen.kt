@@ -6,14 +6,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavController
 import com.globallogic.rdkb.remotemanagement.view.Screen
-import org.jetbrains.compose.ui.tooling.preview.Preview
 
 @Composable
 fun RouterSettingsScreen(navController: NavController) {
     RouterSettings(
         onSetupRouterSettings = { navController.navigate(Screen.RouterDeviceGraph.Setup) },
         onConnectedDevices = { navController.navigate(Screen.RouterDeviceGraph.ConnectedDevices) },
-        onBack = { navController.navigate(Screen.RouterDeviceGraph) }
+        onBack = { navController.navigate(Screen.RouterDeviceGraph.RouterDevice("")) }
     )
 }
 
@@ -38,10 +37,4 @@ private fun RouterSettings(
             content = { Text(text = "Back") }
         )
     }
-}
-
-@Preview
-@Composable
-private fun RouterSettingsPreview() {
-    RouterSettings(onSetupRouterSettings = { }, onConnectedDevices = { }, onBack = { })
 }

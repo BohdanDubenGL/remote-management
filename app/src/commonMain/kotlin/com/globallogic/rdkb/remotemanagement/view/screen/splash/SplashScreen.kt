@@ -9,12 +9,23 @@ import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import com.globallogic.rdkb.remotemanagement.domain.entity.User
+import com.globallogic.rdkb.remotemanagement.domain.usecase.user.GetCurrentLoggedInUserUseCase
 import com.globallogic.rdkb.remotemanagement.view.Screen
-import org.jetbrains.compose.ui.tooling.preview.Preview
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
+import rdkbremotemanagement.app.generated.resources.Res
+import rdkbremotemanagement.app.generated.resources.app_name
+import kotlin.time.Duration.Companion.seconds
 
 @Composable
 fun SplashScreen(
@@ -27,8 +38,10 @@ fun SplashScreen(
         loadCurrentLoggedInUser = splashViewModel::checkCurrentUser,
         onLoggedInUser = { loggedInUser ->
             when(loggedInUser) {
-                User.empty -> navController.navigate(Screen.Authentication)
-                else -> navController.navigate(Screen.HomeGraph) {
+                User.empty -> navController.navigate(Screen.Authentication) {
+                    popUpTo<Screen.RootGraph>()
+                }
+                else -> navController.navigate(Screen.HomeGraph.Topology) {
                     popUpTo<Screen.RootGraph>()
                 }
             }
@@ -52,12 +65,25 @@ private fun Splash(
         verticalArrangement = Arrangement.Center,
         modifier = Modifier.fillMaxSize()
     ) {
-        Text(text = "RDK-B Remote Management")
+        Text(text = stringResource(Res.string.app_name))
     }
 }
 
-@Preview
-@Composable
-private fun SplashPreview() {
-    Splash(uiState = SplashUiState(), loadCurrentLoggedInUser = { }, onLoggedInUser = { })
+class SplashViewModel(
+    private val getCurrentLoggedInUser: GetCurrentLoggedInUserUseCase
+): ViewModel() {
+    private val _uiState: MutableStateFlow<SplashUiState> = MutableStateFlow(SplashUiState())
+    val uiState: StateFlow<SplashUiState> get() = _uiState
+
+    fun checkCurrentUser() {
+        viewModelScope.launch {
+            delay(1.seconds.inWholeMilliseconds) // todo: remove
+            val loggedInUser = getCurrentLoggedInUser()
+            _uiState.update { it.copy(loggedInUser = loggedInUser) }
+        }
+    }
 }
+
+data class SplashUiState(
+    val loggedInUser: User? = null
+)

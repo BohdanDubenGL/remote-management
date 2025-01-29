@@ -6,7 +6,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavController
 import com.globallogic.rdkb.remotemanagement.view.Screen
-import org.jetbrains.compose.ui.tooling.preview.Preview
 
 @Composable
 fun SearchRouterDeviceScreen(navController: NavController) {
@@ -26,10 +25,4 @@ private fun SearchRouterDevice(
             content = { Text(text = "Connect") }
         )
     }
-}
-
-@Preview
-@Composable
-private fun SearchRouterDevicePreview() {
-    SearchRouterDevice(onRouterDeviceFound = { })
 }
