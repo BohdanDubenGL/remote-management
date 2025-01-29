@@ -28,12 +28,19 @@ class FakeRouterDeviceRepository(
         RouterDevice("Controller3", "192.168.1.152", "9a:1a:22:49:73:2c") to
                 RouterDeviceInfo(false, 0, "ar1842", "192.168.1.152", "v1.0.7", "BS100651024E6CA9", 0, 20, 1900L, 11800L, availableBands = setOf("5GHz", "2.4GHz", "6GHz")),
     ),
+    private var selectedRouterDevice: RouterDevice = RouterDevice.empty,
 ) : RouterDeviceRepository {
     override suspend fun factoryResetRouterDevice(device: RouterDevice): Unit = Unit
 
+    override suspend fun getRouterDevice(deviceMacAddress: String): RouterDevice {
+        return connectedDevices.keys.firstOrNull { it.macAddress == deviceMacAddress } ?: RouterDevice.empty
+    }
+
     override suspend fun getRouterDeviceConnectedDevices(device: RouterDevice): List<ConnectedDevice> = connectedDevices.getOrElse(device, ::emptyList)
 
-    override suspend fun getRouterDeviceInfo(device: RouterDevice): RouterDeviceInfo = routerDeviceInfos.getOrElse(device, RouterDeviceInfo.Companion::empty)
+    override suspend fun getRouterDeviceInfo(device: RouterDevice): RouterDeviceInfo {
+        return routerDeviceInfos.getOrElse(device, RouterDeviceInfo::empty)
+    }
 
     override suspend fun getRouterDeviceTopologyData(device: RouterDevice): RouterDeviceTopologyData {
         return RouterDeviceTopologyData(getRouterDeviceInfo(device).lanConnected, device, getRouterDeviceConnectedDevices(device))
@@ -42,4 +49,10 @@ class FakeRouterDeviceRepository(
     override suspend fun restartRouterDevice(device: RouterDevice): Unit = Unit
 
     override suspend fun setupRouterDevice(device: RouterDevice, settings: RouterDeviceSettings): Unit = Unit
+
+    override suspend fun selectRouterDevice(device: RouterDevice) {
+        selectedRouterDevice = device
+    }
+
+    override suspend fun getSelectRouterDevice(): RouterDevice = selectedRouterDevice
 }

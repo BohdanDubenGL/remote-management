@@ -4,6 +4,7 @@ import com.globallogic.rdkb.remotemanagement.view.screen.authentication.Authenti
 import com.globallogic.rdkb.remotemanagement.view.screen.home.ChangeAccountSettingsViewModel
 import com.globallogic.rdkb.remotemanagement.view.screen.home.RouterDeviceListViewModel
 import com.globallogic.rdkb.remotemanagement.view.screen.home.SettingsViewModel
+import com.globallogic.rdkb.remotemanagement.view.screen.routerdevice.RouterDeviceViewModel
 import com.globallogic.rdkb.remotemanagement.view.screen.splash.SplashViewModel
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.viewModelOf
@@ -17,4 +18,5 @@ val viewModule: Module = module {
     viewModelOf(::ChangeAccountSettingsViewModel)
     viewModelOf(::SettingsViewModel)
     viewModelOf(::RouterDeviceListViewModel)
+    viewModelOf(::RouterDeviceViewModel)
 }

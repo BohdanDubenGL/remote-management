@@ -5,7 +5,6 @@ import androidx.compose.material.BottomNavigation
 import androidx.compose.material.BottomNavigationItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -19,11 +18,13 @@ import androidx.navigation.NavController
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.compose.currentBackStackEntryAsState
+import com.globallogic.rdkb.remotemanagement.view.LocalNavController
 import com.globallogic.rdkb.remotemanagement.view.ScaffoldController
-import com.globallogic.rdkb.remotemanagement.view.Screen
+import org.jetbrains.compose.resources.stringResource
 
 @Composable
-fun AppBottomNavigation(navController: NavController, scaffoldController: ScaffoldController) {
+fun AppBottomNavigation(scaffoldController: ScaffoldController) {
+    val navController: NavController = LocalNavController.current
     var visibility by remember { mutableStateOf(false) }
     BottomNavigation(
         backgroundColor = MaterialTheme.colorScheme.primaryContainer,
@@ -39,11 +40,13 @@ fun AppBottomNavigation(navController: NavController, scaffoldController: Scaffo
         routes.forEach { route ->
             BottomNavigationItem(
                 selected = currentDestination?.hierarchy?.any { it.hasRoute(route.route::class) } == true,
-                icon = { Icon(route.icon, contentDescription = route.name) },
-                label = { Text(route.name) },
+                icon = { if (route.name != null) Icon(route.icon, contentDescription = stringResource(route.name)) },
+                label = { if (route.name != null) Text(text = stringResource(route.name)) },
                 onClick = {
-                    navController.navigate(route.route) {
-                        popUpTo<Screen.RootGraph>()
+                    if (currentDestination?.hierarchy?.any { it.hasRoute(route.route::class) } != true) {
+                        navController.navigate(route.route) {
+                            popUpTo(route.graph)
+                        }
                     }
                 },
                 selectedContentColor = MaterialTheme.colorScheme.onTertiaryContainer,

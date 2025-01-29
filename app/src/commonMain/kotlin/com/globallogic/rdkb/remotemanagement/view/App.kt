@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
@@ -19,15 +20,19 @@ fun App() {
         KoinContext {
             val scaffoldController = appScaffoldController()
             val navController = rememberNavController()
-            val navGraph = rememberApplicationNavGraph(navController)
+            CompositionLocalProvider(
+                LocalNavController provides navController
+            ) {
+                val navGraph = rememberApplicationNavGraph()
 
-            Scaffold(
-                topBar = { AppTopBar(navController, scaffoldController) },
-                bottomBar = { AppBottomNavigation(navController, scaffoldController) },
-                floatingActionButton = { AppFloatingActionButton(navController, scaffoldController) },
-                modifier = Modifier.fillMaxSize()
-            ) { innerPadding ->
-                NavHost(navController, navGraph, Modifier.padding(innerPadding))
+                Scaffold(
+                    topBar = { AppTopBar(scaffoldController) },
+                    bottomBar = { AppBottomNavigation(scaffoldController) },
+                    floatingActionButton = { AppFloatingActionButton(scaffoldController) },
+                    modifier = Modifier.fillMaxSize()
+                ) { innerPadding ->
+                    NavHost(navController, navGraph, Modifier.padding(innerPadding))
+                }
             }
         }
     }

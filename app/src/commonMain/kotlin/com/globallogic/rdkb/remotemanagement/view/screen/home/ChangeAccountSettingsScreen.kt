@@ -19,6 +19,7 @@ import androidx.navigation.NavController
 import com.globallogic.rdkb.remotemanagement.domain.entity.ChangeAccountSettingsData
 import com.globallogic.rdkb.remotemanagement.domain.usecase.user.ChangeAccountSettingsUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.user.GetCurrentLoggedInUserUseCase
+import com.globallogic.rdkb.remotemanagement.view.LocalNavController
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -30,7 +31,7 @@ import kotlin.time.Duration.Companion.seconds
 
 @Composable
 fun ChangeAccountSettingsScreen(
-    navController: NavController,
+    navController: NavController = LocalNavController.current,
     changeAccountSettingsViewModel: ChangeAccountSettingsViewModel = koinViewModel()
 ) {
     val uiState by changeAccountSettingsViewModel.uiState.collectAsStateWithLifecycle()
@@ -39,8 +40,9 @@ fun ChangeAccountSettingsScreen(
         uiState = uiState,
         loadCurrentUserData = changeAccountSettingsViewModel::loadCurrentUserData,
         onEmailEntered = changeAccountSettingsViewModel::onEmailEntered,
-        onPasswordEntered = changeAccountSettingsViewModel::onPasswordEntered,
-        onConfirmPasswordEntered = changeAccountSettingsViewModel::onConfirmPasswordEntered,
+        onCurrentPasswordEntered = changeAccountSettingsViewModel::onCurrentPasswordEntered,
+        onNewPasswordEntered = changeAccountSettingsViewModel::onNewPasswordEntered,
+        onConfirmNewPasswordEntered = changeAccountSettingsViewModel::onConfirmNewPasswordEntered,
         onSaveClicked = changeAccountSettingsViewModel::saveData,
         onDataSaved = { navController.navigateUp() },
     )
@@ -51,8 +53,9 @@ fun ChangeAccountSettings(
     uiState: ChangeAccountSettingsUiState,
     loadCurrentUserData: () -> Unit,
     onEmailEntered: (String) -> Unit,
-    onPasswordEntered: (String) -> Unit,
-    onConfirmPasswordEntered: (String) -> Unit,
+    onCurrentPasswordEntered: (String) -> Unit,
+    onNewPasswordEntered: (String) -> Unit,
+    onConfirmNewPasswordEntered: (String) -> Unit,
     onSaveClicked: () -> Unit,
     onDataSaved: () -> Unit,
 ) {
@@ -76,17 +79,24 @@ fun ChangeAccountSettings(
                 placeholder = { Text(text = "Enter your email") }
             )
             TextField(
-                value = uiState.password,
-                onValueChange = onPasswordEntered,
-                label = { Text(text = "Password") },
-                placeholder = { Text(text = "Enter your password") },
+                value = uiState.currentPassword,
+                onValueChange = onCurrentPasswordEntered,
+                label = { Text(text = "Current Password") },
+                placeholder = { Text(text = "Enter your current password") },
                 visualTransformation = PasswordVisualTransformation()
             )
             TextField(
-                value = uiState.confirmPassword,
-                onValueChange = onConfirmPasswordEntered,
-                label = { Text(text = "Confirm Password") },
-                placeholder = { Text(text = "Re-enter your password") },
+                value = uiState.newPassword,
+                onValueChange = onNewPasswordEntered,
+                label = { Text(text = "New Password") },
+                placeholder = { Text(text = "Enter new password") },
+                visualTransformation = PasswordVisualTransformation()
+            )
+            TextField(
+                value = uiState.confirmNewPassword,
+                onValueChange = onConfirmNewPasswordEntered,
+                label = { Text(text = "Confirm New Password") },
+                placeholder = { Text(text = "Re-enter new password") },
                 visualTransformation = PasswordVisualTransformation()
             )
             Button(
@@ -124,18 +134,22 @@ class ChangeAccountSettingsViewModel(
         _uiState.update { it.copy(email = email) }
     }
 
-    fun onPasswordEntered(password: String) {
-        _uiState.update { it.copy(password = password) }
+    fun onCurrentPasswordEntered(currentPassword: String) {
+        _uiState.update { it.copy(currentPassword = currentPassword) }
     }
 
-    fun onConfirmPasswordEntered(confirmPassword: String) {
-        _uiState.update { it.copy(confirmPassword = confirmPassword) }
+    fun onNewPasswordEntered(newPassword: String) {
+        _uiState.update { it.copy(newPassword = newPassword) }
+    }
+
+    fun onConfirmNewPasswordEntered(confirmNewPassword: String) {
+        _uiState.update { it.copy(confirmNewPassword = confirmNewPassword) }
     }
 
     fun saveData() {
         viewModelScope.launch {
             val state = _uiState.value
-            changeAccountSettings(ChangeAccountSettingsData(state.email, state.password, state.confirmPassword))
+            changeAccountSettings(ChangeAccountSettingsData(state.email, state.newPassword, state.confirmNewPassword))
             _uiState.update { it.copy(dataSaved = true) }
         }
     }
@@ -143,8 +157,9 @@ class ChangeAccountSettingsViewModel(
 
 data class ChangeAccountSettingsUiState(
     val email: String = "",
-    val password: String = "",
-    val confirmPassword: String = "",
+    val currentPassword: String = "",
+    val newPassword: String = "",
+    val confirmNewPassword: String = "",
     val userDataLoaded: Boolean = false,
     val dataSaved: Boolean = false,
 )

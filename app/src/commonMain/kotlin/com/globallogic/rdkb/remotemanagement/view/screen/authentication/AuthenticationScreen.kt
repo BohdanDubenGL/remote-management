@@ -21,6 +21,7 @@ import com.globallogic.rdkb.remotemanagement.domain.entity.RegistrationData
 import com.globallogic.rdkb.remotemanagement.domain.entity.User
 import com.globallogic.rdkb.remotemanagement.domain.usecase.user.LoginUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.user.RegistrationUseCase
+import com.globallogic.rdkb.remotemanagement.view.LocalNavController
 import com.globallogic.rdkb.remotemanagement.view.Screen
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -31,7 +32,7 @@ import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 fun AuthenticationScreen(
-    navController: NavController,
+    navController: NavController = LocalNavController.current,
     authenticationViewModel: AuthenticationViewModel = koinViewModel(),
 ) {
     val uiState: AuthenticationUiState by authenticationViewModel.uiState.collectAsStateWithLifecycle()

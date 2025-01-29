@@ -1,15 +1,15 @@
 package com.globallogic.rdkb.remotemanagement.view
 
 fun appScaffoldController(): ScaffoldController = ScaffoldController(
-    Screen.HomeGraph to listOf(
-        BottomBarRoute(Screen.HomeGraph.Topology),
-        BottomBarRoute(Screen.HomeGraph.RouterDeviceList),
-        BottomBarRoute(Screen.HomeGraph.Settings)
+    Screen.HomeGraph::class to listOf(
+        BottomBarRoute(Screen.HomeGraph.Topology, Screen.RootGraph),
+        BottomBarRoute(Screen.HomeGraph.RouterDeviceList, Screen.RootGraph),
+        BottomBarRoute(Screen.HomeGraph.Settings, Screen.RootGraph),
     ),
-    Screen.RouterDeviceGraph to listOf(
-        BottomBarRoute(Screen.RouterDeviceGraph.RouterDevice("")),
-        BottomBarRoute(Screen.RouterDeviceGraph.ConnectedDevices),
-        BottomBarRoute(Screen.RouterDeviceGraph.Setup),
-        BottomBarRoute(Screen.RouterDeviceGraph.RouterSettings),
+    Screen.RouterDeviceGraph::class to listOf(
+        BottomBarRoute(Screen.RouterDeviceGraph.RouterDevice, Screen.RouterDeviceGraph),
+        BottomBarRoute(Screen.RouterDeviceGraph.ConnectedDevices, Screen.RouterDeviceGraph),
+        BottomBarRoute(Screen.RouterDeviceGraph.Setup, Screen.RouterDeviceGraph),
+        BottomBarRoute(Screen.RouterDeviceGraph.RouterSettings, Screen.RouterDeviceGraph),
     ),
 )

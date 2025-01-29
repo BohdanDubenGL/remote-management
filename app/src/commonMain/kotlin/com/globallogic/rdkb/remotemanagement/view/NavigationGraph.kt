@@ -5,7 +5,9 @@ import androidx.compose.runtime.remember
 import androidx.navigation.NavController
 import androidx.navigation.NavGraph
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.navigation
 import androidx.navigation.createGraph
+import androidx.navigation.toRoute
 import com.globallogic.rdkb.remotemanagement.view.screen.splash.SplashScreen
 import com.globallogic.rdkb.remotemanagement.view.screen.connection.ConnectRouterDeviceScreen
 import com.globallogic.rdkb.remotemanagement.view.screen.connection.SearchRouterDeviceScreen
@@ -20,24 +22,27 @@ import com.globallogic.rdkb.remotemanagement.view.screen.routerdevice.RouterSett
 import com.globallogic.rdkb.remotemanagement.view.screen.routerdevice.SetupRouterDeviceScreen
 
 @Composable
-fun rememberApplicationNavGraph(navController: NavController): NavGraph {
+fun rememberApplicationNavGraph(): NavGraph {
+    val navController: NavController = LocalNavController.current
     return remember(navController) {
         navController.createGraph(route = Screen.RootGraph::class, startDestination = Screen.Splash) {
-            composable<Screen.Splash> { SplashScreen(navController) }
-            composable<Screen.Authentication> { AuthenticationScreen(navController) }
+            composable<Screen.Splash> { SplashScreen() }
+            composable<Screen.Authentication> { AuthenticationScreen() }
 
-            composable<Screen.ConnectionGraph.SearchRouterDevice> { SearchRouterDeviceScreen(navController) }
-            composable<Screen.ConnectionGraph.ConnectRouterDevice> { ConnectRouterDeviceScreen(navController) }
+            composable<Screen.ConnectionGraph.SearchRouterDevice> { SearchRouterDeviceScreen() }
+            composable<Screen.ConnectionGraph.ConnectRouterDevice> { ConnectRouterDeviceScreen() }
 
-            composable<Screen.HomeGraph.Topology> { TopologyScreen(navController) }
-            composable<Screen.HomeGraph.RouterDeviceList> { RouterDeviceListScreen(navController) }
-            composable<Screen.HomeGraph.Settings> { SettingsScreen(navController) }
-            composable<Screen.HomeGraph.ChangeAccountSettings> { ChangeAccountSettingsScreen(navController) }
+            composable<Screen.HomeGraph.Topology> { TopologyScreen() }
+            composable<Screen.HomeGraph.RouterDeviceList> { RouterDeviceListScreen() }
+            composable<Screen.HomeGraph.Settings> { SettingsScreen() }
+            composable<Screen.HomeGraph.ChangeAccountSettings> { ChangeAccountSettingsScreen() }
 
-            composable<Screen.RouterDeviceGraph.RouterDevice> { RouterDeviceScreen(navController) }
-            composable<Screen.RouterDeviceGraph.Setup> { SetupRouterDeviceScreen(navController) }
-            composable<Screen.RouterDeviceGraph.ConnectedDevices> { ConnectedDeviceListScreen(navController) }
-            composable<Screen.RouterDeviceGraph.RouterSettings> { RouterSettingsScreen(navController) }
+            navigation<Screen.RouterDeviceGraph>(startDestination = Screen.RouterDeviceGraph.RouterDevice::class) {
+                composable<Screen.RouterDeviceGraph.RouterDevice> { RouterDeviceScreen() }
+                composable<Screen.RouterDeviceGraph.Setup> { SetupRouterDeviceScreen() }
+                composable<Screen.RouterDeviceGraph.ConnectedDevices> { ConnectedDeviceListScreen() }
+                composable<Screen.RouterDeviceGraph.RouterSettings> { RouterSettingsScreen() }
+            }
         }
     }
 }

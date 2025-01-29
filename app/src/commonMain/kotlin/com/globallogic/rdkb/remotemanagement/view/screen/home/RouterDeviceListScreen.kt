@@ -8,7 +8,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
@@ -21,7 +23,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import com.globallogic.rdkb.remotemanagement.domain.entity.RouterDevice
+import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.SelectRouterDeviceUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdeviceconnection.GetRouterDeviceListUseCase
+import com.globallogic.rdkb.remotemanagement.view.LocalNavController
 import com.globallogic.rdkb.remotemanagement.view.Screen
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -32,14 +36,17 @@ import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 fun RouterDeviceListScreen(
-    navController: NavController,
+    navController: NavController = LocalNavController.current,
     routerDeviceListViewModel: RouterDeviceListViewModel = koinViewModel(),
 ) {
     val uiState by routerDeviceListViewModel.uiState.collectAsStateWithLifecycle()
     RouterDeviceList(
         uiState = uiState,
         loadRouterDevices = routerDeviceListViewModel::loadRouterDevices,
-        onRouterDeviceClicked = { navController.navigate(Screen.RouterDeviceGraph.RouterDevice(it.macAddress)) },
+        onRouterDeviceClicked = { routerDevice ->
+            routerDeviceListViewModel.onRouterDeviceSelected(routerDevice)
+            navController.navigate(Screen.RouterDeviceGraph)
+        },
     )
 }
 
@@ -60,12 +67,15 @@ private fun RouterDeviceList(
         LazyColumn {
             items(uiState.routerDevices, RouterDevice::macAddress) { routerDevice ->
                 Card(
+                    shape = RoundedCornerShape(12.dp),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
                     modifier = Modifier
                         .padding(16.dp, 8.dp)
                         .clickable { onRouterDeviceClicked(routerDevice) }
                 ) {
                     Column(
-                        modifier = Modifier.padding(16.dp, 8.dp).fillMaxWidth()
+                        modifier = Modifier.padding(16.dp, 8.dp).fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Text(text = "name: ${routerDevice.name}")
                         Text(text = "ip: ${routerDevice.ip}")
@@ -79,6 +89,7 @@ private fun RouterDeviceList(
 
 class RouterDeviceListViewModel(
     private val getRouterDeviceList: GetRouterDeviceListUseCase,
+    private val selectRouterDevice: SelectRouterDeviceUseCase,
 ) : ViewModel() {
     private val _uiState: MutableStateFlow<RouterDeviceListUiState> = MutableStateFlow(RouterDeviceListUiState())
     val uiState: StateFlow<RouterDeviceListUiState> get() = _uiState.asStateFlow()
@@ -87,6 +98,12 @@ class RouterDeviceListViewModel(
         viewModelScope.launch {
             val routerDevices = getRouterDeviceList()
             _uiState.update { it.copy(routerDevices = routerDevices) }
+        }
+    }
+
+    fun onRouterDeviceSelected(routerDevice: RouterDevice) {
+        viewModelScope.launch {
+            selectRouterDevice(routerDevice)
         }
     }
 }

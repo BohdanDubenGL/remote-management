@@ -5,14 +5,17 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavController
+import com.globallogic.rdkb.remotemanagement.view.LocalNavController
 import com.globallogic.rdkb.remotemanagement.view.Screen
 
 @Composable
-fun ConnectedDeviceListScreen(navController: NavController) {
+fun ConnectedDeviceListScreen(
+    navController: NavController = LocalNavController.current,
+) {
     ConnectedDeviceList(
         onSetupConnectedDeviceList = { navController.navigate(Screen.RouterDeviceGraph.Setup) },
         onRouterSettings = { navController.navigate(Screen.RouterDeviceGraph.RouterSettings) },
-        onBack = { navController.navigate(Screen.RouterDeviceGraph.RouterDevice("")) }
+        onBack = { navController.navigate(Screen.RouterDeviceGraph.RouterDevice) }
     )
 }
 

@@ -15,6 +15,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import com.globallogic.rdkb.remotemanagement.domain.entity.User
 import com.globallogic.rdkb.remotemanagement.domain.usecase.user.GetCurrentLoggedInUserUseCase
+import com.globallogic.rdkb.remotemanagement.view.LocalNavController
 import com.globallogic.rdkb.remotemanagement.view.Screen
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -29,7 +30,7 @@ import kotlin.time.Duration.Companion.seconds
 
 @Composable
 fun SplashScreen(
-    navController: NavController,
+    navController: NavController = LocalNavController.current,
     splashViewModel: SplashViewModel = koinViewModel()
 ) {
     val uiState by splashViewModel.uiState.collectAsStateWithLifecycle()

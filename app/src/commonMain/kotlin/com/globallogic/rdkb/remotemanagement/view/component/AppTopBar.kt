@@ -15,21 +15,21 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
-import androidx.navigation.toRoute
+import com.globallogic.rdkb.remotemanagement.view.LocalNavController
 import com.globallogic.rdkb.remotemanagement.view.ScaffoldController
-import com.globallogic.rdkb.remotemanagement.view.Screen
+import com.globallogic.rdkb.remotemanagement.view.getRouteTitle
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
-import rdkbremotemanagement.app.generated.resources.Res
-import rdkbremotemanagement.app.generated.resources.title
 
 @Composable
-fun AppTopBar(navController: NavController, scaffoldController: ScaffoldController) {
+fun AppTopBar(scaffoldController: ScaffoldController) {
+    val navController: NavController = LocalNavController.current
     val currentBackStackEntry by navController.currentBackStackEntryAsState()
     val previousBackStackEntry by remember(currentBackStackEntry) { mutableStateOf(navController.previousBackStackEntry) }
+    val routeTitle by remember(currentBackStackEntry) { mutableStateOf(getRouteTitle(currentBackStackEntry?.destination?.route)) }
 
     AppTopBar(
-        titleRes = Res.string.title,
+        titleRes = routeTitle,
         navigateUpAction = if (previousBackStackEntry == null) {
             NavigateUpAction.Hidden
         } else {
@@ -41,29 +41,31 @@ fun AppTopBar(navController: NavController, scaffoldController: ScaffoldControll
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppTopBar(
-    titleRes: StringResource,
+    titleRes: StringResource?,
     navigateUpAction: NavigateUpAction,
 ) {
-    CenterAlignedTopAppBar(
-        title = {
-            Text(text = stringResource(titleRes))
-        },
-        navigationIcon = {
-            if (navigateUpAction is NavigateUpAction.Visible) {
-                IconButton(
-                    onClick = navigateUpAction.onClick,
-                ) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Default.ArrowBack,
-                        contentDescription = null,
-                    )
+    if (titleRes != null) {
+        CenterAlignedTopAppBar(
+            title = {
+                Text(text = stringResource(titleRes))
+            },
+            navigationIcon = {
+                if (navigateUpAction is NavigateUpAction.Visible) {
+                    IconButton(
+                        onClick = navigateUpAction.onClick,
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Default.ArrowBack,
+                            contentDescription = null,
+                        )
+                    }
                 }
-            }
-        },
-        colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer,
+            },
+            colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                containerColor = MaterialTheme.colorScheme.primaryContainer,
+            )
         )
-    )
+    }
 }
 
 sealed class NavigateUpAction {

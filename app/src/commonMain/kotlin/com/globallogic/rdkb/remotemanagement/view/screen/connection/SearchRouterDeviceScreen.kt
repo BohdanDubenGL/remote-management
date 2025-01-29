@@ -5,10 +5,13 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavController
+import com.globallogic.rdkb.remotemanagement.view.LocalNavController
 import com.globallogic.rdkb.remotemanagement.view.Screen
 
 @Composable
-fun SearchRouterDeviceScreen(navController: NavController) {
+fun SearchRouterDeviceScreen(
+    navController: NavController = LocalNavController.current,
+) {
     SearchRouterDevice(
         onRouterDeviceFound = { navController.navigate(Screen.ConnectionGraph.ConnectRouterDevice) }
     )

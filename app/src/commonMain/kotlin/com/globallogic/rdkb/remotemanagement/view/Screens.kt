@@ -1,10 +1,18 @@
 package com.globallogic.rdkb.remotemanagement.view
 
-import com.globallogic.rdkb.remotemanagement.domain.entity.RouterDevice
 import kotlinx.serialization.Serializable
 import org.jetbrains.compose.resources.StringResource
 import rdkbremotemanagement.app.generated.resources.Res
-import rdkbremotemanagement.app.generated.resources.title
+import rdkbremotemanagement.app.generated.resources.screen_title_change_account_settings
+import rdkbremotemanagement.app.generated.resources.screen_title_connect_router_device
+import rdkbremotemanagement.app.generated.resources.screen_title_connected_devices
+import rdkbremotemanagement.app.generated.resources.screen_title_router_device
+import rdkbremotemanagement.app.generated.resources.screen_title_router_device_list
+import rdkbremotemanagement.app.generated.resources.screen_title_router_device_settings
+import rdkbremotemanagement.app.generated.resources.screen_title_router_device_setup
+import rdkbremotemanagement.app.generated.resources.screen_title_search_router_device
+import rdkbremotemanagement.app.generated.resources.screen_title_settings
+import rdkbremotemanagement.app.generated.resources.screen_title_topology
 
 @Serializable
 sealed interface Graph : Screen
@@ -32,32 +40,30 @@ sealed interface Screen {
 
     @Serializable
     data object RouterDeviceGraph : Graph {
-        @Serializable data class RouterDevice(val routerDeviceMac: String) : Screen
+        @Serializable data object RouterDevice : Screen
         @Serializable data object Setup : Screen
         @Serializable data object ConnectedDevices : Screen
         @Serializable data object RouterSettings : Screen
     }
 }
 
-val Screen.title: StringResource? get() = when(this) {
-    is Screen.RootGraph -> null
+fun getRouteTitle(route: String?): StringResource? = when (route) {
+    null -> null
 
-    is Screen.Splash -> null
-    is Screen.Authentication -> Res.string.title
+    routeString<Screen.ConnectionGraph.SearchRouterDevice>() -> Res.string.screen_title_search_router_device
+    routeString<Screen.ConnectionGraph.ConnectRouterDevice>() -> Res.string.screen_title_connect_router_device
 
-    is Screen.ConnectionGraph -> Res.string.title
-    is Screen.ConnectionGraph.SearchRouterDevice -> Res.string.title
-    is Screen.ConnectionGraph.ConnectRouterDevice -> Res.string.title
+    routeString<Screen.HomeGraph.Topology>() -> Res.string.screen_title_topology
+    routeString<Screen.HomeGraph.RouterDeviceList>() -> Res.string.screen_title_router_device_list
+    routeString<Screen.HomeGraph.Settings>() -> Res.string.screen_title_settings
+    routeString<Screen.HomeGraph.ChangeAccountSettings>() -> Res.string.screen_title_change_account_settings
 
-    is Screen.HomeGraph -> Res.string.title
-    is Screen.HomeGraph.Topology -> Res.string.title
-    is Screen.HomeGraph.RouterDeviceList -> Res.string.title
-    is Screen.HomeGraph.Settings -> Res.string.title
-    is Screen.HomeGraph.ChangeAccountSettings -> Res.string.title
+    routeString<Screen.RouterDeviceGraph.RouterDevice>() -> Res.string.screen_title_router_device
+    routeString<Screen.RouterDeviceGraph.ConnectedDevices>() -> Res.string.screen_title_connected_devices
+    routeString<Screen.RouterDeviceGraph.Setup>() -> Res.string.screen_title_router_device_setup
+    routeString<Screen.RouterDeviceGraph.RouterSettings>() -> Res.string.screen_title_router_device_settings
 
-    is Screen.RouterDeviceGraph -> Res.string.title
-    is Screen.RouterDeviceGraph.RouterDevice -> Res.string.title
-    is Screen.RouterDeviceGraph.ConnectedDevices -> Res.string.title
-    is Screen.RouterDeviceGraph.Setup -> Res.string.title
-    is Screen.RouterDeviceGraph.RouterSettings -> Res.string.title
+    else -> null
 }
+
+private inline fun <reified S: Screen> routeString(): String = S::class.qualifiedName.orEmpty()

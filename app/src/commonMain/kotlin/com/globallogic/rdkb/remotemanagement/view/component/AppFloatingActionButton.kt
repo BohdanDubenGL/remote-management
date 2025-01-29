@@ -9,11 +9,13 @@ import androidx.compose.runtime.getValue
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.compose.currentBackStackEntryAsState
+import com.globallogic.rdkb.remotemanagement.view.LocalNavController
 import com.globallogic.rdkb.remotemanagement.view.ScaffoldController
 import com.globallogic.rdkb.remotemanagement.view.Screen
 
 @Composable
-fun AppFloatingActionButton(navController: NavController, scaffoldController: ScaffoldController) {
+fun AppFloatingActionButton(scaffoldController: ScaffoldController) {
+    val navController: NavController = LocalNavController.current
     val currentBackStackEntry by navController.currentBackStackEntryAsState()
 
     if (currentBackStackEntry?.destination?.hasRoute<Screen.HomeGraph.Topology>() == true) {
