@@ -5,7 +5,7 @@ plugins {
     alias(libs.plugins.compose.multiplatform) apply false
     alias(libs.plugins.compose.compiler) apply false
     alias(libs.plugins.kotlin.multiplatform) apply false
-    kotlin("plugin.serialization") version "2.1.0" apply false
+    alias(libs.plugins.kotlin.serialization) apply false
 }
 
 fun isNonStable(version: String): Boolean {
