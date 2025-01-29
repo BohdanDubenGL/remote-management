@@ -14,6 +14,7 @@ interface RouterDeviceRepository {
     suspend fun getRouterDeviceTopologyData(device: RouterDevice): RouterDeviceTopologyData
     suspend fun restartRouterDevice(device: RouterDevice)
     suspend fun setupRouterDevice(device: RouterDevice, settings: RouterDeviceSettings)
+    suspend fun removeRouterDevice(device: RouterDevice)
 
     suspend fun selectRouterDevice(device: RouterDevice)
     suspend fun getSelectRouterDevice(): RouterDevice

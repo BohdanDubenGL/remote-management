@@ -9,6 +9,7 @@ import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.GetRout
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.GetRouterDeviceUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.GetRouterDeviceTopologyDataUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.GetSelectedRouterDeviceUseCase
+import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.RemoveRouterDeviceUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.RestartRouterDeviceUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.SelectRouterDeviceUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.SetupRouterDeviceUseCase
@@ -28,6 +29,7 @@ val domainModule: Module = module {
     factoryOf(::GetCurrentLoggedInUserUseCase)
     factoryOf(::ChangeAccountSettingsUseCase)
 
+    factoryOf(::RemoveRouterDeviceUseCase)
     factoryOf(::FactoryResetRouterDeviceUseCase)
     factoryOf(::GetRouterDeviceConnectedDevicesUseCase)
     factoryOf(::GetRouterDeviceInfoUseCase)
