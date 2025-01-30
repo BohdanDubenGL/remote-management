@@ -61,4 +61,8 @@ class FakeRouterDeviceRepository(
     }
 
     override suspend fun getSelectRouterDevice(): RouterDevice = selectedRouterDevice
+
+    override suspend fun getLocalRouterDevice(): RouterDevice {
+        return connectedDevices.keys.firstOrNull { getRouterDeviceInfo(it).lanConnected } ?: RouterDevice.empty
+    }
 }

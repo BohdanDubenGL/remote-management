@@ -41,7 +41,7 @@ fun SettingsScreen(
     settingsViewModel: SettingsViewModel = koinViewModel()
 ) {
     val uiState by settingsViewModel.uiState.collectAsStateWithLifecycle()
-    Settings(
+    SettingsContent(
         uiState = uiState,
         loadCurrentUser = settingsViewModel::loadCurrentUser,
         onLogout = settingsViewModel::logout,
@@ -55,7 +55,7 @@ fun SettingsScreen(
 }
 
 @Composable
-private fun Settings(
+private fun SettingsContent(
     uiState: SettingsUiState,
     loadCurrentUser: () -> Unit,
     onLogout: () -> Unit,

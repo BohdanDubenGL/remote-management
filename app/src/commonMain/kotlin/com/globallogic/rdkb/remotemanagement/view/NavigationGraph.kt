@@ -7,19 +7,18 @@ import androidx.navigation.NavGraph
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
 import androidx.navigation.createGraph
-import androidx.navigation.toRoute
-import com.globallogic.rdkb.remotemanagement.view.screen.splash.SplashScreen
-import com.globallogic.rdkb.remotemanagement.view.screen.connection.ConnectRouterDeviceScreen
+import com.globallogic.rdkb.remotemanagement.view.screen.authentication.AuthenticationScreen
+import com.globallogic.rdkb.remotemanagement.view.screen.connection.AddRouterDeviceManuallyScreen
 import com.globallogic.rdkb.remotemanagement.view.screen.connection.SearchRouterDeviceScreen
+import com.globallogic.rdkb.remotemanagement.view.screen.home.ChangeAccountSettingsScreen
 import com.globallogic.rdkb.remotemanagement.view.screen.home.RouterDeviceListScreen
 import com.globallogic.rdkb.remotemanagement.view.screen.home.SettingsScreen
-import com.globallogic.rdkb.remotemanagement.view.screen.authentication.AuthenticationScreen
-import com.globallogic.rdkb.remotemanagement.view.screen.home.ChangeAccountSettingsScreen
 import com.globallogic.rdkb.remotemanagement.view.screen.home.TopologyScreen
 import com.globallogic.rdkb.remotemanagement.view.screen.routerdevice.ConnectedDeviceListScreen
 import com.globallogic.rdkb.remotemanagement.view.screen.routerdevice.RouterDeviceScreen
 import com.globallogic.rdkb.remotemanagement.view.screen.routerdevice.RouterSettingsScreen
 import com.globallogic.rdkb.remotemanagement.view.screen.routerdevice.SetupRouterDeviceScreen
+import com.globallogic.rdkb.remotemanagement.view.screen.splash.SplashScreen
 
 @Composable
 fun rememberApplicationNavGraph(): NavGraph {
@@ -30,7 +29,7 @@ fun rememberApplicationNavGraph(): NavGraph {
             composable<Screen.Authentication> { AuthenticationScreen() }
 
             composable<Screen.ConnectionGraph.SearchRouterDevice> { SearchRouterDeviceScreen() }
-            composable<Screen.ConnectionGraph.ConnectRouterDevice> { ConnectRouterDeviceScreen() }
+            composable<Screen.ConnectionGraph.AddRouterDeviceManually> { AddRouterDeviceManuallyScreen() }
 
             composable<Screen.HomeGraph.Topology> { TopologyScreen() }
             composable<Screen.HomeGraph.RouterDeviceList> { RouterDeviceListScreen() }

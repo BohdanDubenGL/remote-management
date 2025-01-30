@@ -3,8 +3,8 @@ package com.globallogic.rdkb.remotemanagement.view
 import kotlinx.serialization.Serializable
 import org.jetbrains.compose.resources.StringResource
 import rdkbremotemanagement.app.generated.resources.Res
+import rdkbremotemanagement.app.generated.resources.screen_title_add_router_device_manually
 import rdkbremotemanagement.app.generated.resources.screen_title_change_account_settings
-import rdkbremotemanagement.app.generated.resources.screen_title_connect_router_device
 import rdkbremotemanagement.app.generated.resources.screen_title_connected_devices
 import rdkbremotemanagement.app.generated.resources.screen_title_router_device
 import rdkbremotemanagement.app.generated.resources.screen_title_router_device_list
@@ -27,7 +27,7 @@ sealed interface Screen {
     @Serializable
     data object ConnectionGraph : Graph {
         @Serializable data object SearchRouterDevice : Screen
-        @Serializable data object ConnectRouterDevice : Screen
+        @Serializable data object AddRouterDeviceManually : Screen
     }
 
     @Serializable
@@ -51,7 +51,7 @@ fun getRouteTitle(route: String?): StringResource? = when (route) {
     null -> null
 
     routeString<Screen.ConnectionGraph.SearchRouterDevice>() -> Res.string.screen_title_search_router_device
-    routeString<Screen.ConnectionGraph.ConnectRouterDevice>() -> Res.string.screen_title_connect_router_device
+    routeString<Screen.ConnectionGraph.AddRouterDeviceManually>() -> Res.string.screen_title_add_router_device_manually
 
     routeString<Screen.HomeGraph.Topology>() -> Res.string.screen_title_topology
     routeString<Screen.HomeGraph.RouterDeviceList>() -> Res.string.screen_title_router_device_list

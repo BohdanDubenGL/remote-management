@@ -34,7 +34,7 @@ fun SplashScreen(
     splashViewModel: SplashViewModel = koinViewModel()
 ) {
     val uiState by splashViewModel.uiState.collectAsStateWithLifecycle()
-    Splash(
+    SplashContent(
         uiState = uiState,
         loadCurrentLoggedInUser = splashViewModel::checkCurrentUser,
         onLoggedInUser = { loggedInUser ->
@@ -51,7 +51,7 @@ fun SplashScreen(
 }
 
 @Composable
-private fun Splash(
+private fun SplashContent(
     uiState: SplashUiState,
     loadCurrentLoggedInUser: () -> Unit,
     onLoggedInUser: (loggedInUser: User) -> Unit

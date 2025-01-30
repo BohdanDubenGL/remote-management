@@ -18,4 +18,5 @@ interface RouterDeviceRepository {
 
     suspend fun selectRouterDevice(device: RouterDevice)
     suspend fun getSelectRouterDevice(): RouterDevice
+    suspend fun getLocalRouterDevice(): RouterDevice
 }

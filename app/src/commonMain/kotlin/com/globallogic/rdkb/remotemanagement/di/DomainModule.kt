@@ -4,6 +4,7 @@ import com.globallogic.rdkb.remotemanagement.domain.usecase.user.LoginUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.user.LogoutUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.user.RegistrationUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.FactoryResetRouterDeviceUseCase
+import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.GetLocalRouterDeviceUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.GetRouterDeviceConnectedDevicesUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.GetRouterDeviceInfoUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.GetRouterDeviceUseCase
@@ -13,6 +14,7 @@ import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.RemoveR
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.RestartRouterDeviceUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.SelectRouterDeviceUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.SetupRouterDeviceUseCase
+import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdeviceconnection.AddRouterDeviceManuallyUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdeviceconnection.ConnectToRouterDeviceUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdeviceconnection.GetRouterDeviceListUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdeviceconnection.SearchRouterDevicesUseCase
@@ -39,8 +41,10 @@ val domainModule: Module = module {
     factoryOf(::SetupRouterDeviceUseCase)
     factoryOf(::SelectRouterDeviceUseCase)
     factoryOf(::GetSelectedRouterDeviceUseCase)
+    factoryOf(::GetLocalRouterDeviceUseCase)
 
     factoryOf(::ConnectToRouterDeviceUseCase)
+    factoryOf(::AddRouterDeviceManuallyUseCase)
     factoryOf(::GetRouterDeviceListUseCase)
     factoryOf(::SearchRouterDevicesUseCase)
 }

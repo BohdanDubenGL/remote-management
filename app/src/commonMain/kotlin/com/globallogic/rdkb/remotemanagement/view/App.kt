@@ -20,15 +20,17 @@ fun App() {
         KoinContext {
             val scaffoldController = appScaffoldController()
             val navController = rememberNavController()
+
             CompositionLocalProvider(
-                LocalNavController provides navController
+                LocalNavController provides navController,
+                LocalScaffoldController provides scaffoldController
             ) {
                 val navGraph = rememberApplicationNavGraph()
 
                 Scaffold(
-                    topBar = { AppTopBar(scaffoldController) },
-                    bottomBar = { AppBottomNavigation(scaffoldController) },
-                    floatingActionButton = { AppFloatingActionButton(scaffoldController) },
+                    topBar = { AppTopBar() },
+                    bottomBar = { AppBottomNavigation() },
+                    floatingActionButton = { AppFloatingActionButton() },
                     modifier = Modifier.fillMaxSize()
                 ) { innerPadding ->
                     NavHost(navController, navGraph, Modifier.padding(innerPadding))

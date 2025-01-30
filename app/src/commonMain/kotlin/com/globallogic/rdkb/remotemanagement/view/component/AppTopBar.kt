@@ -16,24 +16,26 @@ import androidx.compose.runtime.remember
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.globallogic.rdkb.remotemanagement.view.LocalNavController
+import com.globallogic.rdkb.remotemanagement.view.LocalScaffoldController
 import com.globallogic.rdkb.remotemanagement.view.ScaffoldController
 import com.globallogic.rdkb.remotemanagement.view.getRouteTitle
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
-fun AppTopBar(scaffoldController: ScaffoldController) {
-    val navController: NavController = LocalNavController.current
+fun AppTopBar(
+    navController: NavController = LocalNavController.current,
+    scaffoldController: ScaffoldController = LocalScaffoldController.current,
+) {
     val currentBackStackEntry by navController.currentBackStackEntryAsState()
     val previousBackStackEntry by remember(currentBackStackEntry) { mutableStateOf(navController.previousBackStackEntry) }
     val routeTitle by remember(currentBackStackEntry) { mutableStateOf(getRouteTitle(currentBackStackEntry?.destination?.route)) }
 
     AppTopBar(
         titleRes = routeTitle,
-        navigateUpAction = if (previousBackStackEntry == null) {
-            NavigateUpAction.Hidden
-        } else {
-            NavigateUpAction.Visible(onClick = navController::navigateUp)
+        navigateUpAction = when (previousBackStackEntry) {
+            null -> null
+            else -> fun() { navController.navigateUp() }
         },
     )
 }
@@ -42,7 +44,7 @@ fun AppTopBar(scaffoldController: ScaffoldController) {
 @Composable
 fun AppTopBar(
     titleRes: StringResource?,
-    navigateUpAction: NavigateUpAction,
+    navigateUpAction: (() -> Unit)? = null,
 ) {
     if (titleRes != null) {
         CenterAlignedTopAppBar(
@@ -50,9 +52,9 @@ fun AppTopBar(
                 Text(text = stringResource(titleRes))
             },
             navigationIcon = {
-                if (navigateUpAction is NavigateUpAction.Visible) {
+                if (navigateUpAction != null) {
                     IconButton(
-                        onClick = navigateUpAction.onClick,
+                        onClick = navigateUpAction,
                     ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Default.ArrowBack,
@@ -66,11 +68,4 @@ fun AppTopBar(
             )
         )
     }
-}
-
-sealed class NavigateUpAction {
-    data object Hidden : NavigateUpAction()
-    data class Visible(
-        val onClick: () -> Unit,
-    ) : NavigateUpAction()
 }

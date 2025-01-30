@@ -37,7 +37,7 @@ fun AuthenticationScreen(
 ) {
     val uiState: AuthenticationUiState by authenticationViewModel.uiState.collectAsStateWithLifecycle()
 
-    Authentication(
+    AuthenticationContent(
         uiState = uiState,
         onEmailEntered = authenticationViewModel::onEmailEntered,
         onPasswordEntered = authenticationViewModel::onPasswordEntered,
@@ -53,7 +53,7 @@ fun AuthenticationScreen(
 }
 
 @Composable
-fun Authentication(
+private fun AuthenticationContent(
     uiState: AuthenticationUiState,
     onEmailEntered: (email: String) -> Unit,
     onPasswordEntered: (password: String) -> Unit,

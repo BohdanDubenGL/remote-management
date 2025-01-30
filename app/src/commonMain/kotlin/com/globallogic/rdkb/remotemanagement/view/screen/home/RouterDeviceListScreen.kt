@@ -40,7 +40,8 @@ fun RouterDeviceListScreen(
     routerDeviceListViewModel: RouterDeviceListViewModel = koinViewModel(),
 ) {
     val uiState by routerDeviceListViewModel.uiState.collectAsStateWithLifecycle()
-    RouterDeviceList(
+
+    RouterDeviceListContent(
         uiState = uiState,
         loadRouterDevices = routerDeviceListViewModel::loadRouterDevices,
         onRouterDeviceClicked = { routerDevice ->
@@ -51,7 +52,7 @@ fun RouterDeviceListScreen(
 }
 
 @Composable
-private fun RouterDeviceList(
+private fun RouterDeviceListContent(
     uiState: RouterDeviceListUiState,
     loadRouterDevices: () -> Unit,
     onRouterDeviceClicked: (RouterDevice) -> Unit

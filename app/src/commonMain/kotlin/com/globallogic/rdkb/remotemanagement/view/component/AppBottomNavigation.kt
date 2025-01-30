@@ -19,12 +19,15 @@ import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.globallogic.rdkb.remotemanagement.view.LocalNavController
+import com.globallogic.rdkb.remotemanagement.view.LocalScaffoldController
 import com.globallogic.rdkb.remotemanagement.view.ScaffoldController
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
-fun AppBottomNavigation(scaffoldController: ScaffoldController) {
-    val navController: NavController = LocalNavController.current
+fun AppBottomNavigation(
+    navController: NavController = LocalNavController.current,
+    scaffoldController: ScaffoldController = LocalScaffoldController.current,
+) {
     var visibility by remember { mutableStateOf(false) }
     BottomNavigation(
         backgroundColor = MaterialTheme.colorScheme.primaryContainer,

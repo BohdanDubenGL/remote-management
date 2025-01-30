@@ -36,7 +36,7 @@ fun ChangeAccountSettingsScreen(
 ) {
     val uiState by changeAccountSettingsViewModel.uiState.collectAsStateWithLifecycle()
 
-    ChangeAccountSettings(
+    ChangeAccountSettingsContent(
         uiState = uiState,
         loadCurrentUserData = changeAccountSettingsViewModel::loadCurrentUserData,
         onEmailEntered = changeAccountSettingsViewModel::onEmailEntered,
@@ -49,7 +49,7 @@ fun ChangeAccountSettingsScreen(
 }
 
 @Composable
-fun ChangeAccountSettings(
+private fun ChangeAccountSettingsContent(
     uiState: ChangeAccountSettingsUiState,
     loadCurrentUserData: () -> Unit,
     onEmailEntered: (String) -> Unit,
