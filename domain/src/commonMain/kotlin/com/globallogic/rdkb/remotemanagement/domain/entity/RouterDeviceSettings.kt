@@ -7,5 +7,6 @@ data class RouterDeviceSettings(
 data class BandSettings(
     val frequency: String,
     val ssid: String,
-    val password: String
+    val password: String,
+    val sameAsFirst: Boolean,
 )

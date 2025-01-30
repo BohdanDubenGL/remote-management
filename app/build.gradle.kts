@@ -8,7 +8,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.compose.multiplatform)
     alias(libs.plugins.compose.compiler)
-    kotlin("plugin.serialization")
+    alias(libs.plugins.kotlin.serialization)
 }
 
 kotlin {
@@ -62,6 +62,7 @@ kotlin {
         commonMain.dependencies {
             implementation(projects.domain)
 
+            implementation(libs.kotlinx.coroutines.core)
             implementation(libs.kotlin.serialization.json)
 
             implementation(compose.runtime)

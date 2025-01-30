@@ -1,0 +1,14 @@
+<resources>
+    <string name="screen_title_search_router_device">Search new devices</string>
+    <string name="screen_title_add_router_device_manually">Add manually</string>
+
+    <string name="screen_title_topology">Topology</string>
+    <string name="screen_title_router_device_list">Devices</string>
+    <string name="screen_title_settings">Settings</string>
+    <string name="screen_title_change_account_settings">Change account</string>
+
+    <string name="screen_title_router_device">Device</string>
+    <string name="screen_title_connected_devices">Connected clients</string>
+    <string name="screen_title_router_device_setup">Setup device</string>
+    <string name="screen_title_router_device_settings">Device settings</string>
+</resources>

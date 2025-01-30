@@ -16,7 +16,11 @@ class FakeRouterDeviceConnectionRepository(
         RouterDevice("Controller3", "192.168.1.152", "9a:1a:22:49:73:2c"),
     )
 ) : RouterDeviceConnectionRepository {
-    override suspend fun connectToRouterDevice(device: FoundRouterDevice) = Unit
+    override suspend fun connectToRouterDevice(device: FoundRouterDevice): RouterDevice = RouterDevice(device.name, device.ip, device.macAddress)
+    override suspend fun addRouterDeviceManually(macAddress: String): RouterDevice {
+        return connectToRouterDevice(FoundRouterDevice("New Device", "ip.ip.ip.ip", macAddress))
+    }
+
     override suspend fun getDeviceList(): List<RouterDevice> = savedRouterDevices
     override suspend fun searchRouterDevices(): List<FoundRouterDevice> = foundRouterDevices
 }
