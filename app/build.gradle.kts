@@ -51,14 +51,7 @@ kotlin {
     
     sourceSets {
         val desktopMain by getting
-        
-        androidMain.dependencies {
-            implementation(libs.kotlinx.coroutines.android)
-            implementation(compose.preview)
-            implementation(libs.androidx.activity.compose)
-            implementation(libs.koin.android)
-            implementation(libs.koin.androidx.compose)
-        }
+
         commonMain.dependencies {
             implementation(projects.domain)
 
@@ -76,14 +69,38 @@ kotlin {
             implementation(libs.androidx.lifecycle.viewmodel)
             implementation(libs.androidx.lifecycle.runtime.compose)
             implementation(libs.androidx.navigation.compose)
+
             implementation(libs.koin.core)
             implementation(libs.koin.compose)
             implementation(libs.koin.compose.viewmodel)
             implementation(libs.koin.compose.navigation)
+
+            implementation(libs.ktor.client.core)
+            implementation(libs.ktor.client.logging)
+        }
+        androidMain.dependencies {
+            implementation(libs.kotlinx.coroutines.android)
+
+            implementation(compose.preview)
+            implementation(libs.androidx.activity.compose)
+
+            implementation(libs.koin.android)
+            implementation(libs.koin.androidx.compose)
+
+            implementation(libs.ktor.client.okhttp)
+        }
+        iosMain.dependencies {
+            implementation(libs.ktor.client.darwin)
         }
         desktopMain.dependencies {
             implementation(libs.kotlinx.coroutines.swing)
+
             implementation(compose.desktop.currentOs)
+
+            implementation(libs.ktor.client.okhttp)
+        }
+        wasmJsMain.dependencies {
+            implementation(libs.ktor.client.js)
         }
     }
 }
