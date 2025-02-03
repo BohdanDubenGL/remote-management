@@ -3,6 +3,8 @@ package com.globallogic.rdkb.remotemanagement.di
 import com.globallogic.rdkb.remotemanagement.data.network.service.RdkCentralApiService
 import com.globallogic.rdkb.remotemanagement.data.network.RdkCentralHttpClient
 import com.globallogic.rdkb.remotemanagement.data.network.service.impl.RdkCentralApiServiceImpl
+import com.globallogic.rdkb.remotemanagement.data.preferences.AppPreferences
+import com.globallogic.rdkb.remotemanagement.data.preferences.impl.AppPreferencesImpl
 import com.globallogic.rdkb.remotemanagement.data.repository.fake.FakeRouterDeviceConnectionRepository
 import com.globallogic.rdkb.remotemanagement.data.repository.fake.FakeRouterDeviceRepository
 import com.globallogic.rdkb.remotemanagement.data.repository.fake.FakeUserRepository
@@ -20,6 +22,8 @@ expect val platformDataModule: Module
 val dataModule: Module = module {
     singleOf(::RdkCentralHttpClient).bind<HttpClient>()
     singleOf(::RdkCentralApiServiceImpl).bind<RdkCentralApiService>()
+
+    singleOf(::AppPreferencesImpl).bind<AppPreferences>()
 
     singleOf({ -> FakeUserRepository() }).bind<UserRepository>()
     singleOf({ -> FakeRouterDeviceConnectionRepository() }).bind<RouterDeviceConnectionRepository>()

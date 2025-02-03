@@ -1,38 +1,25 @@
 package com.globallogic.rdkb.remotemanagement.data.network.service
 
-import io.ktor.util.reflect.TypeInfo
-import io.ktor.util.reflect.typeInfo
+import com.globallogic.rdkb.remotemanagement.data.network.service.model.GetPropertyResponse
+import com.globallogic.rdkb.remotemanagement.data.network.service.model.SetPropertyResponse
 
 interface RdkCentralApiService {
     suspend fun <T> getDeviceProperty(
         deviceMacAddress: String = "dca6320eb8bb", // todo: remove real mac
         deviceProperty: RouterDevice.Get<T>,
-        typeInfo: TypeInfo,
-    ): T?
+    ): Result<GetPropertyResponse>
 
     suspend fun <T> setDeviceProperty(
         deviceMacAddress: String = "dca6320eb8bb", // todo: remove real mac
         deviceProperty: RouterDevice.Set<T>,
-        typeInfo: TypeInfo,
         value: T,
-    ): Boolean
+    ): Result<SetPropertyResponse>
 
     suspend fun doDeviceAction(
         deviceMacAddress: String = "dca6320eb8bb", // todo: remove real mac
         deviceAction: RouterDevice.Action,
-    ): Boolean
+    ): Result<Boolean>
 }
-
-suspend inline fun <reified T> RdkCentralApiService.getDeviceProperty(
-    deviceMacAddress: String = "dca6320eb8bb", // todo: remove real mac
-    deviceProperty: RouterDevice.Get<T>,
-): T? = getDeviceProperty(deviceMacAddress, deviceProperty, typeInfo<T>())
-
-suspend inline fun <reified T> RdkCentralApiService.setDeviceProperty(
-    deviceMacAddress: String = "dca6320eb8bb", // todo: remove real mac
-    deviceProperty: RouterDevice.Set<T>,
-    value: T,
-): Boolean = setDeviceProperty(deviceMacAddress, deviceProperty, typeInfo<T>(), value)
 
 sealed class RouterDevice(val name: String) {
     interface Set<T> { val name: String }
