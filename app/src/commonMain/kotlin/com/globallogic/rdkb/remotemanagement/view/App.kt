@@ -6,16 +6,25 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
+import com.globallogic.rdkb.remotemanagement.data.db.AppDatabase
+import com.globallogic.rdkb.remotemanagement.data.db.createRoomDatabase
 import com.globallogic.rdkb.remotemanagement.view.component.AppBottomNavigation
 import com.globallogic.rdkb.remotemanagement.view.component.AppFloatingActionButton
 import com.globallogic.rdkb.remotemanagement.view.component.AppTopBar
 import org.koin.compose.KoinContext
+import org.koin.compose.koinInject
 
 @Composable
 fun App() {
+    val db = koinInject<AppDatabase>()
+    LaunchedEffect(Unit) {
+        val list = db.getDao().getAllNotes()
+        println(list)
+    }
     MaterialTheme {
         KoinContext {
             val scaffoldController = appScaffoldController()

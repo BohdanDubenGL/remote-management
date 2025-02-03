@@ -7,6 +7,8 @@ plugins {
     alias(libs.plugins.compose.multiplatform)
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.androidx.room)
 }
 
 kotlin {
@@ -51,6 +53,9 @@ kotlin {
             implementation(libs.androidx.datastore)
             implementation(libs.androidx.datastore.preferences)
 
+            implementation(libs.androidx.room.runtime)
+            implementation(libs.androidx.sqlite)
+
             implementation(libs.koin.core)
             implementation(libs.koin.compose)
             implementation(libs.koin.compose.viewmodel)
@@ -66,6 +71,8 @@ kotlin {
 
             implementation(compose.preview)
             implementation(libs.androidx.activity.compose)
+
+            implementation(libs.androidx.room.runtime.android)
 
             implementation(libs.koin.android)
             implementation(libs.koin.androidx.compose)
@@ -108,10 +115,6 @@ android {
     }
 }
 
-dependencies {
-    debugImplementation(compose.uiTooling)
-}
-
 compose.desktop.application {
     mainClass = "com.globallogic.rdkb.remotemanagement.MainKt"
 
@@ -119,5 +122,24 @@ compose.desktop.application {
         targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
         packageName = "com.globallogic.rdkb.remotemanagement"
         packageVersion = "1.0.0"
+    }
+}
+
+dependencies {
+    debugImplementation(compose.uiTooling)
+    add("kspCommonMainMetadata", libs.androidx.room.compiler)
+    add("kspAndroid",libs.androidx.room.compiler)
+    add("kspIosSimulatorArm64",libs.androidx.room.compiler)
+    add("kspIosX64",libs.androidx.room.compiler)
+    add("kspIosArm64",libs.androidx.room.compiler)
+    add("kspDesktop", libs.androidx.room.compiler)
+}
+
+room {
+    schemaDirectory("$projectDir/schemas")
+}
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompilationTask<*>>().configureEach {
+    if (name != "kspCommonMainKotlinMetadata" ) {
+        dependsOn("kspCommonMainKotlinMetadata")
     }
 }
