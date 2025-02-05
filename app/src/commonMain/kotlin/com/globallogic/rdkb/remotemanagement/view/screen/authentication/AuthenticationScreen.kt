@@ -64,7 +64,7 @@ private fun AuthenticationContent(
     onLoggedIn: (loggedInUser: User) -> Unit,
 ) {
     SideEffect {
-        if (uiState.loggedInUser != User.empty) onLoggedIn(uiState.loggedInUser)
+        if (uiState.loggedInUser != null) onLoggedIn(uiState.loggedInUser)
     }
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -132,22 +132,27 @@ class AuthenticationViewModel(
     fun onEnterClick() {
         viewModelScope.launch {
             val email = _uiState.value.email
-            val userExists = isEmailUsed(email)
-            when {
-                userExists -> _uiState.update { it.copy(isEmailEditable = false, showPasswordInput = true) }
-                else -> _uiState.update { it.copy(isEmailEditable = false, showPasswordInput = true, showConfirmPasswordInput = true, isRegistering = true) }
-            }
+            isEmailUsed(email)
+                .onSuccess { userExists ->
+                    when {
+                        userExists -> _uiState.update { it.copy(isEmailEditable = false, showPasswordInput = true) }
+                        else -> _uiState.update { it.copy(isEmailEditable = false, showPasswordInput = true, showConfirmPasswordInput = true, isRegistering = true) }
+                    }
+                }
+                .onFailure { it.printStackTrace() }
         }
     }
 
     fun onAuthenticateClick() {
         viewModelScope.launch {
             val state = _uiState.value
-            val user = when {
+            when {
                 state.isRegistering -> registration(RegistrationData(state.email, state.email, state.password, state.confirmPassword))
                 else -> login(LoginData(state.email, state.email, state.password))
             }
-            _uiState.update { it.copy(loggedInUser = user) }
+                .onSuccess { user -> _uiState.update { it.copy(loggedInUser = user) } }
+                .onFailure { it.printStackTrace() }
+
         }
     }
 }
@@ -160,5 +165,5 @@ data class AuthenticationUiState(
     val showPasswordInput: Boolean = false,
     val showConfirmPasswordInput: Boolean = false,
     val isRegistering: Boolean = false,
-    val loggedInUser: User = User.empty
+    val loggedInUser: User? = null,
 )

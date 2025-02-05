@@ -7,7 +7,7 @@ import com.globallogic.rdkb.remotemanagement.domain.repository.RouterDeviceRepos
 class GetRouterDeviceInfoUseCase(
     private val routerDeviceRepository: RouterDeviceRepository
 ) {
-    suspend operator fun invoke(device: RouterDevice): RouterDeviceInfo = getRouterDeviceInfo(device)
+    suspend operator fun invoke(device: RouterDevice): Result<RouterDeviceInfo?> = getRouterDeviceInfo(device)
 
-    suspend fun getRouterDeviceInfo(device: RouterDevice): RouterDeviceInfo = routerDeviceRepository.getRouterDeviceInfo(device)
+    suspend fun getRouterDeviceInfo(device: RouterDevice): Result<RouterDeviceInfo?> = routerDeviceRepository.getRouterDeviceInfo(device)
 }

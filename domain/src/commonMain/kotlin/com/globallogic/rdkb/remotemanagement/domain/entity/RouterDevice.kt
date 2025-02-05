@@ -4,8 +4,4 @@ data class RouterDevice(
     val name: String,
     val ip: String,
     val macAddress: String
-) {
-    companion object {
-        val empty: RouterDevice = RouterDevice("", "", "")
-    }
-}
+)

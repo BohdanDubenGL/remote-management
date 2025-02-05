@@ -7,7 +7,7 @@ import com.globallogic.rdkb.remotemanagement.domain.repository.UserRepository
 class RegistrationUseCase(
     private val userRepository: UserRepository
 ) {
-    suspend operator fun invoke(registrationData: RegistrationData): User = register(registrationData)
+    suspend operator fun invoke(registrationData: RegistrationData): Result<User> = register(registrationData)
 
-    suspend fun register(registrationData: RegistrationData): User = userRepository.register(registrationData)
+    suspend fun register(registrationData: RegistrationData): Result<User> = userRepository.register(registrationData)
 }

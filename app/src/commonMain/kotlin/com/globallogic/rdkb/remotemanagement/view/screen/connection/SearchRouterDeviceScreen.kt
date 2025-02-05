@@ -147,16 +147,19 @@ class SearchRouterDeviceViewModel(
     fun searchDevices() {
         viewModelScope.launch {
             _uiState.update { SearchRouterDeviceUiState.Searching }
-            val foundDevices = searchRouterDevices()
-            _uiState.update { SearchRouterDeviceUiState.FoundDevices(foundRouterDevices = foundDevices) }
+            searchRouterDevices()
+                .onSuccess { foundDevices -> _uiState.update { SearchRouterDeviceUiState.FoundDevices(foundRouterDevices = foundDevices) } }
+                .onFailure { it.printStackTrace() }
         }
     }
 
     fun connectToDevice(foundRouterDevice: FoundRouterDevice) {
         viewModelScope.launch {
             _uiState.update { SearchRouterDeviceUiState.Connecting(foundRouterDevice = foundRouterDevice) }
-            val routerDevice = connectToRouterDevice(foundRouterDevice)
-            _uiState.update { SearchRouterDeviceUiState.Connected(routerDevice = routerDevice) }
+            connectToRouterDevice(foundRouterDevice)
+                .onSuccess { routerDevice -> _uiState.update { SearchRouterDeviceUiState.Connected(routerDevice = routerDevice) } }
+                .onFailure { it.printStackTrace() }
+
         }
     }
 }

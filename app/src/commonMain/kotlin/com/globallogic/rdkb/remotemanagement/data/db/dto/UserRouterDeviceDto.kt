@@ -5,23 +5,23 @@ import androidx.room.ForeignKey
 
 @Entity(
     tableName = "user_router_device",
-    primaryKeys = ["userId", "routerDeviceId"],
+    primaryKeys = ["userEmail", "routerDeviceMacAddress"],
     foreignKeys = [
         ForeignKey(
             entity = UserDto::class,
-            parentColumns = ["id"],
-            childColumns = ["userId"],
+            parentColumns = ["email"],
+            childColumns = ["userEmail"],
             onDelete = ForeignKey.CASCADE,
         ),
         ForeignKey(
             entity = RouterDeviceDto::class,
-            parentColumns = ["id"],
-            childColumns = ["routerDeviceId"],
+            parentColumns = ["macAddress"],
+            childColumns = ["routerDeviceMacAddress"],
             onDelete = ForeignKey.CASCADE,
         ),
     ],
 )
 data class UserRouterDeviceDto(
-    val userId: String,
-    val routerDeviceId: String
+    val userEmail: String,
+    val routerDeviceMacAddress: String
 )

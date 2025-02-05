@@ -2,18 +2,12 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "0927bc351de667570d13fad790801862",
+    "identityHash": "6513d9f581650e634b32e9901e37e0d8",
     "entities": [
       {
         "tableName": "user",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `email` TEXT NOT NULL, `name` TEXT NOT NULL, `password` TEXT NOT NULL, PRIMARY KEY(`id`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`email` TEXT NOT NULL, `name` TEXT NOT NULL, `password` TEXT NOT NULL, PRIMARY KEY(`email`))",
         "fields": [
-          {
-            "fieldPath": "id",
-            "columnName": "id",
-            "affinity": "TEXT",
-            "notNull": true
-          },
           {
             "fieldPath": "email",
             "columnName": "email",
@@ -36,62 +30,14 @@
         "primaryKey": {
           "autoGenerate": false,
           "columnNames": [
-            "id"
+            "email"
           ]
         }
       },
       {
         "tableName": "router_device",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `macAddress` TEXT NOT NULL, `name` TEXT NOT NULL, `ipAddress` TEXT NOT NULL, `updatedAt` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`macAddress` TEXT NOT NULL, `lanConnected` INTEGER NOT NULL, `connectedExtender` INTEGER NOT NULL, `modelName` TEXT NOT NULL, `ipAddress` TEXT NOT NULL, `firmwareVersion` TEXT NOT NULL, `serialNumber` TEXT NOT NULL, `processorLoadPercent` INTEGER NOT NULL, `memoryUsagePercent` INTEGER NOT NULL, `totalDownloadTraffic` INTEGER NOT NULL, `totalUploadTraffic` INTEGER NOT NULL, `availableBands` TEXT NOT NULL, `updatedAt` INTEGER NOT NULL, PRIMARY KEY(`macAddress`))",
         "fields": [
-          {
-            "fieldPath": "id",
-            "columnName": "id",
-            "affinity": "TEXT",
-            "notNull": true
-          },
-          {
-            "fieldPath": "macAddress",
-            "columnName": "macAddress",
-            "affinity": "TEXT",
-            "notNull": true
-          },
-          {
-            "fieldPath": "name",
-            "columnName": "name",
-            "affinity": "TEXT",
-            "notNull": true
-          },
-          {
-            "fieldPath": "ipAddress",
-            "columnName": "ipAddress",
-            "affinity": "TEXT",
-            "notNull": true
-          },
-          {
-            "fieldPath": "updatedAt",
-            "columnName": "updatedAt",
-            "affinity": "INTEGER",
-            "notNull": true
-          }
-        ],
-        "primaryKey": {
-          "autoGenerate": false,
-          "columnNames": [
-            "id"
-          ]
-        }
-      },
-      {
-        "tableName": "router_device_info",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `macAddress` TEXT NOT NULL, `lanConnected` INTEGER NOT NULL, `connectedExtender` INTEGER NOT NULL, `modelName` TEXT NOT NULL, `ipAddress` TEXT NOT NULL, `firmwareVersion` TEXT NOT NULL, `serialNumber` TEXT NOT NULL, `processorLoadPercent` INTEGER NOT NULL, `memoryUsagePercent` INTEGER NOT NULL, `totalDownloadTraffic` INTEGER NOT NULL, `totalUploadTraffic` INTEGER NOT NULL, `availableBands` TEXT NOT NULL, PRIMARY KEY(`id`), FOREIGN KEY(`id`) REFERENCES `router_device`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
-        "fields": [
-          {
-            "fieldPath": "id",
-            "columnName": "id",
-            "affinity": "TEXT",
-            "notNull": true
-          },
           {
             "fieldPath": "macAddress",
             "columnName": "macAddress",
@@ -163,41 +109,34 @@
             "columnName": "availableBands",
             "affinity": "TEXT",
             "notNull": true
+          },
+          {
+            "fieldPath": "updatedAt",
+            "columnName": "updatedAt",
+            "affinity": "INTEGER",
+            "notNull": true
           }
         ],
         "primaryKey": {
           "autoGenerate": false,
           "columnNames": [
-            "id"
+            "macAddress"
           ]
-        },
-        "foreignKeys": [
-          {
-            "table": "router_device",
-            "onDelete": "CASCADE",
-            "onUpdate": "NO ACTION",
-            "columns": [
-              "id"
-            ],
-            "referencedColumns": [
-              "id"
-            ]
-          }
-        ]
+        }
       },
       {
         "tableName": "user_router_device",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`userId` TEXT NOT NULL, `routerDeviceId` TEXT NOT NULL, PRIMARY KEY(`userId`, `routerDeviceId`), FOREIGN KEY(`userId`) REFERENCES `user`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`routerDeviceId`) REFERENCES `router_device`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`userEmail` TEXT NOT NULL, `routerDeviceMacAddress` TEXT NOT NULL, PRIMARY KEY(`userEmail`, `routerDeviceMacAddress`), FOREIGN KEY(`userEmail`) REFERENCES `user`(`email`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`routerDeviceMacAddress`) REFERENCES `router_device`(`macAddress`) ON UPDATE NO ACTION ON DELETE CASCADE )",
         "fields": [
           {
-            "fieldPath": "userId",
-            "columnName": "userId",
+            "fieldPath": "userEmail",
+            "columnName": "userEmail",
             "affinity": "TEXT",
             "notNull": true
           },
           {
-            "fieldPath": "routerDeviceId",
-            "columnName": "routerDeviceId",
+            "fieldPath": "routerDeviceMacAddress",
+            "columnName": "routerDeviceMacAddress",
             "affinity": "TEXT",
             "notNull": true
           }
@@ -205,8 +144,8 @@
         "primaryKey": {
           "autoGenerate": false,
           "columnNames": [
-            "userId",
-            "routerDeviceId"
+            "userEmail",
+            "routerDeviceMacAddress"
           ]
         },
         "foreignKeys": [
@@ -215,10 +154,10 @@
             "onDelete": "CASCADE",
             "onUpdate": "NO ACTION",
             "columns": [
-              "userId"
+              "userEmail"
             ],
             "referencedColumns": [
-              "id"
+              "email"
             ]
           },
           {
@@ -226,10 +165,77 @@
             "onDelete": "CASCADE",
             "onUpdate": "NO ACTION",
             "columns": [
-              "routerDeviceId"
+              "routerDeviceMacAddress"
             ],
             "referencedColumns": [
-              "id"
+              "macAddress"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "connected_device",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`macAddress` TEXT NOT NULL, `routerDeviceMacAddress` TEXT NOT NULL, `hostName` TEXT NOT NULL, `ssid` TEXT NOT NULL, `channel` INTEGER NOT NULL, `rssi` INTEGER NOT NULL, `bandWidth` TEXT NOT NULL, PRIMARY KEY(`macAddress`), FOREIGN KEY(`routerDeviceMacAddress`) REFERENCES `router_device`(`macAddress`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "macAddress",
+            "columnName": "macAddress",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "routerDeviceMacAddress",
+            "columnName": "routerDeviceMacAddress",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "hostName",
+            "columnName": "hostName",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "ssid",
+            "columnName": "ssid",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "channel",
+            "columnName": "channel",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "rssi",
+            "columnName": "rssi",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "bandWidth",
+            "columnName": "bandWidth",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "macAddress"
+          ]
+        },
+        "foreignKeys": [
+          {
+            "table": "router_device",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "routerDeviceMacAddress"
+            ],
+            "referencedColumns": [
+              "macAddress"
             ]
           }
         ]
@@ -237,7 +243,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '0927bc351de667570d13fad790801862')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '6513d9f581650e634b32e9901e37e0d8')"
     ]
   }
 }

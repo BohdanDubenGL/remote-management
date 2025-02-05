@@ -66,7 +66,7 @@ private fun RouterDeviceListContent(
         modifier = Modifier.fillMaxSize(),
     ) {
         LazyColumn {
-            items(uiState.routerDevices, RouterDevice::macAddress) { routerDevice ->
+            items(uiState.routerDevices) { routerDevice ->
                 Card(
                     shape = RoundedCornerShape(12.dp),
                     elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
@@ -97,14 +97,16 @@ class RouterDeviceListViewModel(
 
     fun loadRouterDevices() {
         viewModelScope.launch {
-            val routerDevices = getRouterDeviceList()
-            _uiState.update { it.copy(routerDevices = routerDevices) }
+            getRouterDeviceList()
+                .onSuccess { routerDevices -> _uiState.update { it.copy(routerDevices = routerDevices) } }
+                .onFailure { it.printStackTrace() }
         }
     }
 
     fun onRouterDeviceSelected(routerDevice: RouterDevice) {
         viewModelScope.launch {
             selectRouterDevice(routerDevice)
+                .onFailure { it.printStackTrace() }
         }
     }
 }

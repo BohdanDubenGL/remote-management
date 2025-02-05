@@ -124,8 +124,9 @@ class ChangeAccountSettingsViewModel(
 
     fun loadCurrentUserData() {
         viewModelScope.launch {
-            val currentUser = getCurrentLoggedInUser()
-            _uiState.update { it.copy(email = currentUser.email, userDataLoaded = true) }
+            getCurrentLoggedInUser()
+                .onSuccess { currentUser -> _uiState.update { it.copy(email = currentUser?.email.orEmpty(), userDataLoaded = true) } }
+                .onFailure { it.printStackTrace() }
         }
     }
 
@@ -149,7 +150,8 @@ class ChangeAccountSettingsViewModel(
         viewModelScope.launch {
             val state = _uiState.value
             changeAccountSettings(ChangeAccountSettingsData(state.email, state.newPassword, state.confirmNewPassword))
-            _uiState.update { it.copy(dataSaved = true) }
+                .onSuccess { _uiState.update { it.copy(dataSaved = true) } }
+                .onFailure { it.printStackTrace() }
         }
     }
 }

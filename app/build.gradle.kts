@@ -37,6 +37,7 @@ kotlin {
 
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.kotlin.serialization.json)
+            implementation(libs.kotlin.datetime)
 
             implementation(compose.runtime)
             implementation(compose.foundation)

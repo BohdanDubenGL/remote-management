@@ -16,9 +16,6 @@ interface UserDao {
     @Upsert
     suspend fun updateUser(user: UserDto)
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertUserRouterDevice(userRouterDevice: UserRouterDeviceDto)
-
     @Query("SELECT * FROM user where email = :email LIMIT 1")
     suspend fun findUserByEmail(email: String): UserDto?
 

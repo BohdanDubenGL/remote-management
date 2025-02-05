@@ -1,19 +1,24 @@
 package com.globallogic.rdkb.remotemanagement.di
 
+import com.globallogic.rdkb.remotemanagement.data.datasource.LocalRouterDeviceDataSource
+import com.globallogic.rdkb.remotemanagement.data.datasource.RemoteRouterDeviceDataSource
+import com.globallogic.rdkb.remotemanagement.data.datasource.RouterDeviceConnectionDataSource
 import com.globallogic.rdkb.remotemanagement.data.datasource.UserDataSource
-import com.globallogic.rdkb.remotemanagement.data.datasource.fake.FakeRouterDeviceConnectionDataSource
-import com.globallogic.rdkb.remotemanagement.data.datasource.fake.FakeRouterDeviceDataSource
+import com.globallogic.rdkb.remotemanagement.data.datasource.fake.fake
+import com.globallogic.rdkb.remotemanagement.data.datasource.impl.LocalRouterDeviceDataSourceImpl
+import com.globallogic.rdkb.remotemanagement.data.datasource.impl.RemoteRouterDeviceDataSourceImpl
+import com.globallogic.rdkb.remotemanagement.data.datasource.impl.RouterDeviceConnectionDataSourceImpl
 import com.globallogic.rdkb.remotemanagement.data.datasource.impl.UserDataSourceImpl
 import com.globallogic.rdkb.remotemanagement.data.db.AppDatabase
 import com.globallogic.rdkb.remotemanagement.data.db.RouterDeviceDao
 import com.globallogic.rdkb.remotemanagement.data.db.UserDao
-import com.globallogic.rdkb.remotemanagement.data.network.service.RdkCentralApiService
 import com.globallogic.rdkb.remotemanagement.data.network.RdkCentralHttpClient
+import com.globallogic.rdkb.remotemanagement.data.network.service.RdkCentralApiService
 import com.globallogic.rdkb.remotemanagement.data.network.service.impl.RdkCentralApiServiceImpl
 import com.globallogic.rdkb.remotemanagement.data.preferences.AppPreferences
 import com.globallogic.rdkb.remotemanagement.data.preferences.impl.AppPreferencesImpl
-import com.globallogic.rdkb.remotemanagement.data.repository.fake.FakeRouterDeviceConnectionRepository
-import com.globallogic.rdkb.remotemanagement.data.repository.fake.FakeRouterDeviceRepository
+import com.globallogic.rdkb.remotemanagement.data.repository.impl.RouterDeviceConnectionRepositoryImpl
+import com.globallogic.rdkb.remotemanagement.data.repository.impl.RouterDeviceRepositoryImpl
 import com.globallogic.rdkb.remotemanagement.data.repository.impl.UserRepositoryImpl
 import com.globallogic.rdkb.remotemanagement.domain.repository.RouterDeviceConnectionRepository
 import com.globallogic.rdkb.remotemanagement.domain.repository.RouterDeviceRepository
@@ -28,13 +33,13 @@ expect val platformDataModule: Module
 
 val dataModule: Module = module {
     singleOf(::UserRepositoryImpl).bind<UserRepository>()
-    singleOf(::FakeRouterDeviceConnectionRepository).bind<RouterDeviceConnectionRepository>()
-    singleOf(::FakeRouterDeviceRepository).bind<RouterDeviceRepository>()
+    singleOf(::RouterDeviceConnectionRepositoryImpl).bind<RouterDeviceConnectionRepository>()
+    singleOf(::RouterDeviceRepositoryImpl).bind<RouterDeviceRepository>()
 
     singleOf(::UserDataSourceImpl).bind<UserDataSource>()
-    singleOf(::FakeRouterDeviceDataSource).bind<FakeRouterDeviceDataSource>()
-    singleOf(::FakeRouterDeviceConnectionDataSource).bind<FakeRouterDeviceConnectionDataSource>()
-
+    singleOf(::LocalRouterDeviceDataSourceImpl).bind<LocalRouterDeviceDataSource>()
+    single { RemoteRouterDeviceDataSourceImpl(get()).fake() }.bind<RemoteRouterDeviceDataSource>() //fake
+    single { RouterDeviceConnectionDataSourceImpl().fake() }.bind<RouterDeviceConnectionDataSource>() //fake
 
     singleOf(::RdkCentralHttpClient).bind<HttpClient>()
     singleOf(::RdkCentralApiServiceImpl).bind<RdkCentralApiService>()

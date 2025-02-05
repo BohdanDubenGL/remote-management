@@ -88,10 +88,13 @@ class AddRouterDeviceManuallyViewModel(
 
     fun connectToDevice() {
         viewModelScope.launch {
-            val routerDevice = addRouterDeviceManually(_uiState.value.deviceMacAddress)
-            if (routerDevice != RouterDevice.empty) {
-                _uiState.update { it.copy(deviceConnected = true) }
-            }
+            addRouterDeviceManually(_uiState.value.deviceMacAddress)
+                .onSuccess { routerDevice ->
+                    if (routerDevice != null) {
+                        _uiState.update { it.copy(deviceConnected = true) }
+                    }
+                }
+                .onFailure { it.printStackTrace() }
         }
     }
 }

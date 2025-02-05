@@ -10,5 +10,5 @@ fun <DB: RoomDatabase> createRoomDatabase(
 ): DB = builder
     .setDriver(BundledSQLiteDriver())
     .setQueryCoroutineContext(Dispatchers.IO)
-//    .fallbackToDestructiveMigration(true)
+    .fallbackToDestructiveMigration(true)
     .build()

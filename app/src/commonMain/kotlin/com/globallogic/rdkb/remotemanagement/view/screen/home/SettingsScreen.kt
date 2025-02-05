@@ -87,7 +87,7 @@ private fun SettingsContent(
             ) {
                 Row {
                     Text("User email: ")
-                    Text(uiState.currentUser.email)
+                    Text(uiState.currentUser?.email.orEmpty())
                 }
             }
         }
@@ -119,20 +119,22 @@ class SettingsViewModel(
 
     fun loadCurrentUser() {
         viewModelScope.launch {
-            val currentUser = getCurrentLoggedInUser()
-            _uiState.update { it.copy(currentUser = currentUser) }
+            getCurrentLoggedInUser()
+                .onSuccess { currentUser -> _uiState.update { it.copy(currentUser = currentUser) } }
+                .onFailure { it.printStackTrace() }
         }
     }
 
     fun logout() {
         viewModelScope.launch {
-            val loggedOut = logoutUser()
-            _uiState.update { it.copy(loggedOut = loggedOut) }
+            logoutUser()
+                .onSuccess { loggedOut -> _uiState.update { it.copy(loggedOut = loggedOut) } }
+                .onFailure { it.printStackTrace() }
         }
     }
 }
 
 data class SettingsUiState(
-    val currentUser: User = User.empty,
+    val currentUser: User? = null,
     val loggedOut: Boolean = false,
 )

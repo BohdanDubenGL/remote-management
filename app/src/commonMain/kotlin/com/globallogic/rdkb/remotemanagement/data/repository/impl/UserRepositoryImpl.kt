@@ -7,42 +7,47 @@ import com.globallogic.rdkb.remotemanagement.domain.entity.LoginData
 import com.globallogic.rdkb.remotemanagement.domain.entity.RegistrationData
 import com.globallogic.rdkb.remotemanagement.domain.entity.User
 import com.globallogic.rdkb.remotemanagement.domain.repository.UserRepository
+import com.globallogic.rdkb.remotemanagement.domain.utils.runCatchingSafe
 
 class UserRepositoryImpl(
     private val appPreferences: AppPreferences,
     private val userDataSource: UserDataSource,
 ) : UserRepository {
-    override suspend fun currentLoggedInUser(): User {
-        val currentUserEmail = appPreferences.currentUserEmailPref.get() ?: return User.empty
-        return userDataSource.findUserByEmail(currentUserEmail) ?: User.empty
+    private suspend fun currentUserEmail(): Result<String?> = runCatchingSafe { appPreferences.currentUserEmailPref.get() }
+
+    override suspend fun currentLoggedInUser(): Result<User?> {
+        return currentUserEmail()
+            .mapCatching { email ->
+                when (email) {
+                    null -> null
+                    else -> userDataSource.findUserByEmail(email).getOrThrow()
+                }
+            }
     }
 
-    override suspend fun changeAccountSettings(settingsData: ChangeAccountSettingsData): User {
-        val currentUserEmail = appPreferences.currentUserEmailPref.get() ?: return User.empty
-        userDataSource.updateUser(currentUserEmail, settingsData.email, "", settingsData.password) ?: User.empty
+    override suspend fun changeAccountSettings(settingsData: ChangeAccountSettingsData): Result<User?> {
+        currentUserEmail()
+            .mapCatching { email -> email ?: error("No user") }
+            .mapCatching { email -> userDataSource.updateUser(email, settingsData.email, "", settingsData.password) }
         return currentLoggedInUser()
     }
 
-    override suspend fun isEmailUsed(email: String): Boolean {
+    override suspend fun isEmailUsed(email: String): Result<Boolean> {
         return userDataSource.isEmailUsed(email)
     }
 
-    override suspend fun register(registrationData: RegistrationData): User {
-        val user = userDataSource.addUser(registrationData.email, "", registrationData.passwordHash) ?: return User.empty
-
-        appPreferences.currentUserEmailPref.set(user.email)
-        return user
+    override suspend fun register(registrationData: RegistrationData): Result<User> {
+        return userDataSource.addUser(registrationData.email, "", registrationData.passwordHash)
+            .onSuccess { user -> appPreferences.currentUserEmailPref.set(user.email) }
     }
 
-    override suspend fun login(loginData: LoginData): User {
-        val user = userDataSource.findUserByCredentials(loginData.email, loginData.passwordHash) ?: return User.empty
-
-        appPreferences.currentUserEmailPref.set(user.email)
-        return user
+    override suspend fun login(loginData: LoginData): Result<User?> {
+        return userDataSource.findUserByCredentials(loginData.email, loginData.passwordHash)
+            .onSuccess { user -> if (user != null) appPreferences.currentUserEmailPref.set(user.email) }
     }
 
-    override suspend fun logout(): Boolean {
+    override suspend fun logout(): Result<Boolean> = runCatchingSafe {
         appPreferences.currentUserEmailPref.reset()
-        return true
+        true
     }
 }

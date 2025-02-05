@@ -1,7 +1,3 @@
 package com.globallogic.rdkb.remotemanagement.domain.entity
 
-data class User(val username: String, val email: String) {
-    companion object {
-        val empty: User = User("", "")
-    }
-}
+data class User(val username: String, val email: String)

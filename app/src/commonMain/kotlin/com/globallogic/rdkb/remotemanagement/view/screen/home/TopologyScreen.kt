@@ -78,7 +78,7 @@ private fun TopologyContent(
         ) {
             Text(text = "Loading...")
         }
-    } else if (uiState.topologyData == RouterDeviceTopologyData.empty) {
+    } else if (uiState.topologyData == null) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
@@ -103,9 +103,9 @@ private fun TopologyContent(
                     verticalArrangement = Arrangement.Center,
                     modifier = Modifier.padding(16.dp, 8.dp),
                 ) {
-                    Text(text = "name: ${uiState.routerDevice.name}")
-                    Text(text = "ip: ${uiState.routerDevice.ip}")
-                    Text(text = "macAddress: ${uiState.routerDevice.macAddress}")
+                    Text(text = "name: ${uiState.routerDevice?.name}")
+                    Text(text = "ip: ${uiState.routerDevice?.ip}")
+                    Text(text = "macAddress: ${uiState.routerDevice?.macAddress}")
                 }
             }
             Spacer(modifier = Modifier.height(24.dp))
@@ -144,15 +144,18 @@ class TopologyViewModel(
 
     fun loadTopologyData() {
         viewModelScope.launch {
-            val routerDevice = getLocalRouterDevice()
-            val topologyData = getRouterDeviceTopologyData(routerDevice)
-            _uiState.update { it.copy(routerDevice = routerDevice, topologyData = topologyData, topologyDataLoaded = true) }
+            getLocalRouterDevice()
+                .mapCatching { routerDevice ->
+                    val topologyData = routerDevice?.let { getRouterDeviceTopologyData(it).getOrThrow() }
+                    _uiState.update { it.copy(routerDevice = routerDevice, topologyData = topologyData, topologyDataLoaded = true) }
+                }
+                .onFailure { it.printStackTrace() }
         }
     }
 }
 
 data class TopologyUiState(
-    val routerDevice: RouterDevice = RouterDevice.empty,
-    val topologyData: RouterDeviceTopologyData = RouterDeviceTopologyData.empty,
+    val routerDevice: RouterDevice? = null,
+    val topologyData: RouterDeviceTopologyData? = null,
     val topologyDataLoaded: Boolean = false,
 )

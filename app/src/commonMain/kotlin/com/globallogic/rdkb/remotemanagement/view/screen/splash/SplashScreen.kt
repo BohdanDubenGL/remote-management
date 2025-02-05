@@ -39,7 +39,7 @@ fun SplashScreen(
         loadCurrentLoggedInUser = splashViewModel::checkCurrentUser,
         onLoggedInUser = { loggedInUser ->
             when(loggedInUser) {
-                User.empty -> navController.navigate(Screen.Authentication) {
+                null -> navController.navigate(Screen.Authentication) {
                     popUpTo<Screen.RootGraph>()
                 }
                 else -> navController.navigate(Screen.HomeGraph.Topology) {
@@ -54,10 +54,10 @@ fun SplashScreen(
 private fun SplashContent(
     uiState: SplashUiState,
     loadCurrentLoggedInUser: () -> Unit,
-    onLoggedInUser: (loggedInUser: User) -> Unit
+    onLoggedInUser: (loggedInUser: User?) -> Unit
 ) {
     SideEffect {
-        if (uiState.loggedInUser != null) onLoggedInUser(uiState.loggedInUser)
+        if (uiState.userDataLoaded) onLoggedInUser(uiState.loggedInUser)
         else loadCurrentLoggedInUser()
     }
 
@@ -79,12 +79,18 @@ class SplashViewModel(
     fun checkCurrentUser() {
         viewModelScope.launch {
             delay(1.seconds.inWholeMilliseconds)
-            val loggedInUser = getCurrentLoggedInUser()
-            _uiState.update { it.copy(loggedInUser = loggedInUser) }
+            getCurrentLoggedInUser()
+                .onSuccess { loggedInUser -> _uiState.update { it.copy(loggedInUser = loggedInUser, userDataLoaded = true) } }
+                .onFailure {
+                    it.printStackTrace()
+                    _uiState.update { it.copy(userDataLoaded = true) }
+                }
+
         }
     }
 }
 
 data class SplashUiState(
-    val loggedInUser: User? = null
+    val loggedInUser: User? = null,
+    val userDataLoaded: Boolean = false,
 )

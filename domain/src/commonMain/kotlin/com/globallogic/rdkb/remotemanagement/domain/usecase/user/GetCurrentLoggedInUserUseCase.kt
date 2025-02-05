@@ -6,7 +6,7 @@ import com.globallogic.rdkb.remotemanagement.domain.repository.UserRepository
 class GetCurrentLoggedInUserUseCase(
     private val userRepository: UserRepository
 ) {
-    suspend operator fun invoke(): User = getCurrentLoggedInUser()
+    suspend operator fun invoke(): Result<User?> = getCurrentLoggedInUser()
 
-    suspend fun getCurrentLoggedInUser(): User = userRepository.currentLoggedInUser()
+    suspend fun getCurrentLoggedInUser(): Result<User?> = userRepository.currentLoggedInUser()
 }

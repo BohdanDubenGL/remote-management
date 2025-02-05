@@ -7,17 +7,17 @@ import com.globallogic.rdkb.remotemanagement.domain.entity.RouterDeviceSettings
 import com.globallogic.rdkb.remotemanagement.domain.entity.RouterDeviceTopologyData
 
 interface RouterDeviceRepository {
-    suspend fun getDeviceList(): List<RouterDevice>
+    suspend fun getDeviceList(): Result<List<RouterDevice>>
 
-    suspend fun factoryResetRouterDevice(device: RouterDevice)
-    suspend fun getRouterDeviceConnectedDevices(device: RouterDevice): List<ConnectedDevice>
-    suspend fun getRouterDeviceInfo(device: RouterDevice): RouterDeviceInfo
-    suspend fun getRouterDeviceTopologyData(device: RouterDevice): RouterDeviceTopologyData
-    suspend fun restartRouterDevice(device: RouterDevice)
-    suspend fun setupRouterDevice(device: RouterDevice, settings: RouterDeviceSettings)
-    suspend fun removeRouterDevice(device: RouterDevice)
+    suspend fun factoryResetRouterDevice(device: RouterDevice): Result<Unit>
+    suspend fun getRouterDeviceConnectedDevices(device: RouterDevice): Result<List<ConnectedDevice>>
+    suspend fun getRouterDeviceInfo(device: RouterDevice): Result<RouterDeviceInfo?>
+    suspend fun getRouterDeviceTopologyData(device: RouterDevice): Result<RouterDeviceTopologyData?>
+    suspend fun restartRouterDevice(device: RouterDevice): Result<Unit>
+    suspend fun setupRouterDevice(device: RouterDevice, settings: RouterDeviceSettings): Result<Unit>
+    suspend fun removeRouterDevice(device: RouterDevice): Result<Unit>
 
-    suspend fun selectRouterDevice(device: RouterDevice)
-    suspend fun getSelectRouterDevice(): RouterDevice
-    suspend fun getLocalRouterDevice(): RouterDevice
+    suspend fun selectRouterDevice(device: RouterDevice): Result<Unit>
+    suspend fun getSelectRouterDevice(): Result<RouterDevice?>
+    suspend fun getLocalRouterDevice(): Result<RouterDevice?>
 }

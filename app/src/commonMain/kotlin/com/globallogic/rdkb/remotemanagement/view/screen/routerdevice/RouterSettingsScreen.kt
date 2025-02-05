@@ -67,7 +67,7 @@ private fun RouterSettingsContent(
     SideEffect {
         when {
             uiState.deviceRemoved -> deviceRemoved()
-            uiState.routerDevice == RouterDevice.empty || !uiState.deviceAvailable -> loadRouterDevice()
+            uiState.routerDevice == null || !uiState.deviceAvailable -> loadRouterDevice()
         }
     }
 
@@ -113,38 +113,45 @@ class RouterSettingsViewModel(
 
     fun loadRouterDevice() {
         viewModelScope.launch {
-            val routerDevice = getSelectedRouterDevice()
-            _uiState.update { it.copy(routerDevice = routerDevice, deviceAvailable = true) }
+            getSelectedRouterDevice()
+                .onSuccess { routerDevice -> _uiState.update { it.copy(routerDevice = routerDevice, deviceAvailable = true) } }
+                .onFailure { it.printStackTrace() }
         }
     }
 
     fun restartRouterDevice() {
         viewModelScope.launch {
+            val routerDevice = _uiState.value.routerDevice ?: return@launch
             _uiState.update { it.copy(deviceAvailable = false) }
-            restartRouterDevice(_uiState.value.routerDevice)
+            restartRouterDevice(routerDevice)
+                .onFailure { it.printStackTrace() }
             _uiState.update { it.copy(deviceAvailable = true) }
         }
     }
 
     fun factoryResetRouterDevice() {
         viewModelScope.launch {
+            val routerDevice = _uiState.value.routerDevice ?: return@launch
             _uiState.update { it.copy(deviceAvailable = false) }
-            factoryResetRouterDevice(_uiState.value.routerDevice)
+            factoryResetRouterDevice(routerDevice)
+                .onFailure { it.printStackTrace() }
             _uiState.update { it.copy(deviceAvailable = true) }
         }
     }
 
     fun removeRouterDevice() {
         viewModelScope.launch {
+            val routerDevice = _uiState.value.routerDevice ?: return@launch
             _uiState.update { it.copy(deviceAvailable = false) }
-            removeRouterDevice(_uiState.value.routerDevice)
+            removeRouterDevice(routerDevice)
+                .onFailure { it.printStackTrace() }
             _uiState.update { it.copy(deviceAvailable = true, deviceRemoved = true) }
         }
     }
 }
 
 data class RouterSettingsUiState(
-    val routerDevice: RouterDevice = RouterDevice.empty,
+    val routerDevice: RouterDevice? = null,
     val deviceAvailable: Boolean = false,
     val deviceRemoved: Boolean = false,
 )

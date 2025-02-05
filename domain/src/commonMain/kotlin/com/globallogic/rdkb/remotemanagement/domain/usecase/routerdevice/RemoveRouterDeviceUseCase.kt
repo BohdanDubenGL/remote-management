@@ -6,7 +6,7 @@ import com.globallogic.rdkb.remotemanagement.domain.repository.RouterDeviceRepos
 class RemoveRouterDeviceUseCase(
     private val routerDeviceRepository: RouterDeviceRepository
 ) {
-    suspend operator fun invoke(device: RouterDevice) = removeRouterDevice(device)
+    suspend operator fun invoke(device: RouterDevice): Result<Unit> = removeRouterDevice(device)
 
-    suspend fun removeRouterDevice(device: RouterDevice) = routerDeviceRepository.removeRouterDevice(device)
+    suspend fun removeRouterDevice(device: RouterDevice): Result<Unit> = routerDeviceRepository.removeRouterDevice(device)
 }
