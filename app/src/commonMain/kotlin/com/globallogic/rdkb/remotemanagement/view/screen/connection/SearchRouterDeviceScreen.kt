@@ -147,7 +147,6 @@ class SearchRouterDeviceViewModel(
     fun searchDevices() {
         viewModelScope.launch {
             _uiState.update { SearchRouterDeviceUiState.Searching }
-            delay(3.seconds.inWholeMilliseconds) // todo: remove
             val foundDevices = searchRouterDevices()
             _uiState.update { SearchRouterDeviceUiState.FoundDevices(foundRouterDevices = foundDevices) }
         }
@@ -156,7 +155,6 @@ class SearchRouterDeviceViewModel(
     fun connectToDevice(foundRouterDevice: FoundRouterDevice) {
         viewModelScope.launch {
             _uiState.update { SearchRouterDeviceUiState.Connecting(foundRouterDevice = foundRouterDevice) }
-            delay(2.seconds.inWholeMilliseconds) // todo: remove
             val routerDevice = connectToRouterDevice(foundRouterDevice)
             _uiState.update { SearchRouterDeviceUiState.Connected(routerDevice = routerDevice) }
         }

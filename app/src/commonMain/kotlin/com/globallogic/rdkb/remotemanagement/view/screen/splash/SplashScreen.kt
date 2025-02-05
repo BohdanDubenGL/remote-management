@@ -78,7 +78,7 @@ class SplashViewModel(
 
     fun checkCurrentUser() {
         viewModelScope.launch {
-            delay(1.seconds.inWholeMilliseconds) // todo: remove
+            delay(1.seconds.inWholeMilliseconds)
             val loggedInUser = getCurrentLoggedInUser()
             _uiState.update { it.copy(loggedInUser = loggedInUser) }
         }

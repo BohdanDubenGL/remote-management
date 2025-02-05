@@ -9,6 +9,7 @@ interface UserRepository {
     suspend fun currentLoggedInUser(): User
     suspend fun changeAccountSettings(settingsData: ChangeAccountSettingsData): User
 
+    suspend fun isEmailUsed(email: String): Boolean
     suspend fun register(registrationData: RegistrationData): User
     suspend fun login(loginData: LoginData): User
     suspend fun logout(): Boolean

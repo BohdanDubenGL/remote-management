@@ -13,5 +13,5 @@ import org.koin.dsl.module
 
 actual val platformDataModule: Module = module {
     single { createDataStore(dataStoreFileName) }.bind<DataStore<Preferences>>()
-    single { createRoomDatabase(createDatabaseBuilder<AppDatabase>("app.db")) }.bind<AppDatabase>()
+    single { createRoomDatabase(createDatabaseBuilder<AppDatabase>(AppDatabase.fileName)) }.bind<AppDatabase>()
 }

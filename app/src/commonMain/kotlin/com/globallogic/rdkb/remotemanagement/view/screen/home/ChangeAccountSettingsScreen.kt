@@ -124,7 +124,6 @@ class ChangeAccountSettingsViewModel(
 
     fun loadCurrentUserData() {
         viewModelScope.launch {
-            delay(1.seconds.inWholeMilliseconds) // todo: remove
             val currentUser = getCurrentLoggedInUser()
             _uiState.update { it.copy(email = currentUser.email, userDataLoaded = true) }
         }

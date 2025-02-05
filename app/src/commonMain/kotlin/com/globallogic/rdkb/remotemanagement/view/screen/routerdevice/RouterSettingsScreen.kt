@@ -24,6 +24,7 @@ import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.GetSele
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.RemoveRouterDeviceUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.RestartRouterDeviceUseCase
 import com.globallogic.rdkb.remotemanagement.view.LocalNavController
+import com.globallogic.rdkb.remotemanagement.view.Screen
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -46,6 +47,11 @@ fun RouterSettingsScreen(
         restartDevice = routerSettingsViewModel::restartRouterDevice,
         factoryResetDevice = routerSettingsViewModel::factoryResetRouterDevice,
         removeDevice = routerSettingsViewModel::removeRouterDevice,
+        deviceRemoved = {
+            navController.navigate(Screen.HomeGraph.Topology) {
+                popUpTo<Screen.RootGraph>()
+            }
+        }
     )
 }
 
@@ -56,10 +62,12 @@ private fun RouterSettingsContent(
     restartDevice: () -> Unit,
     factoryResetDevice: () -> Unit,
     removeDevice: () -> Unit,
+    deviceRemoved: () -> Unit,
 ) {
     SideEffect {
-        if (uiState.routerDevice == RouterDevice.empty || !uiState.deviceAvailable) {
-            loadRouterDevice()
+        when {
+            uiState.deviceRemoved -> deviceRemoved()
+            uiState.routerDevice == RouterDevice.empty || !uiState.deviceAvailable -> loadRouterDevice()
         }
     }
 
@@ -105,7 +113,6 @@ class RouterSettingsViewModel(
 
     fun loadRouterDevice() {
         viewModelScope.launch {
-            delay(2.seconds.inWholeMilliseconds) // todo: remove
             val routerDevice = getSelectedRouterDevice()
             _uiState.update { it.copy(routerDevice = routerDevice, deviceAvailable = true) }
         }
@@ -115,7 +122,6 @@ class RouterSettingsViewModel(
         viewModelScope.launch {
             _uiState.update { it.copy(deviceAvailable = false) }
             restartRouterDevice(_uiState.value.routerDevice)
-            delay(2.seconds.inWholeMilliseconds) // todo: remove
             _uiState.update { it.copy(deviceAvailable = true) }
         }
     }
@@ -124,7 +130,6 @@ class RouterSettingsViewModel(
         viewModelScope.launch {
             _uiState.update { it.copy(deviceAvailable = false) }
             factoryResetRouterDevice(_uiState.value.routerDevice)
-            delay(2.seconds.inWholeMilliseconds) // todo: remove
             _uiState.update { it.copy(deviceAvailable = true) }
         }
     }
@@ -133,8 +138,7 @@ class RouterSettingsViewModel(
         viewModelScope.launch {
             _uiState.update { it.copy(deviceAvailable = false) }
             removeRouterDevice(_uiState.value.routerDevice)
-            delay(2.seconds.inWholeMilliseconds) // todo: remove
-            _uiState.update { it.copy(deviceAvailable = true) }
+            _uiState.update { it.copy(deviceAvailable = true, deviceRemoved = true) }
         }
     }
 }
@@ -142,4 +146,5 @@ class RouterSettingsViewModel(
 data class RouterSettingsUiState(
     val routerDevice: RouterDevice = RouterDevice.empty,
     val deviceAvailable: Boolean = false,
+    val deviceRemoved: Boolean = false,
 )

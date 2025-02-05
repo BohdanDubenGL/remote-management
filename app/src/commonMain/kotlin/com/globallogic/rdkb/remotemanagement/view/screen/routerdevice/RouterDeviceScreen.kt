@@ -24,7 +24,6 @@ import androidx.navigation.NavController
 import com.globallogic.rdkb.remotemanagement.domain.entity.RouterDevice
 import com.globallogic.rdkb.remotemanagement.domain.entity.RouterDeviceInfo
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.GetRouterDeviceInfoUseCase
-import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.GetRouterDeviceUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.GetSelectedRouterDeviceUseCase
 import com.globallogic.rdkb.remotemanagement.view.LocalNavController
 import kotlinx.coroutines.delay

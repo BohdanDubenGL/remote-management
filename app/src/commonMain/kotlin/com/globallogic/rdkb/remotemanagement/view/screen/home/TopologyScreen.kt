@@ -61,7 +61,7 @@ private fun TopologyContent(
     searchRouterDevices: () -> Unit,
 ) {
     SideEffect {
-        if (!uiState.topologyDataLoaded) loadTopologyData()
+        loadTopologyData()
     }
     SetupFloatingActionButton(
         floatingActionButtonState = FloatingActionButtonState.Shown(
@@ -144,7 +144,6 @@ class TopologyViewModel(
 
     fun loadTopologyData() {
         viewModelScope.launch {
-            delay(2.seconds.inWholeMilliseconds) // todo: remove
             val routerDevice = getLocalRouterDevice()
             val topologyData = getRouterDeviceTopologyData(routerDevice)
             _uiState.update { it.copy(routerDevice = routerDevice, topologyData = topologyData, topologyDataLoaded = true) }

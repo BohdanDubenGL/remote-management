@@ -19,6 +19,7 @@ import androidx.navigation.NavController
 import com.globallogic.rdkb.remotemanagement.domain.entity.LoginData
 import com.globallogic.rdkb.remotemanagement.domain.entity.RegistrationData
 import com.globallogic.rdkb.remotemanagement.domain.entity.User
+import com.globallogic.rdkb.remotemanagement.domain.usecase.user.IsEmailUsedUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.user.LoginUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.user.RegistrationUseCase
 import com.globallogic.rdkb.remotemanagement.view.LocalNavController
@@ -110,7 +111,8 @@ private fun AuthenticationContent(
 
 class AuthenticationViewModel(
     private val login: LoginUseCase,
-    private val registration: RegistrationUseCase
+    private val registration: RegistrationUseCase,
+    private val isEmailUsed: IsEmailUsedUseCase,
 ) : ViewModel() {
     private val _uiState: MutableStateFlow<AuthenticationUiState> = MutableStateFlow(AuthenticationUiState())
     val uiState: StateFlow<AuthenticationUiState> get() = _uiState.asStateFlow()
@@ -128,11 +130,13 @@ class AuthenticationViewModel(
     }
 
     fun onEnterClick() {
-        val email = _uiState.value.email
-        val userExists = email == "user@user.com"
-        when {
-            userExists -> _uiState.update { it.copy(isEmailEditable = false, showPasswordInput = true) }
-            else -> _uiState.update { it.copy(isEmailEditable = false, showPasswordInput = true, showConfirmPasswordInput = true, isRegistering = true) }
+        viewModelScope.launch {
+            val email = _uiState.value.email
+            val userExists = isEmailUsed(email)
+            when {
+                userExists -> _uiState.update { it.copy(isEmailEditable = false, showPasswordInput = true) }
+                else -> _uiState.update { it.copy(isEmailEditable = false, showPasswordInput = true, showConfirmPasswordInput = true, isRegistering = true) }
+            }
         }
     }
 
