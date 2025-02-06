@@ -25,7 +25,7 @@ fun AppTheme(
     dynamicColor: Boolean = true,
     content: @Composable () -> Unit,
 ) {
-    val colorScheme = ::mediumContrastColorScheme
+    val colorScheme = ::colorScheme
     val colors = when {
         dynamicColor -> dynamicColorScheme(darkTheme) ?: colorScheme(darkTheme)
         else -> colorScheme(darkTheme)

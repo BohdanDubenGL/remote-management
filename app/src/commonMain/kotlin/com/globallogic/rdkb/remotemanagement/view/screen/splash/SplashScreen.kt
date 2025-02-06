@@ -3,12 +3,14 @@ package com.globallogic.rdkb.remotemanagement.view.screen.splash
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.Text
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
@@ -22,10 +24,10 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import org.jetbrains.compose.resources.stringResource
+import org.jetbrains.compose.resources.painterResource
 import org.koin.compose.viewmodel.koinViewModel
 import rdkbremotemanagement.app.generated.resources.Res
-import rdkbremotemanagement.app.generated.resources.app_name
+import rdkbremotemanagement.app.generated.resources.app_logo
 import kotlin.time.Duration.Companion.seconds
 
 @Composable
@@ -64,9 +66,13 @@ private fun SplashContent(
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier.fillMaxSize().padding(50.dp)
     ) {
-        Text(text = stringResource(Res.string.app_name))
+        Icon(
+            painterResource(Res.drawable.app_logo),
+            "Remote Management",
+            modifier = Modifier.fillMaxSize()
+        )
     }
 }
 

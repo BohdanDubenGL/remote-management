@@ -8,7 +8,6 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
-import com.globallogic.rdkb.remotemanagement.view.theme.AppTheme
 import com.globallogic.rdkb.remotemanagement.view.component.AppBottomNavigation
 import com.globallogic.rdkb.remotemanagement.view.component.AppFloatingActionButton
 import com.globallogic.rdkb.remotemanagement.view.component.AppTopBar
@@ -17,12 +16,14 @@ import com.globallogic.rdkb.remotemanagement.view.navigation.LocalNavController
 import com.globallogic.rdkb.remotemanagement.view.navigation.LocalScaffoldController
 import com.globallogic.rdkb.remotemanagement.view.navigation.appScaffoldController
 import com.globallogic.rdkb.remotemanagement.view.navigation.rememberApplicationNavGraph
+import com.globallogic.rdkb.remotemanagement.view.theme.AppTheme
 import org.koin.compose.KoinContext
 
 @Composable
 fun App() {
     AppTheme(
-        dynamicColor = false
+        dynamicColor = false,
+        darkTheme = true,
     ) {
         KoinContext {
             val scaffoldController = appScaffoldController()
