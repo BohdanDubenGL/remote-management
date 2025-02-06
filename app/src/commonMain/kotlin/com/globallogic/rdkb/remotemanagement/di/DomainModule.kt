@@ -7,7 +7,6 @@ import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.Factory
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.GetLocalRouterDeviceUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.GetRouterDeviceConnectedDevicesUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.GetRouterDeviceInfoUseCase
-import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.GetRouterDeviceUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.GetRouterDeviceTopologyDataUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.GetSelectedRouterDeviceUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.RemoveRouterDeviceUseCase
@@ -20,6 +19,7 @@ import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdeviceconnecti
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdeviceconnection.SearchRouterDevicesUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.user.ChangeAccountSettingsUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.user.GetCurrentLoggedInUserUseCase
+import com.globallogic.rdkb.remotemanagement.domain.usecase.user.IsEmailUsedUseCase
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.factoryOf
 import org.koin.dsl.module
@@ -27,6 +27,7 @@ import org.koin.dsl.module
 val domainModule: Module = module {
     factoryOf(::LoginUseCase)
     factoryOf(::RegistrationUseCase)
+    factoryOf(::IsEmailUsedUseCase)
     factoryOf(::LogoutUseCase)
     factoryOf(::GetCurrentLoggedInUserUseCase)
     factoryOf(::ChangeAccountSettingsUseCase)
@@ -35,7 +36,6 @@ val domainModule: Module = module {
     factoryOf(::FactoryResetRouterDeviceUseCase)
     factoryOf(::GetRouterDeviceConnectedDevicesUseCase)
     factoryOf(::GetRouterDeviceInfoUseCase)
-    factoryOf(::GetRouterDeviceUseCase)
     factoryOf(::GetRouterDeviceTopologyDataUseCase)
     factoryOf(::RestartRouterDeviceUseCase)
     factoryOf(::SetupRouterDeviceUseCase)

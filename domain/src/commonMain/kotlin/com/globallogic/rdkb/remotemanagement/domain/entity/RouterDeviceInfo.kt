@@ -5,6 +5,7 @@ data class RouterDeviceInfo(
     val connectedExtender: Int,
     val modelName: String,
     val ipAddress: String,
+    val macAddress: String,
     val firmwareVersion: String,
     val serialNumber: String,
     val processorLoadPercent: Int,
@@ -12,8 +13,4 @@ data class RouterDeviceInfo(
     val totalDownloadTraffic: Long,
     val totalUploadTraffic: Long,
     val availableBands: Set<String>,
-) {
-    companion object {
-        val empty: RouterDeviceInfo = RouterDeviceInfo(true, 0, "", "", "", "", 0, 0, 0L, 0L, emptySet())
-    }
-}
+)

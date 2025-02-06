@@ -1,5 +1,10 @@
 package com.globallogic.rdkb.remotemanagement.view.component
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -15,10 +20,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
-import com.globallogic.rdkb.remotemanagement.view.LocalNavController
-import com.globallogic.rdkb.remotemanagement.view.LocalScaffoldController
-import com.globallogic.rdkb.remotemanagement.view.ScaffoldController
-import com.globallogic.rdkb.remotemanagement.view.getRouteTitle
+import com.globallogic.rdkb.remotemanagement.view.navigation.LocalNavController
+import com.globallogic.rdkb.remotemanagement.view.navigation.LocalScaffoldController
+import com.globallogic.rdkb.remotemanagement.view.navigation.ScaffoldController
+import com.globallogic.rdkb.remotemanagement.view.navigation.getRouteTitle
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 
@@ -46,10 +51,14 @@ fun AppTopBar(
     titleRes: StringResource?,
     navigateUpAction: (() -> Unit)? = null,
 ) {
-    if (titleRes != null) {
+    AnimatedVisibility(
+        visible = titleRes != null,
+        enter = fadeIn() + expandVertically(),
+        exit = fadeOut() + shrinkVertically(),
+    ) {
         CenterAlignedTopAppBar(
             title = {
-                Text(text = stringResource(titleRes))
+                if (titleRes != null) Text(text = stringResource(titleRes))
             },
             navigationIcon = {
                 if (navigateUpAction != null) {

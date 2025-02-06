@@ -6,7 +6,7 @@ import com.globallogic.rdkb.remotemanagement.domain.repository.RouterDeviceConne
 class AddRouterDeviceManuallyUseCase(
     private val routerDeviceConnectionRepository: RouterDeviceConnectionRepository
 ) {
-    suspend operator fun invoke(macAddress: String): RouterDevice = addRouterDeviceManually(macAddress)
+    suspend operator fun invoke(macAddress: String): Result<RouterDevice?> = addRouterDeviceManually(macAddress)
 
-    suspend fun addRouterDeviceManually(macAddress: String): RouterDevice = routerDeviceConnectionRepository.addRouterDeviceManually(macAddress)
+    suspend fun addRouterDeviceManually(macAddress: String): Result<RouterDevice?> = routerDeviceConnectionRepository.addRouterDeviceManually(macAddress)
 }

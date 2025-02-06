@@ -1,0 +1,33 @@
+package com.globallogic.rdkb.remotemanagement.data.datasource.impl
+
+import com.globallogic.rdkb.remotemanagement.data.datasource.RemoteRouterDeviceDataSource
+import com.globallogic.rdkb.remotemanagement.data.network.service.RdkCentralApiService
+import com.globallogic.rdkb.remotemanagement.domain.entity.ConnectedDevice
+import com.globallogic.rdkb.remotemanagement.domain.entity.RouterDevice
+import com.globallogic.rdkb.remotemanagement.domain.entity.RouterDeviceInfo
+import com.globallogic.rdkb.remotemanagement.domain.entity.RouterDeviceSettings
+import com.globallogic.rdkb.remotemanagement.domain.utils.runCatchingSafe
+
+class RemoteRouterDeviceDataSourceImpl(
+    private val centralApiService: RdkCentralApiService
+) : RemoteRouterDeviceDataSource {
+    override suspend fun loadRouterDeviceInfo(device: RouterDevice): Result<RouterDeviceInfo> {
+        error("No device info")
+    }
+
+    override suspend fun loadConnectedDevicesForRouterDevice(device: RouterDevice): Result<List<ConnectedDevice>> {
+        return Result.success(emptyList())
+    }
+
+    override suspend fun factoryResetDevice(device: RouterDevice): Result<Unit> = runCatchingSafe {
+
+    }
+
+    override suspend fun restartDevice(device: RouterDevice): Result<Unit> = runCatchingSafe {
+
+    }
+
+    override suspend fun setupDevice(device: RouterDevice, settings: RouterDeviceSettings): Result<Unit> = runCatchingSafe {
+
+    }
+}

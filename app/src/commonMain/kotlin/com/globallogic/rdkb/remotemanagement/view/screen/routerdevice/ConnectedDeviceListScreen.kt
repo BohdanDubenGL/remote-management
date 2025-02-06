@@ -24,7 +24,8 @@ import androidx.navigation.NavController
 import com.globallogic.rdkb.remotemanagement.domain.entity.ConnectedDevice
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.GetRouterDeviceConnectedDevicesUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.GetSelectedRouterDeviceUseCase
-import com.globallogic.rdkb.remotemanagement.view.LocalNavController
+import com.globallogic.rdkb.remotemanagement.domain.utils.runCatchingSafe
+import com.globallogic.rdkb.remotemanagement.view.navigation.LocalNavController
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -90,9 +91,12 @@ class ConnectedDeviceListViewModel(
 
     fun loadConnectedDevices() {
         viewModelScope.launch {
-            val routerDevice = getSelectedRouterDevice()
-            val connectedDevices = getRouterDeviceConnectedDevices(routerDevice)
-            _uiState.update { it.copy(connectedDevices = connectedDevices) }
+            runCatchingSafe {
+                val routerDevice = getSelectedRouterDevice().getOrThrow() ?: return@runCatchingSafe
+                val connectedDevices = getRouterDeviceConnectedDevices(routerDevice).getOrThrow()
+                _uiState.update { it.copy(connectedDevices = connectedDevices) }
+            }
+                .onFailure { it.printStackTrace() }
         }
     }
 }

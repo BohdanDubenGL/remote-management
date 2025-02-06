@@ -3,29 +3,31 @@ package com.globallogic.rdkb.remotemanagement.view.screen.splash
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.Text
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import com.globallogic.rdkb.remotemanagement.domain.entity.User
 import com.globallogic.rdkb.remotemanagement.domain.usecase.user.GetCurrentLoggedInUserUseCase
-import com.globallogic.rdkb.remotemanagement.view.LocalNavController
-import com.globallogic.rdkb.remotemanagement.view.Screen
+import com.globallogic.rdkb.remotemanagement.view.navigation.LocalNavController
+import com.globallogic.rdkb.remotemanagement.view.navigation.Screen
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import org.jetbrains.compose.resources.stringResource
+import org.jetbrains.compose.resources.painterResource
 import org.koin.compose.viewmodel.koinViewModel
 import rdkbremotemanagement.app.generated.resources.Res
-import rdkbremotemanagement.app.generated.resources.app_name
+import rdkbremotemanagement.app.generated.resources.app_logo
 import kotlin.time.Duration.Companion.seconds
 
 @Composable
@@ -39,7 +41,7 @@ fun SplashScreen(
         loadCurrentLoggedInUser = splashViewModel::checkCurrentUser,
         onLoggedInUser = { loggedInUser ->
             when(loggedInUser) {
-                User.empty -> navController.navigate(Screen.Authentication) {
+                null -> navController.navigate(Screen.Authentication) {
                     popUpTo<Screen.RootGraph>()
                 }
                 else -> navController.navigate(Screen.HomeGraph.Topology) {
@@ -54,19 +56,23 @@ fun SplashScreen(
 private fun SplashContent(
     uiState: SplashUiState,
     loadCurrentLoggedInUser: () -> Unit,
-    onLoggedInUser: (loggedInUser: User) -> Unit
+    onLoggedInUser: (loggedInUser: User?) -> Unit
 ) {
     SideEffect {
-        if (uiState.loggedInUser != null) onLoggedInUser(uiState.loggedInUser)
+        if (uiState.userDataLoaded) onLoggedInUser(uiState.loggedInUser)
         else loadCurrentLoggedInUser()
     }
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier.fillMaxSize().padding(50.dp)
     ) {
-        Text(text = stringResource(Res.string.app_name))
+        Icon(
+            painterResource(Res.drawable.app_logo),
+            "Remote Management",
+            modifier = Modifier.fillMaxSize()
+        )
     }
 }
 
@@ -78,13 +84,19 @@ class SplashViewModel(
 
     fun checkCurrentUser() {
         viewModelScope.launch {
-            delay(1.seconds.inWholeMilliseconds) // todo: remove
-            val loggedInUser = getCurrentLoggedInUser()
-            _uiState.update { it.copy(loggedInUser = loggedInUser) }
+            delay(1.seconds.inWholeMilliseconds)
+            getCurrentLoggedInUser()
+                .onSuccess { loggedInUser -> _uiState.update { it.copy(loggedInUser = loggedInUser, userDataLoaded = true) } }
+                .onFailure {
+                    it.printStackTrace()
+                    _uiState.update { it.copy(userDataLoaded = true) }
+                }
+
         }
     }
 }
 
 data class SplashUiState(
-    val loggedInUser: User? = null
+    val loggedInUser: User? = null,
+    val userDataLoaded: Boolean = false,
 )

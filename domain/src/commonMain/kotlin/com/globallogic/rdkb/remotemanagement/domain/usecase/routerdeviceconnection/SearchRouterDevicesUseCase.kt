@@ -6,7 +6,7 @@ import com.globallogic.rdkb.remotemanagement.domain.repository.RouterDeviceConne
 class SearchRouterDevicesUseCase(
     private val routerDeviceConnectionRepository: RouterDeviceConnectionRepository
 ) {
-    suspend operator fun invoke(): List<FoundRouterDevice> = searchRouterDevices()
+    suspend operator fun invoke(): Result<List<FoundRouterDevice>> = searchRouterDevices()
 
-    suspend fun searchRouterDevices(): List<FoundRouterDevice> = routerDeviceConnectionRepository.searchRouterDevices()
+    suspend fun searchRouterDevices(): Result<List<FoundRouterDevice>> = routerDeviceConnectionRepository.searchRouterDevices()
 }

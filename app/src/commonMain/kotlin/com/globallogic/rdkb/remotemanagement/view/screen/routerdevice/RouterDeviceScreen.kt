@@ -24,9 +24,9 @@ import androidx.navigation.NavController
 import com.globallogic.rdkb.remotemanagement.domain.entity.RouterDevice
 import com.globallogic.rdkb.remotemanagement.domain.entity.RouterDeviceInfo
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.GetRouterDeviceInfoUseCase
-import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.GetRouterDeviceUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.GetSelectedRouterDeviceUseCase
-import com.globallogic.rdkb.remotemanagement.view.LocalNavController
+import com.globallogic.rdkb.remotemanagement.domain.utils.runCatchingSafe
+import com.globallogic.rdkb.remotemanagement.view.navigation.LocalNavController
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -73,18 +73,18 @@ private fun RouterDeviceContent(
                         .padding(16.dp, 16.dp)
                         .verticalScroll(rememberScrollState())
                 ) {
-                    Text("name: " + uiState.routerDevice.name)
-                    Text("ip: " + uiState.routerDevice.ip)
-                    Text("macAddress: " + uiState.routerDevice.macAddress)
-                    Text("lanConnected: " + uiState.routerDeviceInfo.lanConnected)
-                    Text("connectedExtender: " + uiState.routerDeviceInfo.connectedExtender)
-                    Text("modelName: " + uiState.routerDeviceInfo.modelName)
-                    Text("firmwareVersion: " + uiState.routerDeviceInfo.firmwareVersion)
-                    Text("processorLoadPercent: " + uiState.routerDeviceInfo.processorLoadPercent)
-                    Text("memoryUsagePercent: " + uiState.routerDeviceInfo.memoryUsagePercent)
-                    Text("totalDownloadTraffic: " + uiState.routerDeviceInfo.totalDownloadTraffic)
-                    Text("totalUploadTraffic: " + uiState.routerDeviceInfo.totalUploadTraffic)
-                    Text("availableBands: " + uiState.routerDeviceInfo.availableBands)
+                    Text("name: " + uiState.routerDevice?.name)
+                    Text("ip: " + uiState.routerDevice?.ip)
+                    Text("macAddress: " + uiState.routerDevice?.macAddress)
+                    Text("lanConnected: " + uiState.routerDeviceInfo?.lanConnected)
+                    Text("connectedExtender: " + uiState.routerDeviceInfo?.connectedExtender)
+                    Text("modelName: " + uiState.routerDeviceInfo?.modelName)
+                    Text("firmwareVersion: " + uiState.routerDeviceInfo?.firmwareVersion)
+                    Text("processorLoadPercent: " + uiState.routerDeviceInfo?.processorLoadPercent)
+                    Text("memoryUsagePercent: " + uiState.routerDeviceInfo?.memoryUsagePercent)
+                    Text("totalDownloadTraffic: " + uiState.routerDeviceInfo?.totalDownloadTraffic)
+                    Text("totalUploadTraffic: " + uiState.routerDeviceInfo?.totalUploadTraffic)
+                    Text("availableBands: " + uiState.routerDeviceInfo?.availableBands)
                 }
             }
         }
@@ -109,15 +109,18 @@ class RouterDeviceViewModel(
     fun loadSelectedRouterDeviceInfo() {
         viewModelScope.launch {
             delay(1.seconds.inWholeMilliseconds)
-            val routerDevice = getSelectedRouterDevice()
-            val routerDeviceInfo = getRouterDeviceInfo(routerDevice)
-            _uiState.update { it.copy(routerDevice = routerDevice, routerDeviceInfo = routerDeviceInfo, routerDeviceInfoLoaded = true) }
+            runCatchingSafe {
+                val routerDevice = getSelectedRouterDevice().getOrThrow() ?: return@runCatchingSafe
+                val routerDeviceInfo = getRouterDeviceInfo(routerDevice).getOrThrow()
+                _uiState.update { it.copy(routerDevice = routerDevice, routerDeviceInfo = routerDeviceInfo, routerDeviceInfoLoaded = true) }
+            }
+                .onFailure { it.printStackTrace() }
         }
     }
 }
 
 data class RouterDeviceUiState(
     val routerDeviceInfoLoaded: Boolean = false,
-    val routerDevice: RouterDevice = RouterDevice.empty,
-    val routerDeviceInfo: RouterDeviceInfo = RouterDeviceInfo.empty,
+    val routerDevice: RouterDevice? = null,
+    val routerDeviceInfo: RouterDeviceInfo? = null,
 )

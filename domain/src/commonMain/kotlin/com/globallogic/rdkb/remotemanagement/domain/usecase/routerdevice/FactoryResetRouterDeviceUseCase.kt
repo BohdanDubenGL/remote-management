@@ -6,7 +6,7 @@ import com.globallogic.rdkb.remotemanagement.domain.repository.RouterDeviceRepos
 class FactoryResetRouterDeviceUseCase(
     private val routerDeviceRepository: RouterDeviceRepository
 ) {
-    suspend operator fun invoke(device: RouterDevice): Unit = factoryResetRouterDevice(device)
+    suspend operator fun invoke(device: RouterDevice): Result<Unit> = factoryResetRouterDevice(device)
 
-    suspend fun factoryResetRouterDevice(device: RouterDevice): Unit = routerDeviceRepository.factoryResetRouterDevice(device)
+    suspend fun factoryResetRouterDevice(device: RouterDevice): Result<Unit> = routerDeviceRepository.factoryResetRouterDevice(device)
 }

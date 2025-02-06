@@ -8,10 +8,10 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.lifecycle.compose.LifecycleStartEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.currentBackStackEntryAsState
-import com.globallogic.rdkb.remotemanagement.view.FloatingActionButtonState
-import com.globallogic.rdkb.remotemanagement.view.LocalNavController
-import com.globallogic.rdkb.remotemanagement.view.LocalScaffoldController
-import com.globallogic.rdkb.remotemanagement.view.ScaffoldController
+import com.globallogic.rdkb.remotemanagement.view.navigation.FloatingActionButtonState
+import com.globallogic.rdkb.remotemanagement.view.navigation.LocalNavController
+import com.globallogic.rdkb.remotemanagement.view.navigation.LocalScaffoldController
+import com.globallogic.rdkb.remotemanagement.view.navigation.ScaffoldController
 
 @Composable
 fun AppFloatingActionButton(

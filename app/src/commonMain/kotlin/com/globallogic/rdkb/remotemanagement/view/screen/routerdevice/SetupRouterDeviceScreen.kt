@@ -33,8 +33,9 @@ import com.globallogic.rdkb.remotemanagement.domain.entity.RouterDeviceSettings
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.GetRouterDeviceInfoUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.GetSelectedRouterDeviceUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.SetupRouterDeviceUseCase
-import com.globallogic.rdkb.remotemanagement.view.LocalNavController
-import com.globallogic.rdkb.remotemanagement.view.Screen
+import com.globallogic.rdkb.remotemanagement.domain.utils.runCatchingSafe
+import com.globallogic.rdkb.remotemanagement.view.navigation.LocalNavController
+import com.globallogic.rdkb.remotemanagement.view.navigation.Screen
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -73,7 +74,7 @@ private fun SetupRouterDeviceContent(
 ) {
     SideEffect {
         if (uiState.dataSaved) onDataSaved()
-        else if (uiState.routerDevice == RouterDevice.empty) loadRouterDevice()
+        else if (uiState.routerDevice == null) loadRouterDevice()
     }
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -168,26 +169,31 @@ class SetupRouterDeviceViewModel(
 
     fun loadRouterDevice() {
         viewModelScope.launch {
-            val routerDevice = getSelectedRouterDevice()
-            val routerDeviceInfo = getRouterDeviceInfo(routerDevice)
-            _uiState.update { it.copy(
-                routerDevice = routerDevice,
-                bandsSettings = routerDeviceInfo.availableBands.map { BandSettings(it, "", "", false) }
-            ) }
+            runCatchingSafe {
+                val routerDevice = getSelectedRouterDevice().getOrThrow() ?: return@runCatchingSafe
+                val routerDeviceInfo = getRouterDeviceInfo(routerDevice).getOrThrow()
+                _uiState.update { it.copy(
+                    routerDevice = routerDevice,
+                    bandsSettings = routerDeviceInfo?.availableBands?.map { BandSettings(it, "", "", false) }.orEmpty()
+                ) }
+            }
+                .onFailure { it.printStackTrace() }
         }
     }
 
     fun saveData() {
         viewModelScope.launch {
             val state = _uiState.value
-            setupRouterDevice(state.routerDevice, RouterDeviceSettings(state.bandsSettings))
+            val routerDevice = state.routerDevice ?: return@launch
+            setupRouterDevice(routerDevice, RouterDeviceSettings(state.bandsSettings))
+                .onFailure { it.printStackTrace() }
             _uiState.update { it.copy(dataSaved = true) }
         }
     }
 }
 
 data class SetupRouterDeviceUiState(
-    val routerDevice: RouterDevice = RouterDevice.empty,
+    val routerDevice: RouterDevice? = null,
     val bandsSettings: List<BandSettings> = emptyList(),
     val dataSaved: Boolean = false,
 )

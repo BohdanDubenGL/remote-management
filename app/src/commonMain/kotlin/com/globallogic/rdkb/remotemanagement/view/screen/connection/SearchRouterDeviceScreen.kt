@@ -28,18 +28,16 @@ import com.globallogic.rdkb.remotemanagement.domain.entity.FoundRouterDevice
 import com.globallogic.rdkb.remotemanagement.domain.entity.RouterDevice
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdeviceconnection.ConnectToRouterDeviceUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdeviceconnection.SearchRouterDevicesUseCase
-import com.globallogic.rdkb.remotemanagement.view.FloatingActionButtonState
-import com.globallogic.rdkb.remotemanagement.view.LocalNavController
-import com.globallogic.rdkb.remotemanagement.view.Screen
+import com.globallogic.rdkb.remotemanagement.view.navigation.FloatingActionButtonState
+import com.globallogic.rdkb.remotemanagement.view.navigation.LocalNavController
+import com.globallogic.rdkb.remotemanagement.view.navigation.Screen
 import com.globallogic.rdkb.remotemanagement.view.component.SetupFloatingActionButton
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.koin.compose.viewmodel.koinViewModel
-import kotlin.time.Duration.Companion.seconds
 
 @Composable
 fun SearchRouterDeviceScreen(
@@ -147,18 +145,19 @@ class SearchRouterDeviceViewModel(
     fun searchDevices() {
         viewModelScope.launch {
             _uiState.update { SearchRouterDeviceUiState.Searching }
-            delay(3.seconds.inWholeMilliseconds) // todo: remove
-            val foundDevices = searchRouterDevices()
-            _uiState.update { SearchRouterDeviceUiState.FoundDevices(foundRouterDevices = foundDevices) }
+            searchRouterDevices()
+                .onSuccess { foundDevices -> _uiState.update { SearchRouterDeviceUiState.FoundDevices(foundRouterDevices = foundDevices) } }
+                .onFailure { it.printStackTrace() }
         }
     }
 
     fun connectToDevice(foundRouterDevice: FoundRouterDevice) {
         viewModelScope.launch {
             _uiState.update { SearchRouterDeviceUiState.Connecting(foundRouterDevice = foundRouterDevice) }
-            delay(2.seconds.inWholeMilliseconds) // todo: remove
-            val routerDevice = connectToRouterDevice(foundRouterDevice)
-            _uiState.update { SearchRouterDeviceUiState.Connected(routerDevice = routerDevice) }
+            connectToRouterDevice(foundRouterDevice)
+                .onSuccess { routerDevice -> _uiState.update { SearchRouterDeviceUiState.Connected(routerDevice = routerDevice) } }
+                .onFailure { it.printStackTrace() }
+
         }
     }
 }
