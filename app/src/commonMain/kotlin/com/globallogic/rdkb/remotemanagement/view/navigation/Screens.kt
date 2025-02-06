@@ -1,4 +1,4 @@
-package com.globallogic.rdkb.remotemanagement.view
+package com.globallogic.rdkb.remotemanagement.view.navigation
 
 import kotlinx.serialization.Serializable
 import org.jetbrains.compose.resources.StringResource

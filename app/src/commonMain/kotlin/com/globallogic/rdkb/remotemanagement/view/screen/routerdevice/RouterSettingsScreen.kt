@@ -23,16 +23,14 @@ import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.Factory
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.GetSelectedRouterDeviceUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.RemoveRouterDeviceUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.RestartRouterDeviceUseCase
-import com.globallogic.rdkb.remotemanagement.view.LocalNavController
-import com.globallogic.rdkb.remotemanagement.view.Screen
-import kotlinx.coroutines.delay
+import com.globallogic.rdkb.remotemanagement.view.navigation.LocalNavController
+import com.globallogic.rdkb.remotemanagement.view.navigation.Screen
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.koin.compose.viewmodel.koinViewModel
-import kotlin.time.Duration.Companion.seconds
 
 @Composable
 fun RouterSettingsScreen(

@@ -22,8 +22,8 @@ import com.globallogic.rdkb.remotemanagement.domain.entity.User
 import com.globallogic.rdkb.remotemanagement.domain.usecase.user.IsEmailUsedUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.user.LoginUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.user.RegistrationUseCase
-import com.globallogic.rdkb.remotemanagement.view.LocalNavController
-import com.globallogic.rdkb.remotemanagement.view.Screen
+import com.globallogic.rdkb.remotemanagement.view.navigation.LocalNavController
+import com.globallogic.rdkb.remotemanagement.view.navigation.Screen
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow

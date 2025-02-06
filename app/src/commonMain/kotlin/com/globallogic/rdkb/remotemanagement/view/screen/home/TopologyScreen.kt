@@ -27,9 +27,9 @@ import com.globallogic.rdkb.remotemanagement.domain.entity.RouterDevice
 import com.globallogic.rdkb.remotemanagement.domain.entity.RouterDeviceTopologyData
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.GetLocalRouterDeviceUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.GetRouterDeviceTopologyDataUseCase
-import com.globallogic.rdkb.remotemanagement.view.FloatingActionButtonState
-import com.globallogic.rdkb.remotemanagement.view.LocalNavController
-import com.globallogic.rdkb.remotemanagement.view.Screen
+import com.globallogic.rdkb.remotemanagement.view.navigation.FloatingActionButtonState
+import com.globallogic.rdkb.remotemanagement.view.navigation.LocalNavController
+import com.globallogic.rdkb.remotemanagement.view.navigation.Screen
 import com.globallogic.rdkb.remotemanagement.view.component.Client
 import com.globallogic.rdkb.remotemanagement.view.component.Network
 import com.globallogic.rdkb.remotemanagement.view.component.Router

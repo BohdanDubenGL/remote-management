@@ -1,8 +1,7 @@
-package com.globallogic.rdkb.remotemanagement.view
+package com.globallogic.rdkb.remotemanagement.view.navigation
 
 import androidx.compose.runtime.ProvidableCompositionLocal
 import androidx.compose.runtime.staticCompositionLocalOf
-import androidx.navigation.NavController
 
 val LocalScaffoldController: ProvidableCompositionLocal<ScaffoldController> = staticCompositionLocalOf {
     error("Can't access ScaffoldController")

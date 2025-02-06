@@ -1,8 +1,9 @@
-package com.globallogic.rdkb.remotemanagement.view
+package com.globallogic.rdkb.remotemanagement.view.navigation
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -21,7 +22,9 @@ class ScaffoldController(
     fun bottomBarItemsFor(graphName: String): List<BottomBarRoute<Screen>> = routes.getOrElse(graphName, ::emptyList)
 
 
-    private val _floatingActionButtonState: MutableStateFlow<FloatingActionButtonState> = MutableStateFlow(FloatingActionButtonState.Hidden)
+    private val _floatingActionButtonState: MutableStateFlow<FloatingActionButtonState> = MutableStateFlow(
+        FloatingActionButtonState.Hidden
+    )
     val floatingActionButtonState: StateFlow<FloatingActionButtonState> get() = _floatingActionButtonState.asStateFlow()
 
     fun setFloatingActionButtonState(state: FloatingActionButtonState): () -> Unit {
@@ -48,8 +51,9 @@ sealed interface FloatingActionButtonState {
 data class BottomBarRoute<T : Any>(
     val name: StringResource?,
     val route: T,
-    val icon: ImageVector,
+    val activeIcon: ImageVector,
+    val inactiveIcon: ImageVector,
     val graph: Graph
 ) {
-    constructor(route: T, graph: Graph) : this(getRouteTitle(route::class.qualifiedName), route, Icons.Default.Settings, graph)
+    constructor(route: T, graph: Graph) : this(getRouteTitle(route::class.qualifiedName), route, Icons.Filled.Settings, Icons.Outlined.Settings, graph)
 }

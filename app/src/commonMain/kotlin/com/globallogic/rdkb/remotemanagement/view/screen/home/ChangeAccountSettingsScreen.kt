@@ -19,15 +19,13 @@ import androidx.navigation.NavController
 import com.globallogic.rdkb.remotemanagement.domain.entity.ChangeAccountSettingsData
 import com.globallogic.rdkb.remotemanagement.domain.usecase.user.ChangeAccountSettingsUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.user.GetCurrentLoggedInUserUseCase
-import com.globallogic.rdkb.remotemanagement.view.LocalNavController
-import kotlinx.coroutines.delay
+import com.globallogic.rdkb.remotemanagement.view.navigation.LocalNavController
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.koin.compose.viewmodel.koinViewModel
-import kotlin.time.Duration.Companion.seconds
 
 @Composable
 fun ChangeAccountSettingsScreen(

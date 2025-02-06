@@ -1,4 +1,4 @@
-package com.globallogic.rdkb.remotemanagement.view
+package com.globallogic.rdkb.remotemanagement.view.navigation
 
 import androidx.compose.runtime.ProvidableCompositionLocal
 import androidx.compose.runtime.staticCompositionLocalOf

@@ -25,8 +25,8 @@ import androidx.navigation.NavController
 import com.globallogic.rdkb.remotemanagement.domain.entity.RouterDevice
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.SelectRouterDeviceUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdeviceconnection.GetRouterDeviceListUseCase
-import com.globallogic.rdkb.remotemanagement.view.LocalNavController
-import com.globallogic.rdkb.remotemanagement.view.Screen
+import com.globallogic.rdkb.remotemanagement.view.navigation.LocalNavController
+import com.globallogic.rdkb.remotemanagement.view.navigation.Screen
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow

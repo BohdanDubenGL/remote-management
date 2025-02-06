@@ -34,8 +34,8 @@ import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.GetRout
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.GetSelectedRouterDeviceUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.SetupRouterDeviceUseCase
 import com.globallogic.rdkb.remotemanagement.domain.utils.runCatchingSafe
-import com.globallogic.rdkb.remotemanagement.view.LocalNavController
-import com.globallogic.rdkb.remotemanagement.view.Screen
+import com.globallogic.rdkb.remotemanagement.view.navigation.LocalNavController
+import com.globallogic.rdkb.remotemanagement.view.navigation.Screen
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow

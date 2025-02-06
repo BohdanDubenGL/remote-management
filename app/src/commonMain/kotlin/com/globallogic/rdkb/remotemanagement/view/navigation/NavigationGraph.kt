@@ -1,4 +1,4 @@
-package com.globallogic.rdkb.remotemanagement.view
+package com.globallogic.rdkb.remotemanagement.view.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
