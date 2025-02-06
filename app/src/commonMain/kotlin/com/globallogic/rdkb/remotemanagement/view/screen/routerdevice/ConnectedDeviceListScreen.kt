@@ -92,7 +92,7 @@ class ConnectedDeviceListViewModel(
     fun loadConnectedDevices() {
         viewModelScope.launch {
             runCatchingSafe {
-                val routerDevice = getSelectedRouterDevice().getOrThrow() ?: return@launch
+                val routerDevice = getSelectedRouterDevice().getOrThrow() ?: return@runCatchingSafe
                 val connectedDevices = getRouterDeviceConnectedDevices(routerDevice).getOrThrow()
                 _uiState.update { it.copy(connectedDevices = connectedDevices) }
             }

@@ -170,7 +170,7 @@ class SetupRouterDeviceViewModel(
     fun loadRouterDevice() {
         viewModelScope.launch {
             runCatchingSafe {
-                val routerDevice = getSelectedRouterDevice().getOrThrow() ?: return@launch
+                val routerDevice = getSelectedRouterDevice().getOrThrow() ?: return@runCatchingSafe
                 val routerDeviceInfo = getRouterDeviceInfo(routerDevice).getOrThrow()
                 _uiState.update { it.copy(
                     routerDevice = routerDevice,

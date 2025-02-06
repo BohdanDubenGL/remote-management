@@ -4,15 +4,14 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
@@ -31,15 +30,17 @@ import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.GetRout
 import com.globallogic.rdkb.remotemanagement.view.FloatingActionButtonState
 import com.globallogic.rdkb.remotemanagement.view.LocalNavController
 import com.globallogic.rdkb.remotemanagement.view.Screen
+import com.globallogic.rdkb.remotemanagement.view.component.Client
+import com.globallogic.rdkb.remotemanagement.view.component.Network
+import com.globallogic.rdkb.remotemanagement.view.component.Router
 import com.globallogic.rdkb.remotemanagement.view.component.SetupFloatingActionButton
-import kotlinx.coroutines.delay
+import com.globallogic.rdkb.remotemanagement.view.component.TopologyDiagram
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import org.koin.compose.viewmodel.koinViewModel
-import kotlin.time.Duration.Companion.seconds
 
 @Composable
 fun TopologyScreen(
@@ -92,45 +93,18 @@ private fun TopologyContent(
             )
         }
     } else {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
-            modifier = Modifier.fillMaxSize(),
+        Card(
+            elevation = CardDefaults.cardElevation(8.dp),
+            shape = RoundedCornerShape(16.dp),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(32.dp)
         ) {
-            Card {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center,
-                    modifier = Modifier.padding(16.dp, 8.dp),
-                ) {
-                    Text(text = "name: ${uiState.routerDevice?.name}")
-                    Text(text = "ip: ${uiState.routerDevice?.ip}")
-                    Text(text = "macAddress: ${uiState.routerDevice?.macAddress}")
-                }
-            }
-            Spacer(modifier = Modifier.height(24.dp))
-            LazyRow(
-                horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(horizontal = 16.dp)
-            ) {
-                items(uiState.topologyData.connectedDevices) { connectedDevice ->
-                    Card {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.Center,
-                            modifier = Modifier.fillMaxWidth().padding(16.dp, 8.dp),
-                        ) {
-                            Text(text = "macAddress: ${connectedDevice.macAddress}")
-                            Text(text = "hostName: ${connectedDevice.hostName}")
-                            Text(text = "ssid: ${connectedDevice.ssid}")
-                            Text(text = "channel: ${connectedDevice.channel}")
-                            Text(text = "rssi: ${connectedDevice.rssi}")
-                            Text(text = "bandWidth: ${connectedDevice.bandWidth}")
-                        }
-                    }
-                }
-            }
+            TopologyDiagram(
+                Network("Internet"),
+                Router(uiState.topologyData.routerDevice.name),
+                uiState.topologyData.connectedDevices.map { Client(it.hostName) }
+            )
         }
     }
 }
