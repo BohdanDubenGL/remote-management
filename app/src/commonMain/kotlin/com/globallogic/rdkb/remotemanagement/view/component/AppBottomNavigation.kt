@@ -122,7 +122,6 @@ fun RowScope.AppBottomNavigationItem(
                     AnimatedVisibility(
                         visible = selected,
                         enter = fadeIn() + expandVertically(),
-                        exit = fadeOut() + shrinkVertically(),
                     ) {
                         Text(text = stringResource(route.name))
                     }

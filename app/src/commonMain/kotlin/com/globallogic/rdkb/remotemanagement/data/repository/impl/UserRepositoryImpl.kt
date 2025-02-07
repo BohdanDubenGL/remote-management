@@ -32,8 +32,8 @@ class UserRepositoryImpl(
         return currentLoggedInUser()
     }
 
-    override suspend fun isEmailUsed(email: String): Result<Boolean> {
-        return userDataSource.isEmailUsed(email)
+    override suspend fun getUserByEmail(email: String): Result<User?> {
+        return userDataSource.findUserByEmail(email)
     }
 
     override suspend fun register(registrationData: RegistrationData): Result<User> {

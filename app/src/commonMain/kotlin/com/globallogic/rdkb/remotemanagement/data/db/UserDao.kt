@@ -21,7 +21,4 @@ interface UserDao {
 
     @Query("SELECT * FROM user where email = :email AND password = :password LIMIT 1")
     suspend fun findUserByCredentials(email: String, password: String): UserDto?
-
-    @Query("SELECT 1 FROM user where email = :email LIMIT 1")
-    suspend fun isEmailUsed(email: String): Boolean
 }

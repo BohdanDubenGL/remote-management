@@ -1,27 +1,37 @@
 package com.globallogic.rdkb.remotemanagement.view.screen.authentication
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.Button
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.twotone.ArrowBackIosNew
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import com.globallogic.rdkb.remotemanagement.domain.entity.LoginData
 import com.globallogic.rdkb.remotemanagement.domain.entity.RegistrationData
-import com.globallogic.rdkb.remotemanagement.domain.entity.User
-import com.globallogic.rdkb.remotemanagement.domain.usecase.user.IsEmailUsedUseCase
+import com.globallogic.rdkb.remotemanagement.domain.usecase.user.EmailVerification
 import com.globallogic.rdkb.remotemanagement.domain.usecase.user.LoginUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.user.RegistrationUseCase
+import com.globallogic.rdkb.remotemanagement.domain.usecase.user.VerifyEmailForAuthenticationUseCase
+import com.globallogic.rdkb.remotemanagement.view.component.AppButton
+import com.globallogic.rdkb.remotemanagement.view.component.AppIconButton
+import com.globallogic.rdkb.remotemanagement.view.component.AppPasswordTextField
+import com.globallogic.rdkb.remotemanagement.view.component.AppTextField
 import com.globallogic.rdkb.remotemanagement.view.navigation.LocalNavController
 import com.globallogic.rdkb.remotemanagement.view.navigation.Screen
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -41,15 +51,14 @@ fun AuthenticationScreen(
     AuthenticationContent(
         uiState = uiState,
         onEmailEntered = authenticationViewModel::onEmailEntered,
+        onNameEntered = authenticationViewModel::onNameEntered,
         onPasswordEntered = authenticationViewModel::onPasswordEntered,
         onConfirmPasswordEntered = authenticationViewModel::onConfirmPasswordEntered,
-        onAuthenticateClick = authenticationViewModel::onAuthenticateClick,
         onEnterClick = authenticationViewModel::onEnterClick,
-        onLoggedIn = { loggedInUser ->
-            navController.navigate(Screen.HomeGraph.Topology) {
-                popUpTo<Screen.RootGraph>()
-            }
-        }
+        onBackClick = authenticationViewModel::onBackClick,
+        onLoggedIn = { navController.navigate(Screen.HomeGraph.Topology) {
+            popUpTo<Screen.RootGraph>()
+        } },
     )
 }
 
@@ -57,113 +66,245 @@ fun AuthenticationScreen(
 private fun AuthenticationContent(
     uiState: AuthenticationUiState,
     onEmailEntered: (email: String) -> Unit,
+    onNameEntered: (email: String) -> Unit,
     onPasswordEntered: (password: String) -> Unit,
     onConfirmPasswordEntered: (confirmPassword: String) -> Unit,
-    onAuthenticateClick: () -> Unit,
     onEnterClick: () -> Unit,
-    onLoggedIn: (loggedInUser: User) -> Unit,
+    onBackClick: () -> Unit,
+    onLoggedIn: () -> Unit,
 ) {
     SideEffect {
-        if (uiState.loggedInUser != null) onLoggedIn(uiState.loggedInUser)
+        if (uiState is AuthenticationUiState.LoggedIn) onLoggedIn()
     }
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
         modifier = Modifier.fillMaxSize()
     ) {
-        TextField(
-            value = uiState.email,
-            onValueChange = onEmailEntered,
-            label = { Text(text = "Email") },
-            placeholder = { Text(text = "Enter your email") },
-            enabled = uiState.isEmailEditable
-        )
-        if (uiState.showPasswordInput) {
-            TextField(
-                value = uiState.password,
-                onValueChange = onPasswordEntered,
-                label = { Text(text = "Password") },
-                placeholder = { Text(text = "Enter your password") },
-                visualTransformation = PasswordVisualTransformation()
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterVertically),
+            modifier = Modifier.width(350.dp)
+        ) {
+            AppTextField(
+                value = uiState.email,
+                onValueChange = onEmailEntered,
+                label = "Email",
+                placeholder = "Enter your email",
+                isError = uiState.emailError.isNotBlank(),
+                errorMessage = uiState.emailError,
+                enabled = uiState.isEmailEditable,
             )
-        }
-        if (uiState.showConfirmPasswordInput) {
-            TextField(
-                value = uiState.confirmPassword,
-                onValueChange = onConfirmPasswordEntered,
-                label = { Text(text = "Confirm Password") },
-                placeholder = { Text(text = "Re-enter your password") },
-                visualTransformation = PasswordVisualTransformation()
-            )
-        }
-        Button(
-            onClick = {
-                if (uiState.showPasswordInput) {
-                    onAuthenticateClick()
-                } else {
-                    onEnterClick()
+            AnimatedVisibility(uiState.showNameInput) {
+                AppTextField(
+                    value = uiState.name,
+                    onValueChange = onNameEntered,
+                    label = "Username",
+                    placeholder = "Enter your name",
+                    isError = uiState.nameError.isNotBlank(),
+                    errorMessage = uiState.nameError,
+                    enabled = uiState.isNameEditable,
+                )
+            }
+            AnimatedVisibility(uiState.showPasswordInput) {
+                AppPasswordTextField(
+                    value = uiState.password,
+                    onValueChange = onPasswordEntered,
+                    label = "Password",
+                    placeholder = "Enter your password",
+                    isError = uiState.passwordError.isNotBlank(),
+                    errorMessage = uiState.passwordError,
+                )
+            }
+            AnimatedVisibility(uiState.showConfirmPasswordInput) {
+                AppPasswordTextField(
+                    value = uiState.confirmPassword,
+                    onValueChange = onConfirmPasswordEntered,
+                    label = "Confirm Password",
+                    placeholder = "Re-enter your password",
+                    isError = uiState.confirmPasswordError.isNotBlank(),
+                    errorMessage = uiState.confirmPasswordError,
+                )
+            }
+            Spacer(modifier = Modifier.height(64.dp))
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally)
+            ) {
+                AnimatedVisibility(
+                    visible = uiState.showBackButton,
+                    enter = fadeIn(),
+                    exit = fadeOut(),
+                ) {
+                    AppIconButton(
+                        imageVector = Icons.TwoTone.ArrowBackIosNew,
+                        onClick = onBackClick,
+                    )
                 }
-            },
-            content = { Text(text = if(uiState.isRegistering) "Register" else if (uiState.showPasswordInput) "Login" else "Enter") }
-        )
+                AppButton(
+                    text = uiState.enterButtonText,
+                    onClick = onEnterClick,
+                )
+                AnimatedVisibility(
+                    visible = uiState.showBackButton,
+                    enter = fadeIn(),
+                    exit = fadeOut(),
+                ) {
+                    Spacer(modifier = Modifier.width(56.dp))
+                }
+            }
+        }
     }
 }
 
 class AuthenticationViewModel(
     private val login: LoginUseCase,
     private val registration: RegistrationUseCase,
-    private val isEmailUsed: IsEmailUsedUseCase,
+    private val verifyEmailForAuthentication: VerifyEmailForAuthenticationUseCase,
 ) : ViewModel() {
-    private val _uiState: MutableStateFlow<AuthenticationUiState> = MutableStateFlow(AuthenticationUiState())
+    private val _uiState: MutableStateFlow<AuthenticationUiState> = MutableStateFlow(AuthenticationUiState.EnterEmail())
     val uiState: StateFlow<AuthenticationUiState> get() = _uiState.asStateFlow()
 
     fun onEmailEntered(email: String) {
-        _uiState.update { it.copy(email = email) }
+        _uiState.update {
+            when (it) {
+                is AuthenticationUiState.EnterEmail -> it.copy(email = email)
+                else -> it
+            }
+        }
+    }
+
+    fun onNameEntered(name: String) {
+        _uiState.update {
+            when (it) {
+                is AuthenticationUiState.Register -> it.copy(name = name)
+                else -> it
+            }
+        }
     }
 
     fun onPasswordEntered(password: String) {
-        _uiState.update { it.copy(password = password) }
+        _uiState.update {
+            when (it) {
+                is AuthenticationUiState.Login -> it.copy(password = password)
+                is AuthenticationUiState.Register -> it.copy(password = password)
+                else -> it
+            }
+        }
     }
 
     fun onConfirmPasswordEntered(confirmPassword: String) {
-        _uiState.update { it.copy(confirmPassword = confirmPassword) }
+        _uiState.update {
+            when (it) {
+                is AuthenticationUiState.Register -> it.copy(confirmPassword = confirmPassword)
+                else -> it
+            }
+        }
+    }
+
+    fun onBackClick() {
+        viewModelScope.launch {
+            _uiState.update { state ->
+                when(state) {
+                    is AuthenticationUiState.Login -> AuthenticationUiState.EnterEmail(email = state.email)
+                    is AuthenticationUiState.Register -> AuthenticationUiState.EnterEmail(email = state.email)
+                    else -> state
+                }
+            }
+        }
     }
 
     fun onEnterClick() {
         viewModelScope.launch {
-            val email = _uiState.value.email
-            isEmailUsed(email)
-                .onSuccess { userExists ->
-                    when {
-                        userExists -> _uiState.update { it.copy(isEmailEditable = false, showPasswordInput = true) }
-                        else -> _uiState.update { it.copy(isEmailEditable = false, showPasswordInput = true, showConfirmPasswordInput = true, isRegistering = true) }
+            _uiState.update { state ->
+                when(state) {
+                    is AuthenticationUiState.EnterEmail -> verifyEmailForAuthentication(state.email)
+                        .onFailure { it.printStackTrace() }
+                        .mapCatching { emailVerification ->
+                            when(emailVerification) {
+                                is EmailVerification.EmailIsUsed -> AuthenticationUiState.Login(
+                                    email = emailVerification.email,
+                                    name = emailVerification.name
+                                )
+                                is EmailVerification.EmailIsFree -> AuthenticationUiState.Register(
+                                    email = emailVerification.email,
+                                    name = emailVerification.nameSuggestion
+                                )
+                            }
+                        }
+                        .getOrElse { AuthenticationUiState.Error(it.message.orEmpty()) }
+                    is AuthenticationUiState.Login -> {
+                        login(LoginData(state.name, state.email, state.password))
+                            .onFailure { it.printStackTrace() }
+                            .mapCatching { user ->
+                                when(user) {
+                                    null -> state.copy(passwordError = "wrong password")
+                                    else -> AuthenticationUiState.LoggedIn
+                                }
+                            }
+                            .getOrElse { AuthenticationUiState.Error(it.message.orEmpty()) }
                     }
+                    is AuthenticationUiState.Register -> {
+                        registration(RegistrationData(state.name, state.email, state.password, state.confirmPassword))
+                            .onFailure { it.printStackTrace() }
+                            .mapCatching { AuthenticationUiState.LoggedIn }
+                            .getOrElse { AuthenticationUiState.Error(it.message.orEmpty()) }
+                    }
+                    else -> state
                 }
-                .onFailure { it.printStackTrace() }
-        }
-    }
-
-    fun onAuthenticateClick() {
-        viewModelScope.launch {
-            val state = _uiState.value
-            when {
-                state.isRegistering -> registration(RegistrationData(state.email, state.email, state.password, state.confirmPassword))
-                else -> login(LoginData(state.email, state.email, state.password))
             }
-                .onSuccess { user -> _uiState.update { it.copy(loggedInUser = user) } }
-                .onFailure { it.printStackTrace() }
-
         }
     }
 }
 
-data class AuthenticationUiState(
-    val email: String = "",
-    val password: String = "",
-    val confirmPassword: String = "",
-    val isEmailEditable: Boolean = true,
-    val showPasswordInput: Boolean = false,
-    val showConfirmPasswordInput: Boolean = false,
-    val isRegistering: Boolean = false,
-    val loggedInUser: User? = null,
-)
+sealed interface AuthenticationUiState {
+    val email: String get() = ""
+    val name: String get() = ""
+    val password: String get() = ""
+    val confirmPassword: String get() = ""
+    val enterButtonText: String get() = ""
+
+    val emailError: String get() = ""
+    val nameError: String get() = ""
+    val passwordError: String get() = ""
+    val confirmPasswordError: String get() = ""
+
+    val isEmailEditable: Boolean get() = this is EnterEmail
+    val isNameEditable: Boolean get() = this is Register
+
+    val showBackButton: Boolean get() = this is Login || this is Register
+    val showNameInput: Boolean get() = this is Login || this is Register
+    val showPasswordInput: Boolean get() = this is Login || this is Register
+    val showConfirmPasswordInput: Boolean get() = this is Register
+
+    data class EnterEmail(
+        override val email: String = "",
+        override val emailError: String = "",
+        override val enterButtonText: String = "Enter",
+    ): AuthenticationUiState
+
+    data class Login(
+        override val email: String = "",
+        override val name: String = "",
+        override val password: String = "",
+        override val passwordError: String = "",
+        override val enterButtonText: String = "Login",
+    ): AuthenticationUiState
+
+    data class Register(
+        override val email: String = "",
+        override val name: String = "",
+        override val nameError: String = "",
+        override val password: String = "",
+        override val passwordError: String = "",
+        override val confirmPassword: String = "",
+        override val confirmPasswordError: String = "",
+        override val enterButtonText: String = "Register",
+    ): AuthenticationUiState
+
+    data class Error(
+        val errorMessage: String = "",
+    ): AuthenticationUiState
+
+    data object LoggedIn: AuthenticationUiState
+}

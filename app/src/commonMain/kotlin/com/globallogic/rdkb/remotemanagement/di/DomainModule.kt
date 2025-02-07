@@ -19,7 +19,7 @@ import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdeviceconnecti
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdeviceconnection.SearchRouterDevicesUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.user.ChangeAccountSettingsUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.user.GetCurrentLoggedInUserUseCase
-import com.globallogic.rdkb.remotemanagement.domain.usecase.user.IsEmailUsedUseCase
+import com.globallogic.rdkb.remotemanagement.domain.usecase.user.VerifyEmailForAuthenticationUseCase
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.factoryOf
 import org.koin.dsl.module
@@ -27,7 +27,7 @@ import org.koin.dsl.module
 val domainModule: Module = module {
     factoryOf(::LoginUseCase)
     factoryOf(::RegistrationUseCase)
-    factoryOf(::IsEmailUsedUseCase)
+    factoryOf(::VerifyEmailForAuthenticationUseCase)
     factoryOf(::LogoutUseCase)
     factoryOf(::GetCurrentLoggedInUserUseCase)
     factoryOf(::ChangeAccountSettingsUseCase)

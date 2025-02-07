@@ -2,6 +2,7 @@ package com.globallogic.rdkb.remotemanagement.view.component
 
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.StartOffset
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
@@ -12,22 +13,34 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import kotlin.time.Duration.Companion.seconds
 
 @Composable
-fun WaveBackground(modifier: Modifier = Modifier) {
+fun WaveBackground(
+    modifier: Modifier = Modifier,
+) {
+    WaveAnimation(modifier = modifier, delayMillis = 1000, color = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.7F))
+    WaveAnimation(modifier = modifier, delayMillis = 0, color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.7F))
+    WaveAnimation(modifier = modifier, delayMillis = 1500, color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.8F))
+}
+
+@Composable
+private fun WaveAnimation(
+    delayMillis: Int,
+    color: Color,
+    modifier: Modifier = Modifier,
+) {
     val infiniteTransition = rememberInfiniteTransition()
 
-    val secondaryContainerColor = MaterialTheme.colorScheme.secondaryContainer
-    val tertiaryContainerColor = MaterialTheme.colorScheme.tertiaryContainer
-
     val waveOffset by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = 100f,
+        initialValue = 0F,
+        targetValue = 100F,
         animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 4000, easing = LinearEasing),
-            repeatMode = RepeatMode.Reverse
+            animation = tween(durationMillis = 3.seconds.inWholeMilliseconds.toInt(), easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse,
+            initialStartOffset = StartOffset(delayMillis)
         )
     )
 
@@ -35,51 +48,34 @@ fun WaveBackground(modifier: Modifier = Modifier) {
         val width = size.width
         val height = size.height
 
-        drawRect(
-            brush = Brush.verticalGradient(
-                colors = listOf(secondaryContainerColor, tertiaryContainerColor),
-                startY = 0f,
-                endY = height * 0.6f
-            ),
-            size = size
+        drawPath(
+            path = Path().apply {
+                moveTo(0F, height * 0.15F + waveOffset)
+                cubicTo(
+                    width * 0.25F, height * 0.15F + waveOffset,
+                    width * 0.75F, height * 0.05F - waveOffset,
+                    width, height * 0.25F + waveOffset
+                )
+                lineTo(width, 0F)
+                lineTo(0F, 0F)
+                close()
+            },
+            color = color,
         )
 
         drawPath(
             path = Path().apply {
-                moveTo(0f, height * 0.25f + waveOffset)
+                moveTo(0F, height * 0.75F + waveOffset)
                 cubicTo(
-                    width * 0.25f, height * 0.35f + waveOffset,
-                    width * 0.75f, height * 0.15f - waveOffset,
-                    width, height * 0.35f + waveOffset
+                    width * 0.25F, height * 0.70F + waveOffset,
+                    width * 0.75F, height * 0.95F - waveOffset,
+                    width, height * 0.85F + waveOffset
                 )
                 lineTo(width, height)
-                lineTo(0f, height)
+                lineTo(0F, height)
                 close()
             },
-            brush = Brush.verticalGradient(
-                colors = listOf(secondaryContainerColor, tertiaryContainerColor),
-                startY = height * 0.3f,
-                endY = height
-            )
-        )
-
-        drawPath(
-            path = Path().apply {
-                moveTo(0f, height * 0.75f + waveOffset)
-                cubicTo(
-                    width * 0.25f, height * 0.65f + waveOffset,
-                    width * 0.75f, height * 0.85f - waveOffset,
-                    width, height * 0.65f + waveOffset
-                )
-                lineTo(width, height)
-                lineTo(0f, height)
-                close()
-            },
-            brush = Brush.verticalGradient(
-                colors = listOf(secondaryContainerColor, tertiaryContainerColor),
-                startY = height * 0.6f,
-                endY = height
-            )
+            color = color,
         )
     }
 }

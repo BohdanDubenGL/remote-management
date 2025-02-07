@@ -25,10 +25,6 @@ class UserDataSourceImpl(
         UserMapper.toDomain(updatedUser)
     }
 
-    override suspend fun isEmailUsed(email: String): Result<Boolean> = runCatchingSafe {
-        userDao.isEmailUsed(email)
-    }
-
     override suspend fun findUserByEmail(email: String): Result<User?> = runCatchingSafe {
         val user = userDao.findUserByEmail(email)
         user?.let(UserMapper::toDomain)
@@ -38,7 +34,6 @@ class UserDataSourceImpl(
         val user = userDao.findUserByCredentials(email, password)
         user?.let(UserMapper::toDomain)
     }
-
 }
 
 private object UserMapper {
