@@ -8,6 +8,7 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
@@ -25,17 +26,18 @@ fun LoadingSpinner(modifier: Modifier = Modifier) {
         targetValue = 360f,
         animationSpec = infiniteRepeatable(
             animation = tween(durationMillis = 20_000)
-        ), label = "rotation"
+        ),
+        label = "rotation",
     )
     Box(modifier = modifier.graphicsLayer { rotationZ = rotation.value }) {
-        GradientCircle(color = Color(0xff1AF9D5))
-        GradientCircle(color = Color(0xff1AD4D5), delay = 200)
-        GradientCircle(color = Color(0xff1ABFD5), delay = 400)
-        GradientCircle(color = Color(0xff1A9FD5), delay = 600)
-        GradientCircle(color = Color(0xff1A7FD5), delay = 800)
-        GradientCircle(color = Color(0xff1A5FD5), delay = 1000)
-        GradientCircle(color = Color(0xff1A3FD5), delay = 1200)
-        GradientCircle(color = Color(0xff1A1FD5), delay = 1400)
+        arrayOf(
+            Color(0xff1AD4D5),
+            Color(0xff1ABFD5),
+            Color(0xff1A7FD5),
+            Color(0xff1A3FD5),
+        ).forEachIndexed { index, color ->
+            GradientCircle(color = color, delay = 200 * index)
+        }
     }
 }
 
