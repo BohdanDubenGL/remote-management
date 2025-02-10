@@ -24,15 +24,15 @@ import androidx.compose.ui.unit.sp
 
 @Composable
 fun AppTextField(
+    modifier: Modifier = Modifier,
     value: String,
-    onValueChange: (String) -> Unit,
     label: String = "",
     placeholder: String = "",
     isError: Boolean = false,
     errorMessage: String = "",
     enabled: Boolean = true,
     visualTransformation: VisualTransformation = VisualTransformation.None,
-    modifier: Modifier = Modifier,
+    onValueChange: (String) -> Unit,
 ) {
     val borderColor = when {
         isError -> MaterialTheme.colorScheme.error
@@ -96,7 +96,7 @@ fun AppTextField(
                 text = errorMessage,
                 fontSize = 14.sp,
                 color = MaterialTheme.colorScheme.error,
-                modifier = Modifier.padding(start = 32.dp)
+                modifier = Modifier.padding(start = 32.dp, bottom = 8.dp)
             )
         }
     }

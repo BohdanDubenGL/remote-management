@@ -15,12 +15,12 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 fun AppIconButton(
+    modifier: Modifier = Modifier,
     imageVector: ImageVector,
     contentDescription: String = "",
-    onClick: () -> Unit,
     color: Color = MaterialTheme.colorScheme.primaryContainer,
     contentColor: Color = MaterialTheme.colorScheme.primary,
-    modifier: Modifier = Modifier,
+    onClick: () -> Unit,
 ) {
     IconButton(
         content = {

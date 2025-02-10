@@ -9,15 +9,20 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.twotone.ArrowBackIosNew
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
@@ -29,11 +34,16 @@ import com.globallogic.rdkb.remotemanagement.domain.usecase.user.LoginUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.user.RegistrationUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.user.VerifyEmailForAuthenticationUseCase
 import com.globallogic.rdkb.remotemanagement.view.component.AppButton
+import com.globallogic.rdkb.remotemanagement.view.component.AppErrorWithButton
 import com.globallogic.rdkb.remotemanagement.view.component.AppIconButton
+import com.globallogic.rdkb.remotemanagement.view.component.AppLayoutCenter
+import com.globallogic.rdkb.remotemanagement.view.component.AppLayoutVerticalSections
+import com.globallogic.rdkb.remotemanagement.view.component.AppLoadingWithButton
 import com.globallogic.rdkb.remotemanagement.view.component.AppPasswordTextField
 import com.globallogic.rdkb.remotemanagement.view.component.AppTextField
 import com.globallogic.rdkb.remotemanagement.view.navigation.LocalNavController
 import com.globallogic.rdkb.remotemanagement.view.navigation.Screen
+import com.globallogic.rdkb.remotemanagement.view.theme.UbuntuMono
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -76,57 +86,64 @@ private fun AuthenticationContent(
     SideEffect {
         if (uiState is AuthenticationUiState.LoggedIn) onLoggedIn()
     }
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-        modifier = Modifier.fillMaxSize()
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterVertically),
-            modifier = Modifier.width(350.dp)
-        ) {
-            AppTextField(
-                value = uiState.email,
-                onValueChange = onEmailEntered,
-                label = "Email",
-                placeholder = "Enter your email",
-                isError = uiState.emailError.isNotBlank(),
-                errorMessage = uiState.emailError,
-                enabled = uiState.isEmailEditable,
-            )
-            AnimatedVisibility(uiState.showNameInput) {
+
+    AppLayoutVerticalSections(
+        topSection = {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.Top),
+                modifier = Modifier.fillMaxSize().padding(top = 64.dp).width(350.dp)
+            ) {
+                Text(
+                    text = uiState.titleText,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontSize = 24.sp,
+                    fontFamily = FontFamily.UbuntuMono,
+                    modifier = Modifier.padding(vertical = 8.dp)
+                )
                 AppTextField(
-                    value = uiState.name,
-                    onValueChange = onNameEntered,
-                    label = "Username",
-                    placeholder = "Enter your name",
-                    isError = uiState.nameError.isNotBlank(),
-                    errorMessage = uiState.nameError,
-                    enabled = uiState.isNameEditable,
+                    value = uiState.email,
+                    onValueChange = onEmailEntered,
+                    label = "Email",
+                    placeholder = "Enter your email",
+                    isError = uiState.emailError.isNotBlank(),
+                    errorMessage = uiState.emailError,
+                    enabled = uiState.isEmailEditable,
                 )
+                AnimatedVisibility(uiState.showNameInput) {
+                    AppTextField(
+                        value = uiState.name,
+                        onValueChange = onNameEntered,
+                        label = "Username",
+                        placeholder = "Enter your name",
+                        isError = uiState.nameError.isNotBlank(),
+                        errorMessage = uiState.nameError,
+                        enabled = uiState.isNameEditable,
+                    )
+                }
+                AnimatedVisibility(uiState.showPasswordInput) {
+                    AppPasswordTextField(
+                        value = uiState.password,
+                        onValueChange = onPasswordEntered,
+                        label = "Password",
+                        placeholder = "Enter your password",
+                        isError = uiState.passwordError.isNotBlank(),
+                        errorMessage = uiState.passwordError,
+                    )
+                }
+                AnimatedVisibility(uiState.showConfirmPasswordInput) {
+                    AppPasswordTextField(
+                        value = uiState.confirmPassword,
+                        onValueChange = onConfirmPasswordEntered,
+                        label = "Confirm Password",
+                        placeholder = "Re-enter your password",
+                        isError = uiState.confirmPasswordError.isNotBlank(),
+                        errorMessage = uiState.confirmPasswordError,
+                    )
+                }
             }
-            AnimatedVisibility(uiState.showPasswordInput) {
-                AppPasswordTextField(
-                    value = uiState.password,
-                    onValueChange = onPasswordEntered,
-                    label = "Password",
-                    placeholder = "Enter your password",
-                    isError = uiState.passwordError.isNotBlank(),
-                    errorMessage = uiState.passwordError,
-                )
-            }
-            AnimatedVisibility(uiState.showConfirmPasswordInput) {
-                AppPasswordTextField(
-                    value = uiState.confirmPassword,
-                    onValueChange = onConfirmPasswordEntered,
-                    label = "Confirm Password",
-                    placeholder = "Re-enter your password",
-                    isError = uiState.confirmPasswordError.isNotBlank(),
-                    errorMessage = uiState.confirmPasswordError,
-                )
-            }
-            Spacer(modifier = Modifier.height(64.dp))
+        },
+        bottomSection = {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally)
@@ -153,8 +170,9 @@ private fun AuthenticationContent(
                     Spacer(modifier = Modifier.width(56.dp))
                 }
             }
-        }
-    }
+        },
+        modifier = Modifier
+    )
 }
 
 class AuthenticationViewModel(
@@ -258,6 +276,7 @@ class AuthenticationViewModel(
 }
 
 sealed interface AuthenticationUiState {
+    val titleText: String get() = ""
     val email: String get() = ""
     val name: String get() = ""
     val password: String get() = ""
@@ -278,12 +297,14 @@ sealed interface AuthenticationUiState {
     val showConfirmPasswordInput: Boolean get() = this is Register
 
     data class EnterEmail(
+        override val titleText: String = "Authentication",
         override val email: String = "",
         override val emailError: String = "",
         override val enterButtonText: String = "Enter",
     ): AuthenticationUiState
 
     data class Login(
+        override val titleText: String = "Login",
         override val email: String = "",
         override val name: String = "",
         override val password: String = "",
@@ -292,6 +313,7 @@ sealed interface AuthenticationUiState {
     ): AuthenticationUiState
 
     data class Register(
+        override val titleText: String = "Registration",
         override val email: String = "",
         override val name: String = "",
         override val nameError: String = "",

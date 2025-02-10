@@ -19,7 +19,9 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 
 @Composable
-fun LoadingSpinner(modifier: Modifier = Modifier) {
+fun LoadingSpinner(
+    modifier: Modifier = Modifier
+) {
     val animation = rememberInfiniteTransition()
     val rotation = animation.animateFloat(
         initialValue = 0f,

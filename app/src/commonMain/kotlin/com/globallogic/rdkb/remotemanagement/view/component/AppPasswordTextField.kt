@@ -6,14 +6,14 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 
 @Composable
 fun AppPasswordTextField(
+    modifier: Modifier = Modifier,
     value: String,
-    onValueChange: (String) -> Unit,
     label: String = "",
     placeholder: String = "",
     isError: Boolean = false,
     errorMessage: String = "",
     enabled: Boolean = true,
-    modifier: Modifier = Modifier,
+    onValueChange: (String) -> Unit,
 ) {
     AppTextField(
         value = value,

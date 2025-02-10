@@ -28,9 +28,9 @@ fun WaveBackground(
 
 @Composable
 private fun WaveAnimation(
+    modifier: Modifier = Modifier,
     delayMillis: Int,
     color: Color,
-    modifier: Modifier = Modifier,
 ) {
     val infiniteTransition = rememberInfiniteTransition()
 
