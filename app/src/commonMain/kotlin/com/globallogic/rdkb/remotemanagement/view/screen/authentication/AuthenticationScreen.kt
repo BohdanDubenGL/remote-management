@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.Text
@@ -29,16 +28,16 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import com.globallogic.rdkb.remotemanagement.domain.entity.LoginData
 import com.globallogic.rdkb.remotemanagement.domain.entity.RegistrationData
+import com.globallogic.rdkb.remotemanagement.domain.error.UserError
 import com.globallogic.rdkb.remotemanagement.domain.usecase.user.EmailVerification
 import com.globallogic.rdkb.remotemanagement.domain.usecase.user.LoginUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.user.RegistrationUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.user.VerifyEmailForAuthenticationUseCase
+import com.globallogic.rdkb.remotemanagement.domain.utils.dataOrElse
+import com.globallogic.rdkb.remotemanagement.domain.utils.map
 import com.globallogic.rdkb.remotemanagement.view.component.AppButton
-import com.globallogic.rdkb.remotemanagement.view.component.AppErrorWithButton
 import com.globallogic.rdkb.remotemanagement.view.component.AppIconButton
-import com.globallogic.rdkb.remotemanagement.view.component.AppLayoutCenter
 import com.globallogic.rdkb.remotemanagement.view.component.AppLayoutVerticalSections
-import com.globallogic.rdkb.remotemanagement.view.component.AppLoadingWithButton
 import com.globallogic.rdkb.remotemanagement.view.component.AppPasswordTextField
 import com.globallogic.rdkb.remotemanagement.view.component.AppTextField
 import com.globallogic.rdkb.remotemanagement.view.navigation.LocalNavController
@@ -186,7 +185,7 @@ class AuthenticationViewModel(
     fun onEmailEntered(email: String) {
         _uiState.update {
             when (it) {
-                is AuthenticationUiState.EnterEmail -> it.copy(email = email)
+                is AuthenticationUiState.EnterEmail -> it.copy(email = email, emailError = "")
                 else -> it
             }
         }
@@ -195,7 +194,7 @@ class AuthenticationViewModel(
     fun onNameEntered(name: String) {
         _uiState.update {
             when (it) {
-                is AuthenticationUiState.Register -> it.copy(name = name)
+                is AuthenticationUiState.Register -> it.copy(name = name, nameError = "")
                 else -> it
             }
         }
@@ -204,8 +203,8 @@ class AuthenticationViewModel(
     fun onPasswordEntered(password: String) {
         _uiState.update {
             when (it) {
-                is AuthenticationUiState.Login -> it.copy(password = password)
-                is AuthenticationUiState.Register -> it.copy(password = password)
+                is AuthenticationUiState.Login -> it.copy(password = password, passwordError = "")
+                is AuthenticationUiState.Register -> it.copy(password = password, passwordError = "", confirmPasswordError = "")
                 else -> it
             }
         }
@@ -214,7 +213,7 @@ class AuthenticationViewModel(
     fun onConfirmPasswordEntered(confirmPassword: String) {
         _uiState.update {
             when (it) {
-                is AuthenticationUiState.Register -> it.copy(confirmPassword = confirmPassword)
+                is AuthenticationUiState.Register -> it.copy(confirmPassword = confirmPassword, passwordError = "", confirmPasswordError = "")
                 else -> it
             }
         }
@@ -236,37 +235,46 @@ class AuthenticationViewModel(
         viewModelScope.launch {
             _uiState.update { state ->
                 when(state) {
-                    is AuthenticationUiState.EnterEmail -> verifyEmailForAuthentication(state.email)
-                        .onFailure { it.printStackTrace() }
-                        .mapCatching { emailVerification ->
-                            when(emailVerification) {
-                                is EmailVerification.EmailIsUsed -> AuthenticationUiState.Login(
-                                    email = emailVerification.email,
-                                    name = emailVerification.name
-                                )
-                                is EmailVerification.EmailIsFree -> AuthenticationUiState.Register(
-                                    email = emailVerification.email,
-                                    name = emailVerification.nameSuggestion
-                                )
-                            }
-                        }
-                        .getOrElse { AuthenticationUiState.Error(it.message.orEmpty()) }
-                    is AuthenticationUiState.Login -> {
-                        login(LoginData(state.name, state.email, state.password))
-                            .onFailure { it.printStackTrace() }
-                            .mapCatching { user ->
-                                when(user) {
-                                    null -> state.copy(passwordError = "wrong password")
-                                    else -> AuthenticationUiState.LoggedIn
+                    is AuthenticationUiState.EnterEmail -> {
+                        verifyEmailForAuthentication(state.email)
+                            .map { emailVerification ->
+                                when(emailVerification) {
+                                    is EmailVerification.EmailIsUsed -> AuthenticationUiState.Login(
+                                        email = emailVerification.email,
+                                        name = emailVerification.name
+                                    )
+                                    is EmailVerification.EmailIsFree -> AuthenticationUiState.Register(
+                                        email = emailVerification.email,
+                                        name = emailVerification.nameSuggestion
+                                    )
                                 }
                             }
-                            .getOrElse { AuthenticationUiState.Error(it.message.orEmpty()) }
+                            .dataOrElse { error -> state.copy(emailError = "wrong email format") }
+                    }
+                    is AuthenticationUiState.Login -> {
+                        login(LoginData(state.name, state.email, state.password))
+                            .map { user -> AuthenticationUiState.LoggedIn }
+                            .dataOrElse { error ->
+                                when (error) {
+                                    is UserError.WrongCredentials -> state.copy(passwordError = "wrong password")
+                                    is UserError.WrongPasswordFormat -> state.copy(passwordError = "wrong password format")
+                                    is UserError.WrongPasswordLength -> state.copy(passwordError = "password length should be in ${error.min} and ${error.max}")
+                                }
+                            }
                     }
                     is AuthenticationUiState.Register -> {
                         registration(RegistrationData(state.name, state.email, state.password, state.confirmPassword))
-                            .onFailure { it.printStackTrace() }
-                            .mapCatching { AuthenticationUiState.LoggedIn }
-                            .getOrElse { AuthenticationUiState.Error(it.message.orEmpty()) }
+                            .map { AuthenticationUiState.LoggedIn }
+                            .dataOrElse { error ->
+                                when (error) {
+                                    is UserError.UserAlreadyExist -> AuthenticationUiState.Error("User already exist")
+                                    is UserError.ConfirmPasswordDoesntMatch -> state.copy(confirmPasswordError = "confirm password doesn't match", passwordError = "", nameError = "")
+                                    is UserError.WrongPasswordFormat -> state.copy(passwordError = "wrong password format", confirmPasswordError = "", nameError = "")
+                                    is UserError.WrongPasswordLength -> state.copy(passwordError = "password length should be in ${error.min} and ${error.max}", confirmPasswordError = "", nameError = "")
+                                    is UserError.WrongUsernameFormat -> state.copy(nameError = "wrong username format", passwordError = "", confirmPasswordError = "")
+                                    is UserError.WrongUsernameLength -> state.copy(nameError = "username length should be in ${error.min} and ${error.max}", passwordError = "", confirmPasswordError = "")
+                                }
+                            }
                     }
                     else -> state
                 }

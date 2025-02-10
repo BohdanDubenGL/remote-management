@@ -6,7 +6,6 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Upsert
 import com.globallogic.rdkb.remotemanagement.data.db.dto.UserDto
-import com.globallogic.rdkb.remotemanagement.data.db.dto.UserRouterDeviceDto
 
 @Dao
 interface UserDao {

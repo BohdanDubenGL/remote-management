@@ -17,8 +17,11 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import com.globallogic.rdkb.remotemanagement.domain.entity.ChangeAccountSettingsData
+import com.globallogic.rdkb.remotemanagement.domain.error.UserError
 import com.globallogic.rdkb.remotemanagement.domain.usecase.user.ChangeAccountSettingsUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.user.GetCurrentLoggedInUserUseCase
+import com.globallogic.rdkb.remotemanagement.domain.utils.dataOrElse
+import com.globallogic.rdkb.remotemanagement.domain.utils.map
 import com.globallogic.rdkb.remotemanagement.view.navigation.LocalNavController
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -122,9 +125,11 @@ class ChangeAccountSettingsViewModel(
 
     fun loadCurrentUserData() {
         viewModelScope.launch {
-            getCurrentLoggedInUser()
-                .onSuccess { currentUser -> _uiState.update { it.copy(email = currentUser?.email.orEmpty(), userDataLoaded = true) } }
-                .onFailure { it.printStackTrace() }
+            _uiState.update { state ->
+                getCurrentLoggedInUser()
+                    .map { currentUser -> state.copy(email = currentUser.email, userDataLoaded = true) }
+                    .dataOrElse { error -> state.copy(userDataLoaded = true) }
+            }
         }
     }
 
@@ -146,15 +151,28 @@ class ChangeAccountSettingsViewModel(
 
     fun saveData() {
         viewModelScope.launch {
-            val state = _uiState.value
-            changeAccountSettings(ChangeAccountSettingsData(state.email, state.newPassword, state.confirmNewPassword))
-                .onSuccess { _uiState.update { it.copy(dataSaved = true) } }
-                .onFailure { it.printStackTrace() }
+            _uiState.update { state ->
+                changeAccountSettings(ChangeAccountSettingsData(state.username, state.email, state.newPassword, state.confirmNewPassword))
+                    .map { state.copy(dataSaved = true) }
+                    .dataOrElse { error ->
+                        when(error) {
+                            UserError.UserNotFound -> state
+                            UserError.ConfirmPasswordDoesntMatch -> state
+                            UserError.WrongCredentials -> state
+                            UserError.WrongEmailFormat -> state
+                            UserError.WrongPasswordFormat -> state
+                            is UserError.WrongPasswordLength -> state
+                            UserError.WrongUsernameFormat -> state
+                            is UserError.WrongUsernameLength -> state
+                        }
+                    }
+            }
         }
     }
 }
 
 data class ChangeAccountSettingsUiState(
+    val username: String = "",
     val email: String = "",
     val currentPassword: String = "",
     val newPassword: String = "",

@@ -20,8 +20,12 @@ import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdeviceconnecti
 import com.globallogic.rdkb.remotemanagement.domain.usecase.user.ChangeAccountSettingsUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.user.GetCurrentLoggedInUserUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.user.VerifyEmailForAuthenticationUseCase
+import com.globallogic.rdkb.remotemanagement.domain.usecase.verification.EmailVerifier
+import com.globallogic.rdkb.remotemanagement.domain.usecase.verification.PasswordVerifier
+import com.globallogic.rdkb.remotemanagement.domain.usecase.verification.UserNameVerifier
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.factoryOf
+import org.koin.dsl.bind
 import org.koin.dsl.module
 
 val domainModule: Module = module {
@@ -47,4 +51,8 @@ val domainModule: Module = module {
     factoryOf(::AddRouterDeviceManuallyUseCase)
     factoryOf(::GetRouterDeviceListUseCase)
     factoryOf(::SearchRouterDevicesUseCase)
+
+    factory { UserNameVerifier() }.bind<UserNameVerifier>()
+    factoryOf(::EmailVerifier).bind<EmailVerifier>()
+    factory { PasswordVerifier() }.bind<PasswordVerifier>()
 }

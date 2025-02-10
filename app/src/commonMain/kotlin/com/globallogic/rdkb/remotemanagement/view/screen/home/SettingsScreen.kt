@@ -24,8 +24,11 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import com.globallogic.rdkb.remotemanagement.domain.entity.User
+import com.globallogic.rdkb.remotemanagement.domain.error.UserError
 import com.globallogic.rdkb.remotemanagement.domain.usecase.user.GetCurrentLoggedInUserUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.user.LogoutUseCase
+import com.globallogic.rdkb.remotemanagement.domain.utils.dataOrElse
+import com.globallogic.rdkb.remotemanagement.domain.utils.map
 import com.globallogic.rdkb.remotemanagement.view.navigation.LocalNavController
 import com.globallogic.rdkb.remotemanagement.view.navigation.Screen
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -119,17 +122,22 @@ class SettingsViewModel(
 
     fun loadCurrentUser() {
         viewModelScope.launch {
-            getCurrentLoggedInUser()
-                .onSuccess { currentUser -> _uiState.update { it.copy(currentUser = currentUser) } }
-                .onFailure { it.printStackTrace() }
+            _uiState.update { state ->
+                getCurrentLoggedInUser()
+                    .map { currentUser -> state.copy(currentUser = currentUser) }
+                    .dataOrElse { error -> state }
+            }
         }
     }
 
     fun logout() {
         viewModelScope.launch {
-            logoutUser()
-                .onSuccess { loggedOut -> _uiState.update { it.copy(loggedOut = loggedOut) } }
-                .onFailure { it.printStackTrace() }
+            _uiState.update { state ->
+                logoutUser()
+                    .map { state.copy(loggedOut = true) }
+                    .dataOrElse { error -> state.copy(loggedOut = false) }
+            }
+
         }
     }
 }

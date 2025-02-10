@@ -3,36 +3,53 @@ package com.globallogic.rdkb.remotemanagement.data.datasource.impl
 import com.globallogic.rdkb.remotemanagement.data.datasource.UserDataSource
 import com.globallogic.rdkb.remotemanagement.data.db.UserDao
 import com.globallogic.rdkb.remotemanagement.data.db.dto.UserDto
+import com.globallogic.rdkb.remotemanagement.data.error.IoUserError
 import com.globallogic.rdkb.remotemanagement.domain.entity.User
+import com.globallogic.rdkb.remotemanagement.domain.utils.Resource
+import com.globallogic.rdkb.remotemanagement.domain.utils.buildResource
 import com.globallogic.rdkb.remotemanagement.domain.utils.runCatchingSafe
 
 class UserDataSourceImpl(
     private val userDao: UserDao
 ): UserDataSource {
 
-    override suspend fun addUser(email: String, name: String, password: String): Result<User> = runCatchingSafe {
-        val userFromDb = userDao.findUserByEmail(email)
-        if (userFromDb != null) error("User with email $email already exist")
+    override suspend fun addUser(email: String, name: String, password: String): Resource<User, IoUserError.AddUserError> = buildResource {
+        val userFromDb = runCatchingSafe { userDao.findUserByEmail(email) }
+            .getOrElse { error -> return failure(IoUserError.DatabaseError(error)) }
+        if (userFromDb != null) return failure(IoUserError.UserAlreadyExist)
+
         val newUser = UserDto(email = email, name = name, password = password)
-        userDao.insertUser(newUser)
-        UserMapper.toDomain(newUser)
+        runCatchingSafe { userDao.insertUser(newUser) }
+            .getOrElse { error -> return failure(IoUserError.DatabaseError(error)) }
+        return success(UserMapper.toDomain(newUser))
     }
 
-    override suspend fun updateUser(email: String, newEmail: String, newName: String, newPassword: String): Result<User> = runCatchingSafe {
-        val user = userDao.findUserByEmail(email) ?: error("No user")
+    override suspend fun updateUser(email: String, newEmail: String, newName: String, newPassword: String): Resource<User, IoUserError.UpdateUserError> = buildResource {
+        val user = runCatchingSafe { userDao.findUserByEmail(email) }
+            .getOrElse { error -> return failure(IoUserError.DatabaseError(error)) }
+            ?: return failure(IoUserError.UserNotFound)
+
         val updatedUser = user.copy(email = newEmail, name = newName, password = newPassword)
-        userDao.updateUser(updatedUser)
-        UserMapper.toDomain(updatedUser)
+        runCatchingSafe { userDao.updateUser(updatedUser) }
+            .getOrElse { error -> return failure(IoUserError.DatabaseError(error)) }
+
+        return success(UserMapper.toDomain(updatedUser))
     }
 
-    override suspend fun findUserByEmail(email: String): Result<User?> = runCatchingSafe {
-        val user = userDao.findUserByEmail(email)
-        user?.let(UserMapper::toDomain)
+    override suspend fun findUserByEmail(email: String): Resource<User, IoUserError.FindUserByIdError> = buildResource {
+        val user = runCatchingSafe { userDao.findUserByEmail(email) }
+            .getOrElse { error -> return failure(IoUserError.DatabaseError(error)) }
+            ?: return failure(IoUserError.UserNotFound)
+
+        return success(UserMapper.toDomain(user))
     }
 
-    override suspend fun findUserByCredentials(email: String, password: String): Result<User?> = runCatchingSafe {
-        val user = userDao.findUserByCredentials(email, password)
-        user?.let(UserMapper::toDomain)
+    override suspend fun findUserByCredentials(email: String, password: String): Resource<User, IoUserError.FindUserByCredentialsError> = buildResource {
+        val user = runCatchingSafe { userDao.findUserByCredentials(email, password) }
+            .getOrElse { error -> return failure(IoUserError.DatabaseError(error)) }
+            ?: return failure(IoUserError.UserNotFound)
+
+        return success(UserMapper.toDomain(user))
     }
 }
 

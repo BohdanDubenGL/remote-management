@@ -16,7 +16,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import com.globallogic.rdkb.remotemanagement.domain.entity.User
+import com.globallogic.rdkb.remotemanagement.domain.error.UserError
 import com.globallogic.rdkb.remotemanagement.domain.usecase.user.GetCurrentLoggedInUserUseCase
+import com.globallogic.rdkb.remotemanagement.domain.utils.dataOrElse
+import com.globallogic.rdkb.remotemanagement.domain.utils.map
 import com.globallogic.rdkb.remotemanagement.view.navigation.LocalNavController
 import com.globallogic.rdkb.remotemanagement.view.navigation.Screen
 import kotlinx.coroutines.delay
@@ -85,12 +88,11 @@ class SplashViewModel(
     fun checkCurrentUser() {
         viewModelScope.launch {
             delay(1.seconds.inWholeMilliseconds)
-            getCurrentLoggedInUser()
-                .onSuccess { loggedInUser -> _uiState.update { it.copy(loggedInUser = loggedInUser, userDataLoaded = true) } }
-                .onFailure {
-                    it.printStackTrace()
-                    _uiState.update { it.copy(userDataLoaded = true) }
-                }
+            _uiState.update { state ->
+                getCurrentLoggedInUser()
+                    .map { loggedInUser -> state.copy(loggedInUser = loggedInUser, userDataLoaded = true) }
+                    .dataOrElse { error -> state.copy(userDataLoaded = true) }
+            }
 
         }
     }
