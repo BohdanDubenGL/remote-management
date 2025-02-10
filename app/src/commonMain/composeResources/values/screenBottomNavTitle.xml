@@ -1,0 +1,10 @@
+<resources>
+    <string name="screen_bottom_nav_title_topology">Topology</string>
+    <string name="screen_bottom_nav_title_router_device_list">Devices</string>
+    <string name="screen_bottom_nav_title_settings">Settings</string>
+
+    <string name="screen_bottom_nav_title_router_device">Device</string>
+    <string name="screen_bottom_nav_title_connected_devices">Clients</string>
+    <string name="screen_bottom_nav_title_router_device_setup">Setup</string>
+    <string name="screen_bottom_nav_title_router_device_settings">Settings</string>
+</resources>

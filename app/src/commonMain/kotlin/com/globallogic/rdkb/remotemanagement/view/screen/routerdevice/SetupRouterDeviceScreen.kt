@@ -3,8 +3,10 @@ package com.globallogic.rdkb.remotemanagement.view.screen.routerdevice
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
@@ -23,6 +25,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
@@ -34,6 +37,11 @@ import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.GetRout
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.GetSelectedRouterDeviceUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.SetupRouterDeviceUseCase
 import com.globallogic.rdkb.remotemanagement.domain.utils.runCatchingSafe
+import com.globallogic.rdkb.remotemanagement.view.component.AppButton
+import com.globallogic.rdkb.remotemanagement.view.component.AppCard
+import com.globallogic.rdkb.remotemanagement.view.component.AppPasswordTextField
+import com.globallogic.rdkb.remotemanagement.view.component.AppTextField
+import com.globallogic.rdkb.remotemanagement.view.component.AppTitleText
 import com.globallogic.rdkb.remotemanagement.view.navigation.LocalNavController
 import com.globallogic.rdkb.remotemanagement.view.navigation.Screen
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -85,34 +93,31 @@ private fun SetupRouterDeviceContent(
         LazyColumn(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Top,
-            modifier = Modifier.padding(40.dp, 16.dp)
+            modifier = Modifier.padding(horizontal = 40.dp)
         ) {
             itemsIndexed(uiState.bandsSettings) { index, bandSettings ->
-                Card(
-                    shape = RoundedCornerShape(12.dp),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-                    modifier = Modifier.padding(16.dp, 8.dp)
+                AppCard(
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                 ) {
                     Column(
                         horizontalAlignment = Alignment.Start,
                         verticalArrangement = Arrangement.spacedBy(8.dp),
-                        modifier = Modifier.padding(48.dp, 16.dp),
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                     ) {
-                        Text(text = bandSettings.frequency)
-                        TextField(
+                        AppTitleText(text = bandSettings.frequency, fontSize = 22.sp)
+                        AppTextField(
                             value = if (bandSettings.sameAsFirst) firstBand?.ssid.orEmpty() else bandSettings.ssid,
                             onValueChange = { onSsidEntered(bandSettings.frequency, it) },
-                            label = { Text(text = "SSID") },
-                            placeholder = { Text(text = "Enter SSID") },
+                            label = "SSID",
+                            placeholder = "Enter SSID",
                             enabled = !bandSettings.sameAsFirst,
                             modifier = Modifier.fillMaxWidth(),
                         )
-                        TextField(
+                        AppPasswordTextField(
                             value = if (bandSettings.sameAsFirst) firstBand?.password.orEmpty() else bandSettings.password,
                             onValueChange = { onPasswordEntered(bandSettings.frequency, it) },
-                            label = { Text(text = "Password") },
-                            placeholder = { Text(text = "Enter new password") },
-                            visualTransformation = PasswordVisualTransformation(),
+                            label = "Password",
+                            placeholder = "Enter new password",
                             enabled = !bandSettings.sameAsFirst,
                             modifier = Modifier.fillMaxWidth(),
                         )
@@ -124,18 +129,19 @@ private fun SetupRouterDeviceContent(
                                     checked = bandSettings.sameAsFirst,
                                     onCheckedChange = { onSameAsFirstChanged(bandSettings.frequency, it) },
                                 )
-                                Text(text = "Same as first")
+                                AppTitleText(text = "Same as first", fontSize = 16.sp)
                             }
                         }
                     }
                 }
             }
             item {
-                Button(
+                AppButton(
+                    text = "Save",
                     onClick = onSaveClicked,
-                    content = { Text(text = "Save") },
                     modifier = Modifier.width(200.dp),
                 )
+                Spacer(modifier = Modifier.height(32.dp))
             }
         }
     }

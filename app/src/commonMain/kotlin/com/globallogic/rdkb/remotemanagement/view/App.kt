@@ -6,6 +6,8 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
 import com.globallogic.rdkb.remotemanagement.view.component.AppBottomNavigation
@@ -20,7 +22,9 @@ import com.globallogic.rdkb.remotemanagement.view.theme.AppTheme
 import org.koin.compose.KoinContext
 
 @Composable
-fun App() {
+fun App(
+    topBarHeight: Dp = 64.dp
+) {
     AppTheme(
         dynamicColor = false,
         darkTheme = true,
@@ -36,7 +40,7 @@ fun App() {
                 val navGraph = rememberApplicationNavGraph()
 
                 Scaffold(
-                    topBar = { AppTopBar() },
+                    topBar = { AppTopBar(height = topBarHeight) },
                     bottomBar = { AppBottomNavigation() },
                     floatingActionButton = { AppFloatingActionButton() },
                     modifier = Modifier.fillMaxSize()

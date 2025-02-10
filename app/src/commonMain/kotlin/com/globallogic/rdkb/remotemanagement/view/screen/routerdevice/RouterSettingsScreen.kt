@@ -23,6 +23,7 @@ import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.Factory
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.GetSelectedRouterDeviceUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.RemoveRouterDeviceUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.RestartRouterDeviceUseCase
+import com.globallogic.rdkb.remotemanagement.view.component.AppButton
 import com.globallogic.rdkb.remotemanagement.view.navigation.LocalNavController
 import com.globallogic.rdkb.remotemanagement.view.navigation.Screen
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -78,23 +79,23 @@ private fun RouterSettingsContent(
             verticalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier.padding(horizontal = 32.dp)
         ) {
-            Button(
-                modifier = Modifier.fillMaxWidth().height(50.dp),
+            AppButton(
+                text = "Restart device",
+                enabled = uiState.deviceAvailable,
                 onClick = restartDevice,
-                enabled = uiState.deviceAvailable,
-                content = { Text(text = "Restart device") }
+                modifier = Modifier.fillMaxWidth(),
             )
-            Button(
-                modifier = Modifier.fillMaxWidth().height(50.dp),
+            AppButton(
+                text = "Factory reset device",
+                enabled = uiState.deviceAvailable,
                 onClick = factoryResetDevice,
-                enabled = uiState.deviceAvailable,
-                content = { Text(text = "Factory reset device") }
+                modifier = Modifier.fillMaxWidth(),
             )
-            Button(
-                modifier = Modifier.fillMaxWidth().height(50.dp),
-                onClick = removeDevice,
+            AppButton(
+                text = "Remove device",
                 enabled = uiState.deviceAvailable,
-                content = { Text(text = "Remove device") }
+                onClick = removeDevice,
+                modifier = Modifier.fillMaxWidth()
             )
         }
     }

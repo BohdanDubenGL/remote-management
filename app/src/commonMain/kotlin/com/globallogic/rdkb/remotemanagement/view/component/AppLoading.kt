@@ -1,5 +1,6 @@
 package com.globallogic.rdkb.remotemanagement.view.component
 
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -17,6 +18,6 @@ fun AppLoading(
             )
         },
         bottomSection = content,
-        modifier = modifier,
+        modifier = modifier.padding(vertical = 16.dp),
     )
 }

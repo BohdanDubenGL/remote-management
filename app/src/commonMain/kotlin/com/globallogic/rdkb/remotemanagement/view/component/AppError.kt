@@ -3,6 +3,7 @@ package com.globallogic.rdkb.remotemanagement.view.component
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
@@ -59,6 +60,6 @@ fun AppError(
             }
         },
         bottomSection = content,
-        modifier = modifier,
+        modifier = modifier.padding(vertical = 16.dp),
     )
 }

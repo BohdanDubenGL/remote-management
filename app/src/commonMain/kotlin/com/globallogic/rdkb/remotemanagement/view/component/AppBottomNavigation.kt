@@ -6,49 +6,46 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.BottomNavigation
 import androidx.compose.material.BottomNavigationItem
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Shapes
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.LifecycleStartEffect
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.globallogic.rdkb.remotemanagement.view.navigation.BottomBarRoute
+import com.globallogic.rdkb.remotemanagement.view.navigation.BottomNavigationState
 import com.globallogic.rdkb.remotemanagement.view.navigation.LocalNavController
 import com.globallogic.rdkb.remotemanagement.view.navigation.LocalScaffoldController
 import com.globallogic.rdkb.remotemanagement.view.navigation.ScaffoldController
 import com.globallogic.rdkb.remotemanagement.view.navigation.Screen
-import kotlinx.coroutines.selects.select
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
@@ -58,32 +55,41 @@ fun AppBottomNavigation(
 ) {
     val currentBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination by remember(currentBackStackEntry) { mutableStateOf(currentBackStackEntry?.destination) }
-    val routes by remember(currentDestination) { mutableStateOf(
-        scaffoldController.bottomBarItemsFor(currentDestination?.route?.substringBeforeLast(".").orEmpty())
+    val bottomNavigationState by scaffoldController.bottomNavigationState.collectAsStateWithLifecycle()
+
+    val routes by remember(currentDestination, bottomNavigationState) { mutableStateOf(
+        when (val state = bottomNavigationState) {
+            is BottomNavigationState.Hidden -> emptyList()
+            is BottomNavigationState.Default -> scaffoldController.bottomBarItemsFor(currentDestination?.route?.substringBeforeLast(".").orEmpty())
+            is BottomNavigationState.Shown -> state.routes
+        }
     ) }
     val visibility by remember(routes) { mutableStateOf(routes.isNotEmpty()) }
-    AnimatedVisibility(
-        visible = visibility,
-        enter = fadeIn() + expandVertically(),
-        exit = fadeOut() + shrinkVertically(),
+    Box(
+        contentAlignment = Alignment.BottomCenter,
+        modifier = Modifier.fillMaxWidth().height(80.dp),
     ) {
-        BottomNavigation(
-            backgroundColor = MaterialTheme.colorScheme.primaryContainer,
-            modifier = Modifier
-                .alpha(if (visibility) 1F else 0F)
-                .height(if (visibility) 80.dp else 0.dp),
+        AnimatedVisibility(
+            visible = visibility,
+            enter = fadeIn() + slideInVertically(),
+            exit = fadeOut() + slideOutVertically(),
         ) {
+            BottomNavigation(
+                backgroundColor = MaterialTheme.colorScheme.primaryContainer,
+                modifier = Modifier.fillMaxSize(),
+            ) {
 
-            routes.forEach { route ->
-                AppBottomNavigationItem(
-                    route = route,
-                    selected = currentDestination?.hierarchy?.any { it.hasRoute(route.route::class) } == true,
-                    onClick = {
-                        navController.navigate(route.route) {
-                            popUpTo(route.graph)
+                routes.forEach { route ->
+                    AppBottomNavigationItem(
+                        route = route,
+                        selected = currentDestination?.hierarchy?.any { it.hasRoute(route.route::class) } == true,
+                        onClick = {
+                            navController.navigate(route.route) {
+                                popUpTo(route.graph)
+                            }
                         }
-                    }
-                )
+                    )
+                }
             }
         }
     }
@@ -135,5 +141,22 @@ fun RowScope.AppBottomNavigationItem(
             unselectedContentColor = MaterialTheme.colorScheme.tertiaryContainer,
             modifier = Modifier.weight(animatedWeight),
         )
+    }
+}
+
+@Composable
+fun SetupBottomNavigation(
+    bottomNavigationState: BottomNavigationState = BottomNavigationState.Default
+) {
+    val scaffoldController = LocalScaffoldController.current
+    val navController = LocalNavController.current
+    val currentNavBackStackEntry by navController.currentBackStackEntryAsState()
+    val rememberedState by rememberUpdatedState(bottomNavigationState)
+
+    LifecycleStartEffect(currentNavBackStackEntry, rememberedState) {
+        val disposable = scaffoldController.setBottomNavigationState(rememberedState)
+        onStopOrDispose {
+            disposable()
+        }
     }
 }

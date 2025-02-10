@@ -5,6 +5,11 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -18,6 +23,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.globallogic.rdkb.remotemanagement.view.navigation.LocalNavController
@@ -29,6 +38,7 @@ import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun AppTopBar(
+    height: Dp,
     navController: NavController = LocalNavController.current,
     scaffoldController: ScaffoldController = LocalScaffoldController.current,
 ) {
@@ -37,6 +47,7 @@ fun AppTopBar(
     val routeTitle by remember(currentBackStackEntry) { mutableStateOf(getRouteTitle(currentBackStackEntry?.destination?.route)) }
 
     AppTopBar(
+        height = height,
         titleRes = routeTitle,
         navigateUpAction = when (previousBackStackEntry) {
             null -> null
@@ -48,33 +59,54 @@ fun AppTopBar(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppTopBar(
+    height: Dp,
     titleRes: StringResource?,
     navigateUpAction: (() -> Unit)? = null,
 ) {
-    AnimatedVisibility(
-        visible = titleRes != null,
-        enter = fadeIn() + expandVertically(),
-        exit = fadeOut() + shrinkVertically(),
+    Box(
+        contentAlignment = Alignment.TopCenter,
+        modifier = Modifier.fillMaxWidth().height(height)
     ) {
-        CenterAlignedTopAppBar(
-            title = {
-                if (titleRes != null) Text(text = stringResource(titleRes))
-            },
-            navigationIcon = {
-                if (navigateUpAction != null) {
-                    IconButton(
-                        onClick = navigateUpAction,
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Default.ArrowBack,
-                            contentDescription = null,
-                        )
+        AnimatedVisibility(
+            visible = titleRes != null,
+            enter = fadeIn() + expandVertically(),
+            exit = fadeOut() + shrinkVertically(),
+        ) {
+            CenterAlignedTopAppBar(
+                title = {
+                    if (titleRes != null) {
+                        Box(
+                            modifier = Modifier.fillMaxHeight(),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            AppTitleText(text = stringResource(titleRes))
+                        }
                     }
-                }
-            },
-            colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                },
+                navigationIcon = {
+                    if (navigateUpAction != null) {
+                        Box(
+                            modifier = Modifier.fillMaxHeight(),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            IconButton(
+                                onClick = navigateUpAction,
+                                content = {
+                                    Icon(
+                                        imageVector = Icons.AutoMirrored.Default.ArrowBack,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.primary,
+                                    )
+                                },
+                            )
+                        }
+                    }
+                },
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                ),
+                modifier = Modifier.height(height),
             )
-        )
+        }
     }
 }

@@ -10,18 +10,14 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.twotone.ArrowBackIosNew
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
@@ -40,9 +36,9 @@ import com.globallogic.rdkb.remotemanagement.view.component.AppIconButton
 import com.globallogic.rdkb.remotemanagement.view.component.AppLayoutVerticalSections
 import com.globallogic.rdkb.remotemanagement.view.component.AppPasswordTextField
 import com.globallogic.rdkb.remotemanagement.view.component.AppTextField
+import com.globallogic.rdkb.remotemanagement.view.component.AppTitleText
 import com.globallogic.rdkb.remotemanagement.view.navigation.LocalNavController
 import com.globallogic.rdkb.remotemanagement.view.navigation.Screen
-import com.globallogic.rdkb.remotemanagement.view.theme.UbuntuMono
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -87,17 +83,15 @@ private fun AuthenticationContent(
     }
 
     AppLayoutVerticalSections(
+        topSectionWeight = 5F,
         topSection = {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.Top),
                 modifier = Modifier.fillMaxSize().padding(top = 64.dp).width(350.dp)
             ) {
-                Text(
+                AppTitleText(
                     text = uiState.titleText,
-                    color = MaterialTheme.colorScheme.primary,
-                    fontSize = 24.sp,
-                    fontFamily = FontFamily.UbuntuMono,
                     modifier = Modifier.padding(vertical = 8.dp)
                 )
                 AppTextField(

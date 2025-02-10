@@ -11,6 +11,9 @@ import com.globallogic.rdkb.remotemanagement.domain.error.UserError
 import com.globallogic.rdkb.remotemanagement.domain.repository.UserRepository
 import com.globallogic.rdkb.remotemanagement.domain.utils.Resource
 import com.globallogic.rdkb.remotemanagement.domain.utils.buildResource
+import com.globallogic.rdkb.remotemanagement.domain.utils.dataOrElse
+import com.globallogic.rdkb.remotemanagement.domain.utils.flatMapData
+import com.globallogic.rdkb.remotemanagement.domain.utils.map
 import com.globallogic.rdkb.remotemanagement.domain.utils.mapError
 import com.globallogic.rdkb.remotemanagement.domain.utils.onSuccess
 
@@ -33,17 +36,28 @@ class UserRepositoryImpl(
     }
 
     override suspend fun changeAccountSettings(settingsData: ChangeAccountSettingsData): Resource<User, UserError.ChangeAccountSettingsError> = buildResource {
-        when (val email = currentUserEmail()) {
-            null -> return failure(UserError.UserNotFound)
-            else -> userDataSource.updateUser(email, settingsData.email, "", settingsData.password).mapError { error ->
-                when (error) {
-                    is IoUserError.DatabaseError -> UserError.UserNotFound
-                    IoUserError.UserNotFound -> UserError.UserNotFound
+        return when (val email = currentUserEmail()) {
+            null -> failure(UserError.UserNotFound)
+            else -> userDataSource.findUserByCredentials(email, settingsData.currentPassword)
+                .mapError { error ->
+                    when (error) {
+                        is IoUserError.DatabaseError -> UserError.WrongCredentials
+                        is IoUserError.UserNotFound -> UserError.WrongCredentials
+                    }
                 }
-            }
+                .flatMapData { user ->
+                    userDataSource.updateUser(user.email, settingsData.email, settingsData.username, settingsData.password).mapError { error ->
+                        when (error) {
+                            is IoUserError.DatabaseError -> UserError.UserNotFound
+                            is IoUserError.UserNotFound -> UserError.UserNotFound
+                        }
+                    }
+                }
+                .flatMapData {
+                    currentLoggedInUser()
+                        .mapError { error -> UserError.UserNotFound }
+                }
         }
-        return currentLoggedInUser()
-            .mapError { error -> UserError.UserNotFound }
     }
 
     override suspend fun getUserByEmail(email: String): Resource<User, UserError.UserNotFound> {

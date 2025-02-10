@@ -15,6 +15,7 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun AppLayoutVerticalSections(
     modifier: Modifier = Modifier,
+    topSectionWeight: Float = 2F,
     topSection: @Composable () -> Unit,
     bottomSection: @Composable () -> Unit,
 ) {
@@ -23,21 +24,21 @@ fun AppLayoutVerticalSections(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier
             .fillMaxSize()
-            .padding(horizontal = 64.dp)
-            .padding(top = 128.dp, bottom = 192.dp),
+            .padding(horizontal = 32.dp)
+            .padding(top = 64.dp, bottom = 96.dp),
     ) {
         Box(
             contentAlignment = Alignment.Center,
             modifier = Modifier
                 .fillMaxSize()
-                .weight(5F),
+                .weight(topSectionWeight),//.background(Color.Green),
             content = { topSection() },
         )
         Box(
             contentAlignment = Alignment.BottomCenter,
             modifier = Modifier
                 .fillMaxSize()
-                .weight(1F),
+                .weight(1F),//.background(Color.Blue),
             content = { bottomSection() },
         )
     }

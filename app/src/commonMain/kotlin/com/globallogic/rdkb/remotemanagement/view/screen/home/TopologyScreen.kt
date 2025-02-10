@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
@@ -27,6 +28,10 @@ import com.globallogic.rdkb.remotemanagement.domain.entity.RouterDevice
 import com.globallogic.rdkb.remotemanagement.domain.entity.RouterDeviceTopologyData
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.GetLocalRouterDeviceUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.GetRouterDeviceTopologyDataUseCase
+import com.globallogic.rdkb.remotemanagement.view.component.AppButton
+import com.globallogic.rdkb.remotemanagement.view.component.AppErrorWithButton
+import com.globallogic.rdkb.remotemanagement.view.component.AppLoadingWithButton
+import com.globallogic.rdkb.remotemanagement.view.component.AppTitleText
 import com.globallogic.rdkb.remotemanagement.view.navigation.FloatingActionButtonState
 import com.globallogic.rdkb.remotemanagement.view.navigation.LocalNavController
 import com.globallogic.rdkb.remotemanagement.view.navigation.Screen
@@ -77,7 +82,7 @@ private fun TopologyContent(
             verticalArrangement = Arrangement.Center,
             modifier = Modifier.fillMaxSize(),
         ) {
-            Text(text = "Loading...")
+            AppTitleText(text = "Loading...")
         }
     } else if (uiState.topologyData == null) {
         Column(
@@ -85,11 +90,12 @@ private fun TopologyContent(
             verticalArrangement = Arrangement.Center,
             modifier = Modifier.fillMaxSize(),
         ) {
-            Text(text = "No data")
+            AppTitleText(text = "No data")
             Spacer(modifier = Modifier.height(16.dp))
-            Button(
+            AppButton(
+                text = "Search devices",
                 onClick = searchRouterDevices,
-                content = { Text(text = "Search devices") }
+                modifier = Modifier.width(250.dp)
             )
         }
     } else {

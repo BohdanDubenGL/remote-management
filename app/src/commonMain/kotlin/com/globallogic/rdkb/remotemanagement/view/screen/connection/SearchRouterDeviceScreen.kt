@@ -3,16 +3,21 @@ package com.globallogic.rdkb.remotemanagement.view.screen.connection
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Router
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
@@ -28,6 +33,10 @@ import com.globallogic.rdkb.remotemanagement.domain.entity.FoundRouterDevice
 import com.globallogic.rdkb.remotemanagement.domain.entity.RouterDevice
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdeviceconnection.ConnectToRouterDeviceUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdeviceconnection.SearchRouterDevicesUseCase
+import com.globallogic.rdkb.remotemanagement.view.component.AppCard
+import com.globallogic.rdkb.remotemanagement.view.component.AppIcon
+import com.globallogic.rdkb.remotemanagement.view.component.AppTextProperty
+import com.globallogic.rdkb.remotemanagement.view.component.AppTitleText
 import com.globallogic.rdkb.remotemanagement.view.navigation.FloatingActionButtonState
 import com.globallogic.rdkb.remotemanagement.view.navigation.LocalNavController
 import com.globallogic.rdkb.remotemanagement.view.navigation.Screen
@@ -96,9 +105,7 @@ private fun SearchRouterDeviceContent(
                 modifier = Modifier.fillMaxSize().padding(24.dp, 8.dp)
             ) {
                 items(uiState.foundRouterDevices) { foundDevice ->
-                    Card(
-                        shape = RoundedCornerShape(8.dp),
-                        elevation = CardDefaults.cardElevation(4.dp),
+                    AppCard(
                         modifier = Modifier.clickable { connectToRouterDevice(foundDevice) }
                     ) {
                         Column(
@@ -106,9 +113,23 @@ private fun SearchRouterDeviceContent(
                             verticalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterVertically),
                             modifier = Modifier.fillMaxWidth().padding(16.dp, 16.dp)
                         ) {
-                            Text(text = "name: ${foundDevice.name}")
-                            Text(text = "ip: ${foundDevice.ip}")
-                            Text(text = "macAddress: ${foundDevice.macAddress}")
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Center,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                AppIcon(
+                                    imageVector = Icons.Default.Router,
+                                    contentColor = MaterialTheme.colorScheme.tertiary,
+                                    modifier = Modifier.size(48.dp)
+                                )
+                                Spacer(modifier = Modifier.weight(1F))
+                                AppTitleText(text = foundDevice.name, color = MaterialTheme.colorScheme.tertiary)
+                            }
+
+                            AppTextProperty(name = "Name:", value = foundDevice.name)
+                            AppTextProperty(name = "IP address:", value = foundDevice.ip)
+                            AppTextProperty(name = "MAC address:", value = foundDevice.macAddress)
                         }
                     }
                 }

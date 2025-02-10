@@ -3,14 +3,20 @@ package com.globallogic.rdkb.remotemanagement.view.screen.home
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Router
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
@@ -25,6 +31,10 @@ import androidx.navigation.NavController
 import com.globallogic.rdkb.remotemanagement.domain.entity.RouterDevice
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.SelectRouterDeviceUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdeviceconnection.GetRouterDeviceListUseCase
+import com.globallogic.rdkb.remotemanagement.view.component.AppCard
+import com.globallogic.rdkb.remotemanagement.view.component.AppIcon
+import com.globallogic.rdkb.remotemanagement.view.component.AppTextProperty
+import com.globallogic.rdkb.remotemanagement.view.component.AppTitleText
 import com.globallogic.rdkb.remotemanagement.view.navigation.LocalNavController
 import com.globallogic.rdkb.remotemanagement.view.navigation.Screen
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -67,9 +77,7 @@ private fun RouterDeviceListContent(
     ) {
         LazyColumn {
             items(uiState.routerDevices) { routerDevice ->
-                Card(
-                    shape = RoundedCornerShape(12.dp),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                AppCard(
                     modifier = Modifier
                         .padding(16.dp, 8.dp)
                         .clickable { onRouterDeviceClicked(routerDevice) }
@@ -78,9 +86,23 @@ private fun RouterDeviceListContent(
                         modifier = Modifier.padding(16.dp, 8.dp).fillMaxWidth(),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Text(text = "name: ${routerDevice.name}")
-                        Text(text = "ip: ${routerDevice.ip}")
-                        Text(text = "mac: ${routerDevice.macAddress}")
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            AppIcon(
+                                imageVector = Icons.Default.Router,
+                                contentColor = MaterialTheme.colorScheme.tertiary,
+                                modifier = Modifier.size(48.dp)
+                            )
+                            Spacer(modifier = Modifier.weight(1F))
+                            AppTitleText(text = routerDevice.name, color = MaterialTheme.colorScheme.tertiary)
+                        }
+
+                        AppTextProperty(name = "Name:", value = routerDevice.name)
+                        AppTextProperty(name = "IP address:", value = routerDevice.ip)
+                        AppTextProperty(name = "MAC address:", value = routerDevice.macAddress)
                     }
                 }
             }

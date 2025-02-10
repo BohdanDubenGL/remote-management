@@ -23,6 +23,7 @@ fun AppButton(
     text: String,
     color: Color = MaterialTheme.colorScheme.primaryContainer,
     contentColor: Color = MaterialTheme.colorScheme.primary,
+    enabled: Boolean = true,
     onClick: () -> Unit,
 ) {
     Button(
@@ -37,7 +38,8 @@ fun AppButton(
             containerColor = color,
             contentColor = contentColor,
         ),
-        elevation = ButtonDefaults.buttonElevation(16.dp)
+        elevation = ButtonDefaults.buttonElevation(16.dp),
+        enabled = enabled,
     ) {
         Text(
             text = text,

@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -19,6 +20,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdeviceconnection.AddRouterDeviceManuallyUseCase
+import com.globallogic.rdkb.remotemanagement.view.component.AppButton
+import com.globallogic.rdkb.remotemanagement.view.component.AppTextField
 import com.globallogic.rdkb.remotemanagement.view.navigation.LocalNavController
 import com.globallogic.rdkb.remotemanagement.view.navigation.Screen
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -59,18 +62,18 @@ private fun AddRouterDeviceManuallyContent(
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier.fillMaxSize().padding(horizontal = 24.dp),
     ) {
-        TextField(
+        AppTextField(
             value = uiState.deviceMacAddress,
             onValueChange = onMacAddressEntered,
-            label = { Text(text = "Mac address") },
-            placeholder = { Text(text = "Enter device mac address") },
+            label = "Mac address",
+            placeholder = "Enter device mac address",
         )
         Spacer(modifier = Modifier.height(16.dp))
-        Button(
+        AppButton(
+            text = "Connect",
             onClick = connectToDevice,
-            content = { Text(text = "Connect") }
         )
     }
 }

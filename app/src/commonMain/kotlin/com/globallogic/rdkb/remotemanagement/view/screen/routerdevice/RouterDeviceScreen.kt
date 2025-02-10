@@ -2,14 +2,21 @@ package com.globallogic.rdkb.remotemanagement.view.screen.routerdevice
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Devices
+import androidx.compose.material.icons.filled.Router
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
@@ -26,6 +33,10 @@ import com.globallogic.rdkb.remotemanagement.domain.entity.RouterDeviceInfo
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.GetRouterDeviceInfoUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.GetSelectedRouterDeviceUseCase
 import com.globallogic.rdkb.remotemanagement.domain.utils.runCatchingSafe
+import com.globallogic.rdkb.remotemanagement.view.component.AppCard
+import com.globallogic.rdkb.remotemanagement.view.component.AppIcon
+import com.globallogic.rdkb.remotemanagement.view.component.AppTextProperty
+import com.globallogic.rdkb.remotemanagement.view.component.AppTitleText
 import com.globallogic.rdkb.remotemanagement.view.navigation.LocalNavController
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -60,31 +71,46 @@ private fun RouterDeviceContent(
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Top,
-            modifier = Modifier.fillMaxSize().padding(32.dp, 32.dp)
+            modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp, vertical = 16.dp)
         ) {
-            Card(
-                shape = RoundedCornerShape(4.dp),
-                elevation = CardDefaults.cardElevation(4.dp)
+            AppCard(
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
             ) {
                 Column(
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(16.dp, 16.dp)
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
                         .verticalScroll(rememberScrollState())
                 ) {
-                    Text("name: " + uiState.routerDevice?.name)
-                    Text("ip: " + uiState.routerDevice?.ip)
-                    Text("macAddress: " + uiState.routerDevice?.macAddress)
-                    Text("lanConnected: " + uiState.routerDeviceInfo?.lanConnected)
-                    Text("connectedExtender: " + uiState.routerDeviceInfo?.connectedExtender)
-                    Text("modelName: " + uiState.routerDeviceInfo?.modelName)
-                    Text("firmwareVersion: " + uiState.routerDeviceInfo?.firmwareVersion)
-                    Text("processorLoadPercent: " + uiState.routerDeviceInfo?.processorLoadPercent)
-                    Text("memoryUsagePercent: " + uiState.routerDeviceInfo?.memoryUsagePercent)
-                    Text("totalDownloadTraffic: " + uiState.routerDeviceInfo?.totalDownloadTraffic)
-                    Text("totalUploadTraffic: " + uiState.routerDeviceInfo?.totalUploadTraffic)
-                    Text("availableBands: " + uiState.routerDeviceInfo?.availableBands)
+                    if (uiState.routerDevice != null && uiState.routerDeviceInfo != null) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            AppIcon(
+                                imageVector = Icons.Default.Router,
+                                contentColor = MaterialTheme.colorScheme.tertiary,
+                                modifier = Modifier.size(48.dp)
+                            )
+                            Spacer(modifier = Modifier.weight(1F))
+                            AppTitleText(text = uiState.routerDevice.name, color = MaterialTheme.colorScheme.tertiary)
+                        }
+
+                        AppTextProperty(name = "Name:", value = uiState.routerDevice.name)
+                        AppTextProperty(name = "IP:", value = uiState.routerDevice.ip)
+                        AppTextProperty(name = "Mac address:", value = uiState.routerDevice.macAddress)
+                        AppTextProperty(name = "Lan connected:", value = uiState.routerDeviceInfo.lanConnected.toString())
+                        AppTextProperty(name = "Connected extender:", value = uiState.routerDeviceInfo.connectedExtender.toString())
+                        AppTextProperty(name = "Model name:", value = uiState.routerDeviceInfo.modelName)
+                        AppTextProperty(name = "Firmware version:", value = uiState.routerDeviceInfo.firmwareVersion)
+                        AppTextProperty(name = "Processor load (%):", value = uiState.routerDeviceInfo.processorLoadPercent.toString())
+                        AppTextProperty(name = "Memory usage (%):", value = uiState.routerDeviceInfo.memoryUsagePercent.toString())
+                        AppTextProperty(name = "Total download (kB):", value = uiState.routerDeviceInfo.totalDownloadTraffic.toString())
+                        AppTextProperty(name = "Total upload (kB):", value = uiState.routerDeviceInfo.totalUploadTraffic.toString())
+                        AppTextProperty(name = "Available bands:", value = uiState.routerDeviceInfo.availableBands.joinToString(separator = ","))
+                    }
                 }
             }
         }
