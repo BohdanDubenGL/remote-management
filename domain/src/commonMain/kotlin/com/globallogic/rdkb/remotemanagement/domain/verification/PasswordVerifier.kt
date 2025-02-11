@@ -1,4 +1,4 @@
-package com.globallogic.rdkb.remotemanagement.domain.usecase.verification
+package com.globallogic.rdkb.remotemanagement.domain.verification
 
 class PasswordVerifier(
     val minLength: Int = 5,

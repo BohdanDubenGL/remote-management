@@ -11,6 +11,8 @@ sealed interface ResourceState<out Data, out Error: ResourceError> {
 
 interface ResourceError
 
+data class ThrowableResourceError(val throwable: Throwable) : ResourceError
+
 object BuildResourceScope {
     fun <Data> success(data: Data): Success<Data> = Success(data)
     fun <Error: ResourceError> failure(error: Error): Failure<Error> = Failure(error)

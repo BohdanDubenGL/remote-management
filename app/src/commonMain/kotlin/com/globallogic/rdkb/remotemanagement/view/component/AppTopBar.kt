@@ -25,6 +25,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -79,7 +80,7 @@ fun AppTopBar(
                             modifier = Modifier.fillMaxHeight(),
                             contentAlignment = Alignment.Center,
                         ) {
-                            AppTitleText(text = stringResource(titleRes))
+                            AppTitleText(text = stringResource(titleRes), color = Color.White)
                         }
                     }
                 },
@@ -95,7 +96,7 @@ fun AppTopBar(
                                     Icon(
                                         imageVector = Icons.AutoMirrored.Default.ArrowBack,
                                         contentDescription = null,
-                                        tint = MaterialTheme.colorScheme.primary,
+                                        tint = Color.White,
                                     )
                                 },
                             )

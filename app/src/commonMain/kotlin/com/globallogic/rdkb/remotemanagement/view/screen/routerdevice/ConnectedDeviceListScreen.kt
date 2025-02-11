@@ -32,6 +32,7 @@ import androidx.navigation.NavController
 import com.globallogic.rdkb.remotemanagement.domain.entity.ConnectedDevice
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.GetRouterDeviceConnectedDevicesUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.GetSelectedRouterDeviceUseCase
+import com.globallogic.rdkb.remotemanagement.domain.utils.dataOrElse
 import com.globallogic.rdkb.remotemanagement.domain.utils.runCatchingSafe
 import com.globallogic.rdkb.remotemanagement.view.component.AppCard
 import com.globallogic.rdkb.remotemanagement.view.component.AppIcon
@@ -115,12 +116,13 @@ class ConnectedDeviceListViewModel(
 
     fun loadConnectedDevices() {
         viewModelScope.launch {
-            runCatchingSafe {
-                val routerDevice = getSelectedRouterDevice().getOrThrow() ?: return@runCatchingSafe
-                val connectedDevices = getRouterDeviceConnectedDevices(routerDevice).getOrThrow()
-                _uiState.update { it.copy(connectedDevices = connectedDevices) }
+            _uiState.update { state ->
+                val routerDevice = getSelectedRouterDevice()
+                    .dataOrElse { error -> return@update state }
+                val connectedDevices = getRouterDeviceConnectedDevices(routerDevice)
+                    .dataOrElse { error -> return@update state }
+                state.copy(connectedDevices = connectedDevices)
             }
-                .onFailure { it.printStackTrace() }
         }
     }
 }

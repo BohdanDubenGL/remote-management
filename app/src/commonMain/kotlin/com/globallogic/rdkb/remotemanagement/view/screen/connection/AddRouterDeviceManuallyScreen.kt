@@ -20,6 +20,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdeviceconnection.AddRouterDeviceManuallyUseCase
+import com.globallogic.rdkb.remotemanagement.domain.utils.dataOrElse
+import com.globallogic.rdkb.remotemanagement.domain.utils.map
 import com.globallogic.rdkb.remotemanagement.view.component.AppButton
 import com.globallogic.rdkb.remotemanagement.view.component.AppTextField
 import com.globallogic.rdkb.remotemanagement.view.navigation.LocalNavController
@@ -90,13 +92,11 @@ class AddRouterDeviceManuallyViewModel(
 
     fun connectToDevice() {
         viewModelScope.launch {
-            addRouterDeviceManually(_uiState.value.deviceMacAddress)
-                .onSuccess { routerDevice ->
-                    if (routerDevice != null) {
-                        _uiState.update { it.copy(deviceConnected = true) }
-                    }
-                }
-                .onFailure { it.printStackTrace() }
+            _uiState.update { state ->
+                addRouterDeviceManually(state.deviceMacAddress)
+                    .map { routerDevice -> state.copy(deviceConnected = true) }
+                    .dataOrElse { error -> state }
+            }
         }
     }
 }

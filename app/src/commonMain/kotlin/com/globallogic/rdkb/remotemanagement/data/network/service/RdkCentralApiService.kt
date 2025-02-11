@@ -2,23 +2,25 @@ package com.globallogic.rdkb.remotemanagement.data.network.service
 
 import com.globallogic.rdkb.remotemanagement.data.network.service.model.GetPropertyResponse
 import com.globallogic.rdkb.remotemanagement.data.network.service.model.SetPropertyResponse
+import com.globallogic.rdkb.remotemanagement.domain.utils.Resource
+import com.globallogic.rdkb.remotemanagement.domain.utils.ThrowableResourceError
 
 interface RdkCentralApiService {
     suspend fun <T> getDeviceProperty(
         deviceMacAddress: String = "dca6320eb8bb", // todo: remove real mac
         deviceProperty: RouterDevice.Get<T>,
-    ): Result<GetPropertyResponse>
+    ): Resource<GetPropertyResponse, ThrowableResourceError>
 
     suspend fun <T> setDeviceProperty(
         deviceMacAddress: String = "dca6320eb8bb", // todo: remove real mac
         deviceProperty: RouterDevice.Set<T>,
         value: T,
-    ): Result<SetPropertyResponse>
+    ): Resource<SetPropertyResponse, ThrowableResourceError>
 
     suspend fun doDeviceAction(
         deviceMacAddress: String = "dca6320eb8bb", // todo: remove real mac
         deviceAction: RouterDevice.Action,
-    ): Result<Boolean>
+    ): Resource<Boolean, ThrowableResourceError>
 }
 
 sealed class RouterDevice(val name: String) {

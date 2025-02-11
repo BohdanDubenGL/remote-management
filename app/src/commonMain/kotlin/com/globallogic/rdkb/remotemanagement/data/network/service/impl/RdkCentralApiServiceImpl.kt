@@ -6,6 +6,8 @@ import com.globallogic.rdkb.remotemanagement.data.network.service.RdkCentralApiS
 import com.globallogic.rdkb.remotemanagement.data.network.service.RouterDevice
 import com.globallogic.rdkb.remotemanagement.data.network.service.model.GetPropertyResponse
 import com.globallogic.rdkb.remotemanagement.data.network.service.model.SetPropertyResponse
+import com.globallogic.rdkb.remotemanagement.domain.utils.Resource
+import com.globallogic.rdkb.remotemanagement.domain.utils.ThrowableResourceError
 import io.ktor.client.HttpClient
 import io.ktor.client.request.parameter
 import io.ktor.client.request.setBody
@@ -22,7 +24,7 @@ class RdkCentralApiServiceImpl(
     override suspend fun <T> getDeviceProperty(
         deviceMacAddress: String,
         deviceProperty: RouterDevice.Get<T>
-    ): Result<GetPropertyResponse> {
+    ): Resource<GetPropertyResponse, ThrowableResourceError> {
         return httpClient.safeGet<GetPropertyResponse> {
             url("/api/v2/device/mac:$deviceMacAddress/config")
             contentType(ContentType.Application.Json)
@@ -36,7 +38,7 @@ class RdkCentralApiServiceImpl(
         deviceMacAddress: String,
         deviceProperty: RouterDevice.Set<T>,
         value: T,
-    ): Result<SetPropertyResponse> {
+    ): Resource<SetPropertyResponse, ThrowableResourceError> {
         return httpClient.safePatch {
             url("/api/v2/device/mac:$deviceMacAddress/config")
             setBody("{\"parameters\": [ {\"dataType\": 0, \"name\": \"${deviceProperty.name}\", \"value\": \"$value\"}]}")
@@ -46,7 +48,7 @@ class RdkCentralApiServiceImpl(
     override suspend fun doDeviceAction(
         deviceMacAddress: String,
         deviceAction: RouterDevice.Action
-    ): Result<Boolean> {
+    ): Resource<Boolean, ThrowableResourceError> {
         TODO("Not yet implemented")
     }
 }

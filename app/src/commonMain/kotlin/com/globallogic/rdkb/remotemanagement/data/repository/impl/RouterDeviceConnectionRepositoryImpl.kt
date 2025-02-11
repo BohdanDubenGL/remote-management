@@ -6,8 +6,13 @@ import com.globallogic.rdkb.remotemanagement.data.datasource.RouterDeviceConnect
 import com.globallogic.rdkb.remotemanagement.data.preferences.AppPreferences
 import com.globallogic.rdkb.remotemanagement.domain.entity.FoundRouterDevice
 import com.globallogic.rdkb.remotemanagement.domain.entity.RouterDevice
+import com.globallogic.rdkb.remotemanagement.domain.error.DeviceError
 import com.globallogic.rdkb.remotemanagement.domain.repository.RouterDeviceConnectionRepository
-import com.globallogic.rdkb.remotemanagement.domain.utils.runCatchingSafe
+import com.globallogic.rdkb.remotemanagement.domain.utils.Resource
+import com.globallogic.rdkb.remotemanagement.domain.utils.buildResource
+import com.globallogic.rdkb.remotemanagement.domain.utils.dataOrElse
+import com.globallogic.rdkb.remotemanagement.domain.utils.map
+import com.globallogic.rdkb.remotemanagement.domain.utils.mapError
 
 class RouterDeviceConnectionRepositoryImpl(
     private val appPreferences: AppPreferences,
@@ -15,25 +20,35 @@ class RouterDeviceConnectionRepositoryImpl(
     private val localRouterDeviceDataSource: LocalRouterDeviceDataSource,
     private val remoteRouterDeviceDataSource: RemoteRouterDeviceDataSource,
 ) : RouterDeviceConnectionRepository {
-    private suspend fun currentUserEmail(): String = appPreferences.currentUserEmailPref.get() ?: error("No user")
 
-    override suspend fun connectToRouterDevice(device: FoundRouterDevice): Result<RouterDevice> {
+    override suspend fun connectToRouterDevice(device: FoundRouterDevice): Resource<RouterDevice, DeviceError.CantConnectToRouterDevice> {
         return addRouterDeviceManually(device.macAddress)
     }
 
-    override suspend fun addRouterDeviceManually(macAddress: String): Result<RouterDevice> = runCatchingSafe {
-        val device = routerDeviceConnectionDataSource.connectToRouterDevice(macAddress).getOrThrow() ?: error("Can't connect")
-        val deviceInfo = remoteRouterDeviceDataSource.loadRouterDeviceInfo(device).getOrThrow()
-        localRouterDeviceDataSource.saveRouterDevice(deviceInfo, currentUserEmail())
-        device
+    override suspend fun addRouterDeviceManually(macAddress: String): Resource<RouterDevice, DeviceError.CantConnectToRouterDevice> = buildResource {
+        val device = routerDeviceConnectionDataSource.connectToRouterDevice(macAddress)
+            .dataOrElse { error -> return failure(DeviceError.CantConnectToRouterDevice) }
+        val deviceInfo = remoteRouterDeviceDataSource.loadRouterDeviceInfo(device)
+            .dataOrElse { error -> return failure(DeviceError.CantConnectToRouterDevice) }
+
+        val email = appPreferences.currentUserEmailPref.get()
+            ?: return failure(DeviceError.CantConnectToRouterDevice)
+        localRouterDeviceDataSource.saveRouterDevice(deviceInfo, email)
+            .dataOrElse { error -> return failure(DeviceError.CantConnectToRouterDevice) }
+
+        return success(device)
     }
 
-    override suspend fun searchRouterDevices(): Result<List<FoundRouterDevice>> {
-        return localRouterDeviceDataSource.loadRouterDevicesForUser(currentUserEmail())
+    override suspend fun searchRouterDevices(): Resource<List<FoundRouterDevice>, DeviceError.NoAvailableRouterDevices> = buildResource {
+        val email = appPreferences.currentUserEmailPref.get()
+            ?: return failure(DeviceError.NoAvailableRouterDevices)
+
+        val connectedDevices = localRouterDeviceDataSource.loadRouterDevicesForUser(email)
             .map { devices -> devices.map { it.macAddress } }
-            .mapCatching { connectedDevices ->
-                routerDeviceConnectionDataSource.findAvailableRouterDevices().getOrThrow()
-                    .filter { it.macAddress !in connectedDevices }
-            }
+            .dataOrElse { error -> return failure(DeviceError.NoAvailableRouterDevices) }
+
+        return routerDeviceConnectionDataSource.findAvailableRouterDevices()
+            .map { availableDevices -> availableDevices.filter { it.macAddress !in connectedDevices } }
+            .mapError { error -> DeviceError.NoAvailableRouterDevices }
     }
 }

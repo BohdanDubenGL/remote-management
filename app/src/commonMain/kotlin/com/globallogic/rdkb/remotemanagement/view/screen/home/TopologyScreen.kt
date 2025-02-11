@@ -13,12 +13,14 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -28,7 +30,9 @@ import com.globallogic.rdkb.remotemanagement.domain.entity.RouterDevice
 import com.globallogic.rdkb.remotemanagement.domain.entity.RouterDeviceTopologyData
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.GetLocalRouterDeviceUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.GetRouterDeviceTopologyDataUseCase
+import com.globallogic.rdkb.remotemanagement.domain.utils.dataOrElse
 import com.globallogic.rdkb.remotemanagement.view.component.AppButton
+import com.globallogic.rdkb.remotemanagement.view.component.AppCard
 import com.globallogic.rdkb.remotemanagement.view.component.AppErrorWithButton
 import com.globallogic.rdkb.remotemanagement.view.component.AppLoadingWithButton
 import com.globallogic.rdkb.remotemanagement.view.component.AppTitleText
@@ -99,12 +103,12 @@ private fun TopologyContent(
             )
         }
     } else {
-        Card(
-            elevation = CardDefaults.cardElevation(8.dp),
-            shape = RoundedCornerShape(16.dp),
+        AppCard(
+            color = Color.White,
             modifier = Modifier
                 .fillMaxSize()
-                .padding(32.dp)
+                .padding(horizontal = 32.dp)
+                .padding(top = 32.dp, bottom = 72.dp),
         ) {
             TopologyDiagram(
                 Network("Internet"),
@@ -124,12 +128,13 @@ class TopologyViewModel(
 
     fun loadTopologyData() {
         viewModelScope.launch {
-            getLocalRouterDevice()
-                .mapCatching { routerDevice ->
-                    val topologyData = routerDevice?.let { getRouterDeviceTopologyData(it).getOrThrow() }
-                    _uiState.update { it.copy(routerDevice = routerDevice, topologyData = topologyData, topologyDataLoaded = true) }
-                }
-                .onFailure { it.printStackTrace() }
+            _uiState.update { state ->
+                val routerDevice = getLocalRouterDevice()
+                    .dataOrElse { error -> return@update state.copy(topologyDataLoaded = true) }
+                val topologyData = getRouterDeviceTopologyData(routerDevice)
+                    .dataOrElse { error -> return@update state.copy(topologyDataLoaded = true) }
+                state.copy(routerDevice = routerDevice, topologyData = topologyData, topologyDataLoaded = true)
+            }
         }
     }
 }

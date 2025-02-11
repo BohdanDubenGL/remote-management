@@ -10,5 +10,5 @@
     <string name="screen_title_router_device">Device</string>
     <string name="screen_title_connected_devices">Connected clients</string>
     <string name="screen_title_router_device_setup">Setup device</string>
-    <string name="screen_title_router_device_settings">Device settings</string>
+    <string name="screen_title_router_device_settings">Device actions</string>
 </resources>

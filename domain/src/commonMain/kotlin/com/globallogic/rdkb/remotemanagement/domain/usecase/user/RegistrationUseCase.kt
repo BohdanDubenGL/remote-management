@@ -4,8 +4,8 @@ import com.globallogic.rdkb.remotemanagement.domain.entity.RegistrationData
 import com.globallogic.rdkb.remotemanagement.domain.entity.User
 import com.globallogic.rdkb.remotemanagement.domain.error.UserError
 import com.globallogic.rdkb.remotemanagement.domain.repository.UserRepository
-import com.globallogic.rdkb.remotemanagement.domain.usecase.verification.PasswordVerifier
-import com.globallogic.rdkb.remotemanagement.domain.usecase.verification.UserNameVerifier
+import com.globallogic.rdkb.remotemanagement.domain.verification.PasswordVerifier
+import com.globallogic.rdkb.remotemanagement.domain.verification.UserNameVerifier
 import com.globallogic.rdkb.remotemanagement.domain.utils.Resource
 import com.globallogic.rdkb.remotemanagement.domain.utils.buildResource
 

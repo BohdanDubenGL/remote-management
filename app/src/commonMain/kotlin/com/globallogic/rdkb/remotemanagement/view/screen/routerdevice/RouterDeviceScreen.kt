@@ -32,6 +32,7 @@ import com.globallogic.rdkb.remotemanagement.domain.entity.RouterDevice
 import com.globallogic.rdkb.remotemanagement.domain.entity.RouterDeviceInfo
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.GetRouterDeviceInfoUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.GetSelectedRouterDeviceUseCase
+import com.globallogic.rdkb.remotemanagement.domain.utils.dataOrElse
 import com.globallogic.rdkb.remotemanagement.domain.utils.runCatchingSafe
 import com.globallogic.rdkb.remotemanagement.view.component.AppCard
 import com.globallogic.rdkb.remotemanagement.view.component.AppIcon
@@ -135,12 +136,13 @@ class RouterDeviceViewModel(
     fun loadSelectedRouterDeviceInfo() {
         viewModelScope.launch {
             delay(1.seconds.inWholeMilliseconds)
-            runCatchingSafe {
-                val routerDevice = getSelectedRouterDevice().getOrThrow() ?: return@runCatchingSafe
-                val routerDeviceInfo = getRouterDeviceInfo(routerDevice).getOrThrow()
-                _uiState.update { it.copy(routerDevice = routerDevice, routerDeviceInfo = routerDeviceInfo, routerDeviceInfoLoaded = true) }
+            _uiState.update { state ->
+                val routerDevice = getSelectedRouterDevice()
+                    .dataOrElse { error -> return@update state }
+                val routerDeviceInfo = getRouterDeviceInfo(routerDevice)
+                    .dataOrElse { error -> return@update state }
+                state.copy(routerDevice = routerDevice, routerDeviceInfo = routerDeviceInfo, routerDeviceInfoLoaded = true)
             }
-                .onFailure { it.printStackTrace() }
         }
     }
 }

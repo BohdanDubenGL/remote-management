@@ -36,6 +36,8 @@ import com.globallogic.rdkb.remotemanagement.domain.entity.RouterDeviceSettings
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.GetRouterDeviceInfoUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.GetSelectedRouterDeviceUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.SetupRouterDeviceUseCase
+import com.globallogic.rdkb.remotemanagement.domain.utils.dataOrElse
+import com.globallogic.rdkb.remotemanagement.domain.utils.map
 import com.globallogic.rdkb.remotemanagement.domain.utils.runCatchingSafe
 import com.globallogic.rdkb.remotemanagement.view.component.AppButton
 import com.globallogic.rdkb.remotemanagement.view.component.AppCard
@@ -175,25 +177,28 @@ class SetupRouterDeviceViewModel(
 
     fun loadRouterDevice() {
         viewModelScope.launch {
-            runCatchingSafe {
-                val routerDevice = getSelectedRouterDevice().getOrThrow() ?: return@runCatchingSafe
-                val routerDeviceInfo = getRouterDeviceInfo(routerDevice).getOrThrow()
-                _uiState.update { it.copy(
+            _uiState.update { state ->
+                val routerDevice = getSelectedRouterDevice()
+                    .dataOrElse { error -> return@update state }
+                val routerDeviceInfo = getRouterDeviceInfo(routerDevice)
+                    .dataOrElse { error -> return@update state }
+                state.copy(
                     routerDevice = routerDevice,
-                    bandsSettings = routerDeviceInfo?.availableBands?.map { BandSettings(it, "", "", false) }.orEmpty()
-                ) }
+                    bandsSettings = routerDeviceInfo.availableBands
+                        .map { BandSettings(it, "", "", false) }
+                )
             }
-                .onFailure { it.printStackTrace() }
         }
     }
 
     fun saveData() {
         viewModelScope.launch {
-            val state = _uiState.value
-            val routerDevice = state.routerDevice ?: return@launch
-            setupRouterDevice(routerDevice, RouterDeviceSettings(state.bandsSettings))
-                .onFailure { it.printStackTrace() }
-            _uiState.update { it.copy(dataSaved = true) }
+            _uiState.update { state ->
+                state.routerDevice ?: return@update state
+                setupRouterDevice(state.routerDevice, RouterDeviceSettings(state.bandsSettings))
+                    .map { state.copy(dataSaved = true) }
+                    .dataOrElse { error -> state }
+            }
         }
     }
 }

@@ -2,7 +2,7 @@ package com.globallogic.rdkb.remotemanagement.domain.usecase.user
 
 import com.globallogic.rdkb.remotemanagement.domain.error.UserError
 import com.globallogic.rdkb.remotemanagement.domain.repository.UserRepository
-import com.globallogic.rdkb.remotemanagement.domain.usecase.verification.EmailVerifier
+import com.globallogic.rdkb.remotemanagement.domain.verification.EmailVerifier
 import com.globallogic.rdkb.remotemanagement.domain.utils.Resource
 import com.globallogic.rdkb.remotemanagement.domain.utils.buildResource
 import com.globallogic.rdkb.remotemanagement.domain.utils.map

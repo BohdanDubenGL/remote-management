@@ -33,6 +33,8 @@ import com.globallogic.rdkb.remotemanagement.domain.entity.FoundRouterDevice
 import com.globallogic.rdkb.remotemanagement.domain.entity.RouterDevice
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdeviceconnection.ConnectToRouterDeviceUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdeviceconnection.SearchRouterDevicesUseCase
+import com.globallogic.rdkb.remotemanagement.domain.utils.dataOrElse
+import com.globallogic.rdkb.remotemanagement.domain.utils.map
 import com.globallogic.rdkb.remotemanagement.view.component.AppCard
 import com.globallogic.rdkb.remotemanagement.view.component.AppIcon
 import com.globallogic.rdkb.remotemanagement.view.component.AppTextProperty
@@ -166,18 +168,22 @@ class SearchRouterDeviceViewModel(
     fun searchDevices() {
         viewModelScope.launch {
             _uiState.update { SearchRouterDeviceUiState.Searching }
-            searchRouterDevices()
-                .onSuccess { foundDevices -> _uiState.update { SearchRouterDeviceUiState.FoundDevices(foundRouterDevices = foundDevices) } }
-                .onFailure { it.printStackTrace() }
+            _uiState.update { state ->
+                searchRouterDevices()
+                    .map { foundDevices -> SearchRouterDeviceUiState.FoundDevices(foundRouterDevices = foundDevices) }
+                    .dataOrElse { error -> state }
+            }
         }
     }
 
     fun connectToDevice(foundRouterDevice: FoundRouterDevice) {
         viewModelScope.launch {
             _uiState.update { SearchRouterDeviceUiState.Connecting(foundRouterDevice = foundRouterDevice) }
-            connectToRouterDevice(foundRouterDevice)
-                .onSuccess { routerDevice -> _uiState.update { SearchRouterDeviceUiState.Connected(routerDevice = routerDevice) } }
-                .onFailure { it.printStackTrace() }
+            _uiState.update { state ->
+                connectToRouterDevice(foundRouterDevice)
+                    .map { routerDevice -> SearchRouterDeviceUiState.Connected(routerDevice = routerDevice) }
+                    .dataOrElse { error -> state }
+            }
 
         }
     }

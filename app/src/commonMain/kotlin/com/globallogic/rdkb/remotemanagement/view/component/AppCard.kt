@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.dp
 fun AppCard(
     modifier: Modifier = Modifier,
     cornerRadius: Dp = 16.dp,
+    color: Color = MaterialTheme.colorScheme.secondaryContainer,
     content: @Composable () -> Unit
 ) {
     Card(
@@ -31,7 +32,7 @@ fun AppCard(
     ) {
         Box(
             modifier = Modifier
-                .background(MaterialTheme.colorScheme.secondaryContainer)
+                .background(color)
                 .padding(16.dp),
             content = { content() }
         )

@@ -1,27 +1,29 @@
 package com.globallogic.rdkb.remotemanagement.data.datasource
 
+import com.globallogic.rdkb.remotemanagement.data.error.IoDeviceError
 import com.globallogic.rdkb.remotemanagement.domain.entity.ConnectedDevice
 import com.globallogic.rdkb.remotemanagement.domain.entity.RouterDevice
 import com.globallogic.rdkb.remotemanagement.domain.entity.RouterDeviceInfo
 import com.globallogic.rdkb.remotemanagement.domain.entity.RouterDeviceTopologyData
+import com.globallogic.rdkb.remotemanagement.domain.utils.Resource
 
 interface LocalRouterDeviceDataSource {
 
-    suspend fun loadRouterDevicesForUser(userEmail: String): Result<List<RouterDevice>>
+    suspend fun loadRouterDevicesForUser(userEmail: String): Resource<List<RouterDevice>, IoDeviceError.LoadRouterDevicesForUser>
 
-    suspend fun findRouterDeviceByMacAddress(macAddress: String): Result<RouterDevice?>
+    suspend fun findRouterDeviceByMacAddress(macAddress: String): Resource<RouterDevice, IoDeviceError.FindRouterDeviceByMacAddress>
 
-    suspend fun saveConnectedDevices(device: RouterDevice, connectedDevices: List<ConnectedDevice>): Result<Unit>
+    suspend fun saveConnectedDevices(device: RouterDevice, connectedDevices: List<ConnectedDevice>): Resource<Unit, IoDeviceError.SaveConnectedDevices>
 
-    suspend fun loadConnectedDevices(device: RouterDevice): Result<List<ConnectedDevice>>
+    suspend fun loadConnectedDevices(device: RouterDevice): Resource<List<ConnectedDevice>, IoDeviceError.LoadConnectedDevices>
 
-    suspend fun loadDeviceInfo(device: RouterDevice): Result<RouterDeviceInfo?>
+    suspend fun loadDeviceInfo(device: RouterDevice): Resource<RouterDeviceInfo, IoDeviceError.LoadDeviceInfo>
 
-    suspend fun loadTopologyData(device: RouterDevice): Result<RouterDeviceTopologyData?>
+    suspend fun loadTopologyData(device: RouterDevice): Resource<RouterDeviceTopologyData, IoDeviceError.NoTopologyDataFound>
 
-    suspend fun saveRouterDevice(device: RouterDeviceInfo, userEmail: String): Result<Unit>
+    suspend fun saveRouterDevice(device: RouterDeviceInfo, userEmail: String): Resource<Unit, IoDeviceError.SaveRouterDevice>
 
-    suspend fun removeRouterDevice(device: RouterDevice, userEmail: String): Result<Unit>
+    suspend fun removeRouterDevice(device: RouterDevice, userEmail: String): Resource<Unit, IoDeviceError.RemoveRouterDevice>
 
-    suspend fun findLocalRouterDevice(userEmail: String): Result<RouterDevice?>
+    suspend fun findLocalRouterDevice(userEmail: String): Resource<RouterDevice, IoDeviceError.FindLocalRouterDevice>
 }

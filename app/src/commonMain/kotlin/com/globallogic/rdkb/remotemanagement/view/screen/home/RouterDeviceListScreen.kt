@@ -31,6 +31,8 @@ import androidx.navigation.NavController
 import com.globallogic.rdkb.remotemanagement.domain.entity.RouterDevice
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.SelectRouterDeviceUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdeviceconnection.GetRouterDeviceListUseCase
+import com.globallogic.rdkb.remotemanagement.domain.utils.dataOrElse
+import com.globallogic.rdkb.remotemanagement.domain.utils.map
 import com.globallogic.rdkb.remotemanagement.view.component.AppCard
 import com.globallogic.rdkb.remotemanagement.view.component.AppIcon
 import com.globallogic.rdkb.remotemanagement.view.component.AppTextProperty
@@ -119,16 +121,22 @@ class RouterDeviceListViewModel(
 
     fun loadRouterDevices() {
         viewModelScope.launch {
-            getRouterDeviceList()
-                .onSuccess { routerDevices -> _uiState.update { it.copy(routerDevices = routerDevices) } }
-                .onFailure { it.printStackTrace() }
+            _uiState.update { state ->
+                getRouterDeviceList()
+                    .map { routerDevices -> state.copy(routerDevices = routerDevices) }
+                    .dataOrElse { error -> state }
+            }
         }
     }
 
     fun onRouterDeviceSelected(routerDevice: RouterDevice) {
         viewModelScope.launch {
-            selectRouterDevice(routerDevice)
-                .onFailure { it.printStackTrace() }
+            _uiState.update { state ->
+                selectRouterDevice(routerDevice)
+                    .map { state }
+                    .dataOrElse { state }
+            }
+
         }
     }
 }

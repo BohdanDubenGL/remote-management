@@ -23,6 +23,8 @@ import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.Factory
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.GetSelectedRouterDeviceUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.RemoveRouterDeviceUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.RestartRouterDeviceUseCase
+import com.globallogic.rdkb.remotemanagement.domain.utils.dataOrElse
+import com.globallogic.rdkb.remotemanagement.domain.utils.map
 import com.globallogic.rdkb.remotemanagement.view.component.AppButton
 import com.globallogic.rdkb.remotemanagement.view.navigation.LocalNavController
 import com.globallogic.rdkb.remotemanagement.view.navigation.Screen
@@ -112,39 +114,49 @@ class RouterSettingsViewModel(
 
     fun loadRouterDevice() {
         viewModelScope.launch {
-            getSelectedRouterDevice()
-                .onSuccess { routerDevice -> _uiState.update { it.copy(routerDevice = routerDevice, deviceAvailable = true) } }
-                .onFailure { it.printStackTrace() }
+            _uiState.update { state ->
+                getSelectedRouterDevice()
+                    .map { routerDevice -> state.copy(routerDevice = routerDevice, deviceAvailable = true) }
+                    .dataOrElse { error -> state }
+            }
         }
     }
 
     fun restartRouterDevice() {
         viewModelScope.launch {
-            val routerDevice = _uiState.value.routerDevice ?: return@launch
-            _uiState.update { it.copy(deviceAvailable = false) }
-            restartRouterDevice(routerDevice)
-                .onFailure { it.printStackTrace() }
-            _uiState.update { it.copy(deviceAvailable = true) }
+            _uiState.update { state -> state.copy(deviceAvailable = false) }
+            _uiState.update { state ->
+                state.routerDevice ?: return@update state
+                restartRouterDevice(state.routerDevice)
+                    .map { state.copy(deviceAvailable = true) }
+                    .dataOrElse { error -> state }
+            }
         }
     }
 
     fun factoryResetRouterDevice() {
         viewModelScope.launch {
-            val routerDevice = _uiState.value.routerDevice ?: return@launch
             _uiState.update { it.copy(deviceAvailable = false) }
-            factoryResetRouterDevice(routerDevice)
-                .onFailure { it.printStackTrace() }
-            _uiState.update { it.copy(deviceAvailable = true) }
+
+            _uiState.update { state ->
+                state.routerDevice ?: return@update state
+                factoryResetRouterDevice(state.routerDevice)
+                    .map { state.copy(deviceAvailable = true) }
+                    .dataOrElse { error -> state }
+            }
         }
     }
 
     fun removeRouterDevice() {
         viewModelScope.launch {
-            val routerDevice = _uiState.value.routerDevice ?: return@launch
-            _uiState.update { it.copy(deviceAvailable = false) }
-            removeRouterDevice(routerDevice)
-                .onFailure { it.printStackTrace() }
-            _uiState.update { it.copy(deviceAvailable = true, deviceRemoved = true) }
+            _uiState.update { state -> state.copy(deviceAvailable = false) }
+
+            _uiState.update { state ->
+                state.routerDevice ?: return@update state
+                removeRouterDevice(state.routerDevice)
+                    .map { state.copy(deviceAvailable = true, deviceRemoved = true) }
+                    .dataOrElse { error -> state }
+            }
         }
     }
 }

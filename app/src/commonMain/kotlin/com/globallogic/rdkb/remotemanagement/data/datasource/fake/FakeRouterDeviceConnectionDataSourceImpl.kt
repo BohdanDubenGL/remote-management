@@ -1,9 +1,13 @@
 package com.globallogic.rdkb.remotemanagement.data.datasource.fake
 
 import com.globallogic.rdkb.remotemanagement.data.datasource.RouterDeviceConnectionDataSource
+import com.globallogic.rdkb.remotemanagement.data.error.IoDeviceError
 import com.globallogic.rdkb.remotemanagement.domain.entity.FoundRouterDevice
 import com.globallogic.rdkb.remotemanagement.domain.entity.RouterDevice
-import com.globallogic.rdkb.remotemanagement.domain.utils.runCatchingSafe
+import com.globallogic.rdkb.remotemanagement.domain.utils.Resource
+import com.globallogic.rdkb.remotemanagement.domain.utils.buildResource
+import com.globallogic.rdkb.remotemanagement.domain.utils.flatMapData
+import com.globallogic.rdkb.remotemanagement.domain.utils.map
 
 fun RouterDeviceConnectionDataSource.fake(): RouterDeviceConnectionDataSource =
     FakeRouterDeviceConnectionDataSourceImpl(this)
@@ -17,16 +21,16 @@ private class FakeRouterDeviceConnectionDataSourceImpl(
         ipAddress = "192.168.1.150",
     )
 
-    override suspend fun findAvailableRouterDevices(): Result<List<FoundRouterDevice>> = runCatchingSafe {
-        buildList {
-            add(hardcodedDevice.toFoundRouterDevice())
-            addAll(original.findAvailableRouterDevices().getOrThrow())
-        }
+    override suspend fun findAvailableRouterDevices(): Resource<List<FoundRouterDevice>, IoDeviceError.NoAvailableRouterDevices> = buildResource {
+        return success(listOf(hardcodedDevice.toFoundRouterDevice()))
+            .flatMapData { fake ->
+                original.findAvailableRouterDevices().map { it + fake }
+            }
     }
 
-    override suspend fun connectToRouterDevice(macAddress: String): Result<RouterDevice?> {
+    override suspend fun connectToRouterDevice(macAddress: String): Resource<RouterDevice, IoDeviceError.CantConnectToRouterDevice> = buildResource {
         return if (macAddress == hardcodedDevice.macAddress) {
-            Result.success(hardcodedDevice.toRouterDevice())
+            success(hardcodedDevice.toRouterDevice())
         } else {
             original.connectToRouterDevice(macAddress)
         }

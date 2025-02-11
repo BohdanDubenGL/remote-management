@@ -41,7 +41,7 @@ fun TopologyDiagram(
     val clientStates = remember { clients.mapIndexed { i, client -> mutableStateOf(NodeState(Offset(100f + i * 200f, 500f), client.name, Color.Green)) } }
     val textMeasurer = rememberTextMeasurer()
 
-    Canvas(modifier = Modifier.background(Color.White).fillMaxSize().pointerInput(Unit) {
+    Canvas(modifier = Modifier.fillMaxSize().pointerInput(Unit) {
         networkState.value = networkState.value.copy(position = Offset(size.width / 2F, size.height / 4F))
         routerState.value = routerState.value.copy(position = Offset(size.width / 2F, size.height / 2F))
         val offset = size.width / clients.size.inc().toFloat()
