@@ -1,14 +1,16 @@
 package com.globallogic.rdkb.remotemanagement.view.component
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LifecycleStartEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -23,21 +25,25 @@ fun AppFloatingActionButton(
 ) {
     val floatingActionButtonState by scaffoldController.floatingActionButtonState.collectAsStateWithLifecycle()
 
-    when (val state = floatingActionButtonState) {
-        is FloatingActionButtonState.Shown -> {
-            FloatingActionButton(
-                onClick = state.buttonAction,
-                shape = CircleShape
-            ) {
-                AppIcon(
-                    imageVector = state.buttonIcon,
-                    contentDescription = state.iconDescription,
-                    color = MaterialTheme.colorScheme.secondaryContainer,
-                    contentColor = MaterialTheme.colorScheme.secondary,
-                )
-            }
+    val state = floatingActionButtonState
+    AnimatedVisibility(
+        visible = state is FloatingActionButtonState.Shown,
+        enter = slideInHorizontally(animationSpec = tween(200), initialOffsetX = { it }),
+        exit = fadeOut(animationSpec = tween(500)) + slideOutHorizontally(animationSpec = tween(500), targetOffsetX = { it }),
+    ) {
+        FloatingActionButton(
+            onClick = (state as? FloatingActionButtonState.Shown)?.buttonAction ?: { },
+            shape = CircleShape,
+            contentColor = MaterialTheme.colorScheme.secondary,
+            containerColor = MaterialTheme.colorScheme.secondaryContainer,
+        ) {
+            if (state is FloatingActionButtonState.Shown) AppIcon(
+                imageVector = state.buttonIcon,
+                contentDescription = state.iconDescription,
+                color = MaterialTheme.colorScheme.secondaryContainer,
+                contentColor = MaterialTheme.colorScheme.secondary,
+            )
         }
-        is FloatingActionButtonState.Hidden -> Unit
     }
 }
 

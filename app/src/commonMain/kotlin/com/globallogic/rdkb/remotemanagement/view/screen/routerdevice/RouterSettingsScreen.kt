@@ -18,10 +18,17 @@ import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.Factory
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.GetSelectedRouterDeviceUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.RemoveRouterDeviceUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.RestartRouterDeviceUseCase
+import com.globallogic.rdkb.remotemanagement.domain.utils.Resource
+import com.globallogic.rdkb.remotemanagement.domain.utils.ResourceState
 import com.globallogic.rdkb.remotemanagement.domain.utils.dataOrElse
+import com.globallogic.rdkb.remotemanagement.domain.utils.flatMapData
+import com.globallogic.rdkb.remotemanagement.domain.utils.flatMapError
 import com.globallogic.rdkb.remotemanagement.domain.utils.map
+import com.globallogic.rdkb.remotemanagement.domain.utils.onFailure
 import com.globallogic.rdkb.remotemanagement.view.base.MviViewModel
 import com.globallogic.rdkb.remotemanagement.view.component.AppButton
+import com.globallogic.rdkb.remotemanagement.view.component.AppDrawResourceState
+import com.globallogic.rdkb.remotemanagement.view.error.UiResourceError
 import com.globallogic.rdkb.remotemanagement.view.navigation.LocalNavController
 import com.globallogic.rdkb.remotemanagement.view.navigation.Screen
 import org.koin.compose.viewmodel.koinViewModel
@@ -33,14 +40,20 @@ fun RouterSettingsScreen(
 ) {
     val uiState by routerSettingsViewModel.uiState.collectAsStateWithLifecycle()
 
-    RouterSettingsContent(
-        uiState = uiState,
-        restartDevice = routerSettingsViewModel::restartRouterDevice,
-        factoryResetDevice = routerSettingsViewModel::factoryResetRouterDevice,
-        removeDevice = routerSettingsViewModel::removeRouterDevice,
-        deviceRemoved = {
-            navController.navigate(Screen.HomeGraph.Topology) {
-                popUpTo<Screen.RootGraph>()
+    AppDrawResourceState(
+        resourceState = uiState,
+        onSuccess = { state ->
+            when (state) {
+                is RouterSettingsUiState.DeviceRemoved -> SideEffect {
+                    navController.navigate(Screen.HomeGraph.Topology) {
+                        popUpTo<Screen.RootGraph>()
+                    }
+                }
+                is RouterSettingsUiState.DeviceLoaded -> RouterSettingsContent(
+                    restartDevice = routerSettingsViewModel::restartRouterDevice,
+                    factoryResetDevice = routerSettingsViewModel::factoryResetRouterDevice,
+                    removeDevice = routerSettingsViewModel::removeRouterDevice
+                )
             }
         }
     )
@@ -48,16 +61,10 @@ fun RouterSettingsScreen(
 
 @Composable
 private fun RouterSettingsContent(
-    uiState: RouterSettingsUiState,
     restartDevice: () -> Unit,
     factoryResetDevice: () -> Unit,
     removeDevice: () -> Unit,
-    deviceRemoved: () -> Unit,
 ) {
-    SideEffect {
-        if (uiState.deviceRemoved) deviceRemoved()
-    }
-
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
@@ -69,19 +76,16 @@ private fun RouterSettingsContent(
         ) {
             AppButton(
                 text = "Restart device",
-                enabled = uiState.deviceAvailable,
                 onClick = restartDevice,
                 modifier = Modifier.fillMaxWidth(),
             )
             AppButton(
                 text = "Factory reset device",
-                enabled = uiState.deviceAvailable,
                 onClick = factoryResetDevice,
                 modifier = Modifier.fillMaxWidth(),
             )
             AppButton(
                 text = "Remove device",
-                enabled = uiState.deviceAvailable,
                 onClick = removeDevice,
                 modifier = Modifier.fillMaxWidth()
             )
@@ -94,60 +98,63 @@ class RouterSettingsViewModel(
     private val restartRouterDevice: RestartRouterDeviceUseCase,
     private val factoryResetRouterDevice: FactoryResetRouterDeviceUseCase,
     private val removeRouterDevice: RemoveRouterDeviceUseCase,
-) : MviViewModel<RouterSettingsUiState>(RouterSettingsUiState()) {
+) : MviViewModel<ResourceState<RouterSettingsUiState, UiResourceError>>(ResourceState.None) {
 
     override suspend fun onInitState() = loadRouterDevice()
 
     private fun loadRouterDevice() = launchUpdateState { state ->
         getSelectedRouterDevice()
-            .map { routerDevice -> state.copy(routerDevice = routerDevice, deviceAvailable = true) }
+            .map { routerDevice -> Resource.Success(RouterSettingsUiState.DeviceLoaded(routerDevice = routerDevice)) }
             .dataOrElse { error -> state }
     }
 
     fun restartRouterDevice() = launchOnViewModelScope {
-        updateState { state -> state.copy(deviceAvailable = false) }
-        updateState { state ->
-            state.routerDevice ?: return@updateState state
-            restartRouterDevice(state.routerDevice)
-                .map { state.copy(deviceAvailable = true) }
-                .dataOrElse { error ->
-                    loadRouterDevice()
-                    state
-                }
+        val state = uiState.value
+        updateState { ResourceState.Loading }
+        if (state is Resource.Success) {
+            val data = state.data
+            if (data is RouterSettingsUiState.DeviceLoaded) updateState {
+                restartRouterDevice(data.routerDevice)
+                    .onFailure { loadRouterDevice() }
+                    .flatMapData { state }
+                    .flatMapError { error -> state }
+            }
         }
     }
 
     fun factoryResetRouterDevice() = launchOnViewModelScope {
-        updateState { state -> state.copy(deviceAvailable = false) }
-        updateState { state ->
-            state.routerDevice ?: return@updateState state
-            factoryResetRouterDevice(state.routerDevice)
-                .map { state.copy(deviceAvailable = true) }
-                .dataOrElse { error ->
-                    loadRouterDevice()
-                    state
-                }
+        val state = uiState.value
+        updateState { ResourceState.Loading }
+        if (state is Resource.Success) {
+            val data = state.data
+            if (data is RouterSettingsUiState.DeviceLoaded) updateState {
+                factoryResetRouterDevice(data.routerDevice)
+                    .onFailure { loadRouterDevice() }
+                    .flatMapData { state }
+                    .flatMapError { error -> state }
+            }
         }
     }
 
-    fun removeRouterDevice() {
-        launchOnViewModelScope {
-            updateState { state -> state.copy(deviceAvailable = false) }
-            updateState { state ->
-                state.routerDevice ?: return@updateState state
-                removeRouterDevice(state.routerDevice)
-                    .map { state.copy(deviceAvailable = true, deviceRemoved = true) }
-                    .dataOrElse { error ->
-                        loadRouterDevice()
-                        state
-                    }
+    fun removeRouterDevice() = launchOnViewModelScope {
+        val state = uiState.value
+        updateState { ResourceState.Loading }
+        if (state is Resource.Success) {
+            val data = state.data
+            if (data is RouterSettingsUiState.DeviceLoaded) updateState {
+                removeRouterDevice(data.routerDevice)
+                    .onFailure { loadRouterDevice() }
+                    .map { RouterSettingsUiState.DeviceRemoved }
+                    .flatMapError { error -> state }
             }
         }
     }
 }
 
-data class RouterSettingsUiState(
-    val routerDevice: RouterDevice? = null,
-    val deviceAvailable: Boolean = false,
-    val deviceRemoved: Boolean = false,
-)
+sealed interface RouterSettingsUiState {
+    data class DeviceLoaded(
+        val routerDevice: RouterDevice,
+        val deviceRemoved: Boolean = false,
+    ): RouterSettingsUiState
+    data object DeviceRemoved : RouterSettingsUiState
+}

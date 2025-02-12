@@ -5,6 +5,7 @@ import androidx.compose.material.icons.filled.Error
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import com.globallogic.rdkb.remotemanagement.view.error.UiResourceError
 
 @Composable
 fun AppErrorWithButton(
@@ -26,5 +27,22 @@ fun AppErrorWithButton(
             )
         },
         modifier = modifier,
+    )
+}
+
+@Composable
+fun AppErrorWithButton(
+    modifier: Modifier = Modifier,
+    error: UiResourceError,
+    buttonText: String = "",
+    onClick: () -> Unit = { },
+) {
+    AppErrorWithButton(
+        modifier = modifier,
+        errorMessage = error.errorMessage,
+        errorDescription = error.errorDescription,
+        errorIcon = error.errorIcon,
+        buttonText = buttonText,
+        onClick =  onClick
     )
 }

@@ -17,6 +17,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.globallogic.rdkb.remotemanagement.view.error.UiResourceError
 import com.globallogic.rdkb.remotemanagement.view.theme.RobotoMono
 import com.globallogic.rdkb.remotemanagement.view.theme.UbuntuMono
 
@@ -47,19 +48,34 @@ fun AppError(
                     Text(
                         text = errorMessage,
                         color = MaterialTheme.colorScheme.primary,
-                        fontSize = 24.sp,
+                        fontSize = 26.sp,
                         fontFamily = FontFamily.RobotoMono,
                     )
                 }
                 Text(
                     text = errorDescription,
                     color = MaterialTheme.colorScheme.secondary,
-                    fontSize = 20.sp,
+                    fontSize = 22.sp,
                     fontFamily = FontFamily.UbuntuMono,
                 )
             }
         },
         bottomSection = content,
         modifier = modifier.padding(vertical = 16.dp),
+    )
+}
+
+@Composable
+fun AppError(
+    modifier: Modifier = Modifier,
+    error: UiResourceError,
+    content: @Composable () -> Unit = { },
+) {
+    AppError(
+        modifier = modifier,
+        errorMessage = error.errorMessage,
+        errorDescription = error.errorDescription,
+        errorIcon = error.errorIcon,
+        content = content
     )
 }

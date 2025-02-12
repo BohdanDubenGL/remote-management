@@ -74,6 +74,7 @@ private fun AddRouterDeviceManuallyContent(
 class AddRouterDeviceManuallyViewModel(
     private val addRouterDeviceManually: AddRouterDeviceManuallyUseCase,
 ) : MviViewModel<AddRouterDeviceManuallyUiState>(AddRouterDeviceManuallyUiState()) {
+
     fun onMacAddressEntered(macAddress: String) = updateState { state ->
         state.copy(deviceMacAddress = macAddress)
     }

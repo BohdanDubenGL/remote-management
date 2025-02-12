@@ -23,12 +23,16 @@ import androidx.navigation.NavController
 import com.globallogic.rdkb.remotemanagement.domain.entity.ConnectedDevice
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.GetRouterDeviceConnectedDevicesUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.GetSelectedRouterDeviceUseCase
+import com.globallogic.rdkb.remotemanagement.domain.utils.Resource
+import com.globallogic.rdkb.remotemanagement.domain.utils.ResourceState
 import com.globallogic.rdkb.remotemanagement.domain.utils.dataOrElse
 import com.globallogic.rdkb.remotemanagement.view.base.MviViewModel
 import com.globallogic.rdkb.remotemanagement.view.component.AppCard
+import com.globallogic.rdkb.remotemanagement.view.component.AppDrawResourceState
 import com.globallogic.rdkb.remotemanagement.view.component.AppIcon
 import com.globallogic.rdkb.remotemanagement.view.component.AppTextProperty
 import com.globallogic.rdkb.remotemanagement.view.component.AppTitleText
+import com.globallogic.rdkb.remotemanagement.view.error.UiResourceError
 import com.globallogic.rdkb.remotemanagement.view.navigation.LocalNavController
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -38,8 +42,14 @@ fun ConnectedDeviceListScreen(
     connectedDeviceListViewModel: ConnectedDeviceListViewModel = koinViewModel(),
 ) {
     val uiState by connectedDeviceListViewModel.uiState.collectAsStateWithLifecycle()
-    ConnectedDeviceListContent(
-        uiState = uiState,
+
+    AppDrawResourceState(
+        resourceState = uiState,
+        onSuccess = { state ->
+            ConnectedDeviceListContent(
+                uiState = state,
+            )
+        }
     )
 }
 
@@ -91,16 +101,19 @@ private fun ConnectedDeviceListContent(
 class ConnectedDeviceListViewModel(
     private val getSelectedRouterDevice: GetSelectedRouterDeviceUseCase,
     private val getRouterDeviceConnectedDevices: GetRouterDeviceConnectedDevicesUseCase,
-) : MviViewModel<ConnectedDeviceListUiState>(ConnectedDeviceListUiState()) {
+) : MviViewModel<ResourceState<ConnectedDeviceListUiState, UiResourceError>>(ResourceState.None) {
 
     override suspend fun onInitState() = loadConnectedDevices()
 
-    private fun loadConnectedDevices() = launchUpdateState { state ->
-        val routerDevice = getSelectedRouterDevice()
-            .dataOrElse { error -> return@launchUpdateState state }
-        val connectedDevices = getRouterDeviceConnectedDevices(routerDevice)
-            .dataOrElse { error -> return@launchUpdateState state }
-        state.copy(connectedDevices = connectedDevices)
+    private fun loadConnectedDevices() = launchOnViewModelScope {
+        updateState { state -> ResourceState.Loading }
+        updateState { state ->
+            val routerDevice = getSelectedRouterDevice()
+                .dataOrElse { error -> return@updateState state }
+            val connectedDevices = getRouterDeviceConnectedDevices(routerDevice)
+                .dataOrElse { error -> return@updateState state }
+            Resource.Success(ConnectedDeviceListUiState(connectedDevices = connectedDevices))
+        }
     }
 }
 

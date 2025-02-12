@@ -6,34 +6,32 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.onSubscription
+import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlin.time.Duration.Companion.seconds
 
 abstract class MviViewModel<State: Any>(
     initialState: State,
 ) : ViewModel() {
-    protected val mutableUiState: MutableStateFlow<State> = MutableStateFlow(initialState)
-    private val immutableUiState: StateFlow<State> = mutableUiState
+    protected val _uiState: MutableStateFlow<State> = MutableStateFlow(initialState)
+    val uiState: StateFlow<State> = _uiState
+        .shareIn(viewModelScope, SharingStarted.Lazily)
+        .onSubscription { onSubscribeState() }
         .onStart { onInitState() }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5.seconds.inWholeMilliseconds), initialState)
-
-    val uiState: StateFlow<State> get() {
-        launchOnViewModelScope { onCollectState() }
-        return immutableUiState
-    }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), initialState)
 
     protected open suspend fun onInitState() = Unit
 
-    protected open suspend fun onCollectState() = Unit
+    protected open suspend fun onSubscribeState() = Unit
 
     protected fun launchOnViewModelScope(block: suspend () -> Unit) {
         viewModelScope.launch { block() }
     }
 
     protected inline fun updateState(update: (State) -> State) =
-        mutableUiState.update { state -> update(state) }
+        _uiState.update { state -> update(state) }
 
     protected fun launchUpdateState(update: suspend (State) -> State) = launchOnViewModelScope {
         updateState { state -> update(state) }
