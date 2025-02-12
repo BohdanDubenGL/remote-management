@@ -12,6 +12,6 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         enableEdgeToEdge()
-        setContent { App(topBarHeight = 96.dp) }
+        setContent { App(topBarHeight = 104.dp) }
     }
 }

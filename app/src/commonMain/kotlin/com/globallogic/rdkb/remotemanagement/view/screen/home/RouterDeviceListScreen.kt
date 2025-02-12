@@ -11,39 +11,28 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Router
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import com.globallogic.rdkb.remotemanagement.domain.entity.RouterDevice
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.SelectRouterDeviceUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdeviceconnection.GetRouterDeviceListUseCase
 import com.globallogic.rdkb.remotemanagement.domain.utils.dataOrElse
 import com.globallogic.rdkb.remotemanagement.domain.utils.map
+import com.globallogic.rdkb.remotemanagement.view.base.MviViewModel
 import com.globallogic.rdkb.remotemanagement.view.component.AppCard
 import com.globallogic.rdkb.remotemanagement.view.component.AppIcon
 import com.globallogic.rdkb.remotemanagement.view.component.AppTextProperty
 import com.globallogic.rdkb.remotemanagement.view.component.AppTitleText
 import com.globallogic.rdkb.remotemanagement.view.navigation.LocalNavController
 import com.globallogic.rdkb.remotemanagement.view.navigation.Screen
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
@@ -55,7 +44,6 @@ fun RouterDeviceListScreen(
 
     RouterDeviceListContent(
         uiState = uiState,
-        loadRouterDevices = routerDeviceListViewModel::loadRouterDevices,
         onRouterDeviceClicked = { routerDevice ->
             routerDeviceListViewModel.onRouterDeviceSelected(routerDevice)
             navController.navigate(Screen.RouterDeviceGraph)
@@ -66,12 +54,8 @@ fun RouterDeviceListScreen(
 @Composable
 private fun RouterDeviceListContent(
     uiState: RouterDeviceListUiState,
-    loadRouterDevices: () -> Unit,
     onRouterDeviceClicked: (RouterDevice) -> Unit
 ) {
-    SideEffect {
-        loadRouterDevices()
-    }
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Top,
@@ -115,29 +99,21 @@ private fun RouterDeviceListContent(
 class RouterDeviceListViewModel(
     private val getRouterDeviceList: GetRouterDeviceListUseCase,
     private val selectRouterDevice: SelectRouterDeviceUseCase,
-) : ViewModel() {
-    private val _uiState: MutableStateFlow<RouterDeviceListUiState> = MutableStateFlow(RouterDeviceListUiState())
-    val uiState: StateFlow<RouterDeviceListUiState> get() = _uiState.asStateFlow()
-
-    fun loadRouterDevices() {
-        viewModelScope.launch {
-            _uiState.update { state ->
-                getRouterDeviceList()
-                    .map { routerDevices -> state.copy(routerDevices = routerDevices) }
-                    .dataOrElse { error -> state }
-            }
-        }
+) : MviViewModel<RouterDeviceListUiState>(RouterDeviceListUiState()) {
+    override suspend fun onCollectState() {
+        loadRouterDevices()
     }
 
-    fun onRouterDeviceSelected(routerDevice: RouterDevice) {
-        viewModelScope.launch {
-            _uiState.update { state ->
-                selectRouterDevice(routerDevice)
-                    .map { state }
-                    .dataOrElse { state }
-            }
+    private fun loadRouterDevices() = launchUpdateState { state ->
+        getRouterDeviceList()
+            .map { routerDevices -> state.copy(routerDevices = routerDevices) }
+            .dataOrElse { error -> state }
+    }
 
-        }
+    fun onRouterDeviceSelected(routerDevice: RouterDevice) = launchUpdateState { state ->
+        selectRouterDevice(routerDevice)
+            .map { state }
+            .dataOrElse { error -> state }
     }
 }
 

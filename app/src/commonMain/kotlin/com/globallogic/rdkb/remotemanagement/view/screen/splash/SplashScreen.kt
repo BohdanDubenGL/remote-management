@@ -15,11 +15,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
-import com.globallogic.rdkb.remotemanagement.domain.entity.User
-import com.globallogic.rdkb.remotemanagement.domain.error.UserError
 import com.globallogic.rdkb.remotemanagement.domain.usecase.user.GetCurrentLoggedInUserUseCase
 import com.globallogic.rdkb.remotemanagement.domain.utils.dataOrElse
 import com.globallogic.rdkb.remotemanagement.domain.utils.map
+import com.globallogic.rdkb.remotemanagement.view.base.MviViewModel
 import com.globallogic.rdkb.remotemanagement.view.navigation.LocalNavController
 import com.globallogic.rdkb.remotemanagement.view.navigation.Screen
 import kotlinx.coroutines.delay
@@ -30,7 +29,7 @@ import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 import org.koin.compose.viewmodel.koinViewModel
 import rdkbremotemanagement.app.generated.resources.Res
-import rdkbremotemanagement.app.generated.resources.app_logo
+import rdkbremotemanagement.app.generated.resources.app_splash_logo
 import kotlin.time.Duration.Companion.seconds
 
 @Composable
@@ -39,17 +38,17 @@ fun SplashScreen(
     splashViewModel: SplashViewModel = koinViewModel()
 ) {
     val uiState by splashViewModel.uiState.collectAsStateWithLifecycle()
+
     SplashContent(
         uiState = uiState,
-        loadCurrentLoggedInUser = splashViewModel::checkCurrentUser,
-        onLoggedInUser = { loggedInUser ->
-            when(loggedInUser) {
-                null -> navController.navigate(Screen.Authentication) {
-                    popUpTo<Screen.RootGraph>()
-                }
-                else -> navController.navigate(Screen.HomeGraph.Topology) {
-                    popUpTo<Screen.RootGraph>()
-                }
+        onLoggedInUser = {
+            navController.navigate(Screen.HomeGraph.Topology) {
+                popUpTo<Screen.RootGraph>()
+            }
+        },
+        onNoLoggedInUser = {
+            navController.navigate(Screen.Authentication) {
+                popUpTo<Screen.RootGraph>()
             }
         }
     )
@@ -58,22 +57,28 @@ fun SplashScreen(
 @Composable
 private fun SplashContent(
     uiState: SplashUiState,
-    loadCurrentLoggedInUser: () -> Unit,
-    onLoggedInUser: (loggedInUser: User?) -> Unit
+    onLoggedInUser: () -> Unit,
+    onNoLoggedInUser: () -> Unit,
 ) {
     SideEffect {
-        if (uiState.userDataLoaded) onLoggedInUser(uiState.loggedInUser)
-        else loadCurrentLoggedInUser()
+        when (uiState) {
+            SplashUiState.LoggedIn -> onLoggedInUser()
+            SplashUiState.NoLoggedInUser -> onNoLoggedInUser()
+            SplashUiState.None -> Unit
+        }
     }
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
-        modifier = Modifier.fillMaxSize().padding(50.dp)
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(all = 16.dp)
+            .padding(bottom = 96.dp)
     ) {
         Icon(
-            painterResource(Res.drawable.app_logo),
-            "Remote Management",
+            painter = painterResource(Res.drawable.app_splash_logo),
+            contentDescription = "Remote Management",
             modifier = Modifier.fillMaxSize()
         )
     }
@@ -81,24 +86,20 @@ private fun SplashContent(
 
 class SplashViewModel(
     private val getCurrentLoggedInUser: GetCurrentLoggedInUserUseCase
-): ViewModel() {
-    private val _uiState: MutableStateFlow<SplashUiState> = MutableStateFlow(SplashUiState())
-    val uiState: StateFlow<SplashUiState> get() = _uiState
+): MviViewModel<SplashUiState>(SplashUiState.None) {
 
-    fun checkCurrentUser() {
-        viewModelScope.launch {
-            delay(1.seconds.inWholeMilliseconds)
-            _uiState.update { state ->
-                getCurrentLoggedInUser()
-                    .map { loggedInUser -> state.copy(loggedInUser = loggedInUser, userDataLoaded = true) }
-                    .dataOrElse { error -> state.copy(userDataLoaded = true) }
-            }
+    override suspend fun onInitState() = checkCurrentUser()
 
-        }
+    private fun checkCurrentUser() = launchUpdateState { state ->
+        delay(1.seconds.inWholeMilliseconds)
+        getCurrentLoggedInUser()
+            .map { loggedInUser -> SplashUiState.LoggedIn }
+            .dataOrElse { error -> SplashUiState.NoLoggedInUser }
     }
 }
 
-data class SplashUiState(
-    val loggedInUser: User? = null,
-    val userDataLoaded: Boolean = false,
-)
+sealed interface SplashUiState {
+    data object None : SplashUiState
+    data object LoggedIn : SplashUiState
+    data object NoLoggedInUser : SplashUiState
+}

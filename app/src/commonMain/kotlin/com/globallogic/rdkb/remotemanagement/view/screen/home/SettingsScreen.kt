@@ -14,28 +14,21 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import com.globallogic.rdkb.remotemanagement.domain.entity.User
 import com.globallogic.rdkb.remotemanagement.domain.usecase.user.GetCurrentLoggedInUserUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.user.LogoutUseCase
 import com.globallogic.rdkb.remotemanagement.domain.utils.dataOrElse
 import com.globallogic.rdkb.remotemanagement.domain.utils.map
+import com.globallogic.rdkb.remotemanagement.view.base.MviViewModel
 import com.globallogic.rdkb.remotemanagement.view.component.AppButton
 import com.globallogic.rdkb.remotemanagement.view.component.AppCard
 import com.globallogic.rdkb.remotemanagement.view.component.AppIcon
-import com.globallogic.rdkb.remotemanagement.view.component.AppIconButton
 import com.globallogic.rdkb.remotemanagement.view.component.AppLayoutVerticalSections
 import com.globallogic.rdkb.remotemanagement.view.component.AppTextProperty
 import com.globallogic.rdkb.remotemanagement.view.navigation.LocalNavController
 import com.globallogic.rdkb.remotemanagement.view.navigation.Screen
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
@@ -46,7 +39,6 @@ fun SettingsScreen(
     val uiState by settingsViewModel.uiState.collectAsStateWithLifecycle()
     SettingsContent(
         uiState = uiState,
-        loadCurrentUser = settingsViewModel::loadCurrentUser,
         onLogout = settingsViewModel::logout,
         onLoggedOut = {
             navController.navigate(Screen.Authentication) {
@@ -60,14 +52,12 @@ fun SettingsScreen(
 @Composable
 private fun SettingsContent(
     uiState: SettingsUiState,
-    loadCurrentUser: () -> Unit,
     onLogout: () -> Unit,
     onLoggedOut: () -> Unit,
     onChangeAccountSettings: () -> Unit
 ) {
     SideEffect {
         if (uiState.loggedOut) onLoggedOut()
-        else loadCurrentUser()
     }
 
     AppLayoutVerticalSections(
@@ -125,29 +115,20 @@ private fun SettingsContent(
 class SettingsViewModel(
     private val getCurrentLoggedInUser: GetCurrentLoggedInUserUseCase,
     private val logoutUser: LogoutUseCase,
-) : ViewModel() {
-    private val _uiState: MutableStateFlow<SettingsUiState> = MutableStateFlow(SettingsUiState())
-    val uiState: StateFlow<SettingsUiState> get() = _uiState.asStateFlow()
+) : MviViewModel<SettingsUiState>(SettingsUiState()) {
 
-    fun loadCurrentUser() {
-        viewModelScope.launch {
-            _uiState.update { state ->
-                getCurrentLoggedInUser()
-                    .map { currentUser -> state.copy(currentUser = currentUser) }
-                    .dataOrElse { error -> state }
-            }
-        }
+    override suspend fun onInitState() = loadCurrentUser()
+
+    private fun loadCurrentUser() = launchUpdateState { state ->
+        getCurrentLoggedInUser()
+            .map { currentUser -> state.copy(currentUser = currentUser) }
+            .dataOrElse { error -> state }
     }
 
-    fun logout() {
-        viewModelScope.launch {
-            _uiState.update { state ->
-                logoutUser()
-                    .map { state.copy(loggedOut = true) }
-                    .dataOrElse { error -> state.copy(loggedOut = false) }
-            }
-
-        }
+    fun logout() = launchUpdateState { state ->
+        logoutUser()
+            .map { state.copy(loggedOut = true) }
+            .dataOrElse { error -> state.copy(loggedOut = false) }
     }
 }
 

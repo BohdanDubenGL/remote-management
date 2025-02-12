@@ -7,48 +7,34 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import com.globallogic.rdkb.remotemanagement.domain.entity.RouterDevice
 import com.globallogic.rdkb.remotemanagement.domain.entity.RouterDeviceTopologyData
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.GetLocalRouterDeviceUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.GetRouterDeviceTopologyDataUseCase
 import com.globallogic.rdkb.remotemanagement.domain.utils.dataOrElse
+import com.globallogic.rdkb.remotemanagement.view.base.MviViewModel
 import com.globallogic.rdkb.remotemanagement.view.component.AppButton
 import com.globallogic.rdkb.remotemanagement.view.component.AppCard
-import com.globallogic.rdkb.remotemanagement.view.component.AppErrorWithButton
-import com.globallogic.rdkb.remotemanagement.view.component.AppLoadingWithButton
 import com.globallogic.rdkb.remotemanagement.view.component.AppTitleText
-import com.globallogic.rdkb.remotemanagement.view.navigation.FloatingActionButtonState
-import com.globallogic.rdkb.remotemanagement.view.navigation.LocalNavController
-import com.globallogic.rdkb.remotemanagement.view.navigation.Screen
 import com.globallogic.rdkb.remotemanagement.view.component.Client
 import com.globallogic.rdkb.remotemanagement.view.component.Network
 import com.globallogic.rdkb.remotemanagement.view.component.Router
 import com.globallogic.rdkb.remotemanagement.view.component.SetupFloatingActionButton
 import com.globallogic.rdkb.remotemanagement.view.component.TopologyDiagram
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
+import com.globallogic.rdkb.remotemanagement.view.navigation.FloatingActionButtonState
+import com.globallogic.rdkb.remotemanagement.view.navigation.LocalNavController
+import com.globallogic.rdkb.remotemanagement.view.navigation.Screen
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
@@ -59,7 +45,6 @@ fun TopologyScreen(
     val uiState by topologyViewModel.uiState.collectAsStateWithLifecycle()
     TopologyContent(
         uiState = uiState,
-        loadTopologyData = topologyViewModel::loadTopologyData,
         searchRouterDevices = { navController.navigate(Screen.ConnectionGraph.SearchRouterDevice) }
     )
 }
@@ -67,12 +52,8 @@ fun TopologyScreen(
 @Composable
 private fun TopologyContent(
     uiState: TopologyUiState,
-    loadTopologyData: () -> Unit,
     searchRouterDevices: () -> Unit,
 ) {
-    SideEffect {
-        loadTopologyData()
-    }
     SetupFloatingActionButton(
         floatingActionButtonState = FloatingActionButtonState.Shown(
             buttonIcon = Icons.Default.Search,
@@ -104,7 +85,7 @@ private fun TopologyContent(
         }
     } else {
         AppCard(
-            color = Color.White,
+            color = MaterialTheme.colorScheme.primary,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(horizontal = 32.dp)
@@ -122,20 +103,16 @@ private fun TopologyContent(
 class TopologyViewModel(
     private val getLocalRouterDevice: GetLocalRouterDeviceUseCase,
     private val getRouterDeviceTopologyData: GetRouterDeviceTopologyDataUseCase,
-) : ViewModel() {
-    private val _uiState: MutableStateFlow<TopologyUiState> = MutableStateFlow(TopologyUiState())
-    val uiState: StateFlow<TopologyUiState> get() = _uiState.asStateFlow()
+) : MviViewModel<TopologyUiState>(TopologyUiState()) {
 
-    fun loadTopologyData() {
-        viewModelScope.launch {
-            _uiState.update { state ->
-                val routerDevice = getLocalRouterDevice()
-                    .dataOrElse { error -> return@update state.copy(topologyDataLoaded = true) }
-                val topologyData = getRouterDeviceTopologyData(routerDevice)
-                    .dataOrElse { error -> return@update state.copy(topologyDataLoaded = true) }
-                state.copy(routerDevice = routerDevice, topologyData = topologyData, topologyDataLoaded = true)
-            }
-        }
+    override suspend fun onCollectState() = loadTopologyData()
+
+    private fun loadTopologyData() = launchUpdateState { state ->
+        val routerDevice = getLocalRouterDevice()
+            .dataOrElse { error -> return@launchUpdateState state.copy(topologyDataLoaded = true) }
+        val topologyData = getRouterDeviceTopologyData(routerDevice)
+            .dataOrElse { error -> return@launchUpdateState state.copy(topologyDataLoaded = true) }
+        state.copy(routerDevice = routerDevice, topologyData = topologyData, topologyDataLoaded = true)
     }
 }
 

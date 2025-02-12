@@ -11,12 +11,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Router
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -25,9 +22,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import com.globallogic.rdkb.remotemanagement.domain.entity.FoundRouterDevice
 import com.globallogic.rdkb.remotemanagement.domain.entity.RouterDevice
@@ -35,19 +30,15 @@ import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdeviceconnecti
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdeviceconnection.SearchRouterDevicesUseCase
 import com.globallogic.rdkb.remotemanagement.domain.utils.dataOrElse
 import com.globallogic.rdkb.remotemanagement.domain.utils.map
+import com.globallogic.rdkb.remotemanagement.view.base.MviViewModel
 import com.globallogic.rdkb.remotemanagement.view.component.AppCard
 import com.globallogic.rdkb.remotemanagement.view.component.AppIcon
 import com.globallogic.rdkb.remotemanagement.view.component.AppTextProperty
 import com.globallogic.rdkb.remotemanagement.view.component.AppTitleText
+import com.globallogic.rdkb.remotemanagement.view.component.SetupFloatingActionButton
 import com.globallogic.rdkb.remotemanagement.view.navigation.FloatingActionButtonState
 import com.globallogic.rdkb.remotemanagement.view.navigation.LocalNavController
 import com.globallogic.rdkb.remotemanagement.view.navigation.Screen
-import com.globallogic.rdkb.remotemanagement.view.component.SetupFloatingActionButton
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
@@ -58,7 +49,6 @@ fun SearchRouterDeviceScreen(
     val uiState by searchRouterDeviceViewModel.uiState.collectAsStateWithLifecycle()
     SearchRouterDeviceContent(
         uiState = uiState,
-        searchDevices = searchRouterDeviceViewModel::searchDevices,
         connectToRouterDevice = searchRouterDeviceViewModel::connectToDevice,
         addDeviceManually = { navController.navigate(Screen.ConnectionGraph.AddRouterDeviceManually) {
             popUpTo<Screen.HomeGraph.Topology>()
@@ -70,17 +60,12 @@ fun SearchRouterDeviceScreen(
 @Composable
 private fun SearchRouterDeviceContent(
     uiState: SearchRouterDeviceUiState,
-    searchDevices: () -> Unit,
     connectToRouterDevice: (FoundRouterDevice) -> Unit,
     addDeviceManually: () -> Unit,
     onDeviceConnected: () -> Unit,
 ) {
     SideEffect {
-        when (uiState) {
-            is SearchRouterDeviceUiState.None -> searchDevices()
-            is SearchRouterDeviceUiState.Connected -> onDeviceConnected()
-            else -> Unit
-        }
+        if (uiState is SearchRouterDeviceUiState.Connected) onDeviceConnected()
     }
     SetupFloatingActionButton(
         floatingActionButtonState = FloatingActionButtonState.Shown(
@@ -161,31 +146,27 @@ private fun SearchRouterDeviceContent(
 class SearchRouterDeviceViewModel(
     private val searchRouterDevices: SearchRouterDevicesUseCase,
     private val connectToRouterDevice: ConnectToRouterDeviceUseCase,
-) : ViewModel() {
-    private val _uiState: MutableStateFlow<SearchRouterDeviceUiState> = MutableStateFlow(SearchRouterDeviceUiState.None)
-    val uiState: StateFlow<SearchRouterDeviceUiState> get() = _uiState.asStateFlow()
+) : MviViewModel<SearchRouterDeviceUiState>(SearchRouterDeviceUiState.None) {
 
-    fun searchDevices() {
-        viewModelScope.launch {
-            _uiState.update { SearchRouterDeviceUiState.Searching }
-            _uiState.update { state ->
-                searchRouterDevices()
-                    .map { foundDevices -> SearchRouterDeviceUiState.FoundDevices(foundRouterDevices = foundDevices) }
-                    .dataOrElse { error -> state }
-            }
+    override suspend fun onInitState() = searchDevices()
+
+    private fun searchDevices() = launchOnViewModelScope {
+        updateState { SearchRouterDeviceUiState.Searching }
+        updateState { state ->
+            searchRouterDevices()
+                .map { foundDevices -> SearchRouterDeviceUiState.FoundDevices(foundRouterDevices = foundDevices) }
+                .dataOrElse { error -> state }
         }
     }
 
-    fun connectToDevice(foundRouterDevice: FoundRouterDevice) {
-        viewModelScope.launch {
-            _uiState.update { SearchRouterDeviceUiState.Connecting(foundRouterDevice = foundRouterDevice) }
-            _uiState.update { state ->
-                connectToRouterDevice(foundRouterDevice)
-                    .map { routerDevice -> SearchRouterDeviceUiState.Connected(routerDevice = routerDevice) }
-                    .dataOrElse { error -> state }
-            }
-
+    fun connectToDevice(foundRouterDevice: FoundRouterDevice) = launchOnViewModelScope {
+        updateState { SearchRouterDeviceUiState.Connecting(foundRouterDevice = foundRouterDevice) }
+        updateState { state ->
+            connectToRouterDevice(foundRouterDevice)
+                .map { routerDevice -> SearchRouterDeviceUiState.Connected(routerDevice = routerDevice) }
+                .dataOrElse { error -> state }
         }
+
     }
 }
 

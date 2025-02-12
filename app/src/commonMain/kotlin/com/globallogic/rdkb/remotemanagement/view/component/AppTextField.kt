@@ -85,7 +85,7 @@ fun AppTextField(
             enabled = enabled,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(60.dp)
+                .height(64.dp)
                 .padding(horizontal = 16.dp)
         )
         AnimatedVisibility(
