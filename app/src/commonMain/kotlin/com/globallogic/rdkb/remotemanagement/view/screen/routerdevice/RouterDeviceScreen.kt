@@ -13,7 +13,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Router
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -22,8 +21,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.globallogic.rdkb.remotemanagement.domain.entity.RouterDevice
-import com.globallogic.rdkb.remotemanagement.domain.entity.RouterDeviceInfo
-import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.GetRouterDeviceInfoUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.GetSelectedRouterDeviceUseCase
 import com.globallogic.rdkb.remotemanagement.domain.utils.Resource
 import com.globallogic.rdkb.remotemanagement.domain.utils.ResourceState
@@ -85,21 +82,21 @@ private fun RouterDeviceContent(
                         modifier = Modifier.size(48.dp)
                     )
                     Spacer(modifier = Modifier.weight(1F))
-                    AppTitleText(text = uiState.routerDevice.name, color = MaterialTheme.colorScheme.tertiary)
+                    AppTitleText(text = uiState.routerDevice.modelName, color = MaterialTheme.colorScheme.tertiary)
                 }
 
-                AppTextProperty(name = "Name:", value = uiState.routerDevice.name)
-                AppTextProperty(name = "IP:", value = uiState.routerDevice.ip)
+                AppTextProperty(name = "Name:", value = uiState.routerDevice.modelName)
+                AppTextProperty(name = "IP:", value = uiState.routerDevice.ipAddress)
                 AppTextProperty(name = "Mac address:", value = uiState.routerDevice.macAddress)
-                AppTextProperty(name = "Lan connected:", value = uiState.routerDeviceInfo.lanConnected.toString())
-                AppTextProperty(name = "Connected extender:", value = uiState.routerDeviceInfo.connectedExtender.toString())
-                AppTextProperty(name = "Model name:", value = uiState.routerDeviceInfo.modelName)
-                AppTextProperty(name = "Firmware version:", value = uiState.routerDeviceInfo.firmwareVersion)
-                AppTextProperty(name = "Processor load (%):", value = uiState.routerDeviceInfo.processorLoadPercent.toString())
-                AppTextProperty(name = "Memory usage (%):", value = uiState.routerDeviceInfo.memoryUsagePercent.toString())
-                AppTextProperty(name = "Total download (kB):", value = uiState.routerDeviceInfo.totalDownloadTraffic.toString())
-                AppTextProperty(name = "Total upload (kB):", value = uiState.routerDeviceInfo.totalUploadTraffic.toString())
-                AppTextProperty(name = "Available bands:", value = uiState.routerDeviceInfo.availableBands.joinToString(separator = ","))
+                AppTextProperty(name = "Lan connected:", value = uiState.routerDevice.lanConnected.toString())
+                AppTextProperty(name = "Connected extender:", value = uiState.routerDevice.connectedExtender.toString())
+                AppTextProperty(name = "Model name:", value = uiState.routerDevice.modelName)
+                AppTextProperty(name = "Firmware version:", value = uiState.routerDevice.firmwareVersion)
+                AppTextProperty(name = "Processor load (%):", value = uiState.routerDevice.processorLoadPercent.toString())
+                AppTextProperty(name = "Memory usage (%):", value = uiState.routerDevice.memoryUsagePercent.toString())
+                AppTextProperty(name = "Total download (kB):", value = uiState.routerDevice.totalDownloadTraffic.toString())
+                AppTextProperty(name = "Total upload (kB):", value = uiState.routerDevice.totalUploadTraffic.toString())
+                AppTextProperty(name = "Available bands:", value = uiState.routerDevice.availableBands.joinToString(separator = ","))
             }
         }
     }
@@ -107,7 +104,6 @@ private fun RouterDeviceContent(
 
 class RouterDeviceViewModel(
     private val getSelectedRouterDevice: GetSelectedRouterDeviceUseCase,
-    private val getRouterDeviceInfo: GetRouterDeviceInfoUseCase
 ) : MviViewModel<ResourceState<RouterDeviceUiState, UiResourceError>>(ResourceState.None) {
 
     override suspend fun onInitState() = loadSelectedRouterDeviceInfo()
@@ -115,13 +111,10 @@ class RouterDeviceViewModel(
     private fun loadSelectedRouterDeviceInfo() = launchUpdateState { state ->
         val routerDevice = getSelectedRouterDevice()
             .dataOrElse { error -> return@launchUpdateState state }
-        val routerDeviceInfo = getRouterDeviceInfo(routerDevice)
-            .dataOrElse { error -> return@launchUpdateState state }
-        Resource.Success(RouterDeviceUiState(routerDevice = routerDevice, routerDeviceInfo = routerDeviceInfo))
+        Resource.Success(RouterDeviceUiState(routerDevice = routerDevice))
     }
 }
 
 data class RouterDeviceUiState(
     val routerDevice: RouterDevice,
-    val routerDeviceInfo: RouterDeviceInfo,
 )

@@ -5,11 +5,10 @@ import com.globallogic.rdkb.remotemanagement.data.datasource.RemoteRouterDeviceD
 import com.globallogic.rdkb.remotemanagement.data.preferences.AppPreferences
 import com.globallogic.rdkb.remotemanagement.domain.entity.ConnectedDevice
 import com.globallogic.rdkb.remotemanagement.domain.entity.RouterDevice
-import com.globallogic.rdkb.remotemanagement.domain.entity.RouterDeviceInfo
 import com.globallogic.rdkb.remotemanagement.domain.entity.RouterDeviceSettings
-import com.globallogic.rdkb.remotemanagement.domain.entity.RouterDeviceTopologyData
 import com.globallogic.rdkb.remotemanagement.domain.error.DeviceError
 import com.globallogic.rdkb.remotemanagement.domain.repository.RouterDeviceRepository
+import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.RouterDeviceAction
 import com.globallogic.rdkb.remotemanagement.domain.utils.Resource
 import com.globallogic.rdkb.remotemanagement.domain.utils.Resource.Failure
 import com.globallogic.rdkb.remotemanagement.domain.utils.Resource.Success
@@ -41,56 +40,9 @@ class RouterDeviceRepositoryImpl(
             .mapError { error -> DeviceError.NoConnectedDevicesFound }
     }
 
-    override suspend fun getRouterDeviceInfo(device: RouterDevice): Resource<RouterDeviceInfo, DeviceError.NoDeviceInfoFound> {
-        val deviceInfo = remoteRouterDeviceDataSource.loadRouterDeviceInfo(device)
-            .dataOrElse { error -> return Failure(DeviceError.NoDeviceInfoFound) }
-
-        val email = appPreferences.currentUserEmailPref.get()
-            ?: return Failure(DeviceError.NoDeviceInfoFound)
-        localRouterDeviceDataSource.saveRouterDevice(deviceInfo, email)
-            .dataOrElse { error -> return Failure(DeviceError.NoDeviceInfoFound) }
-        localRouterDeviceDataSource.loadDeviceInfo(device)
-            .dataOrElse { error -> return Failure(DeviceError.NoDeviceInfoFound) }
-
-        return Success(deviceInfo)
-    }
-
-    override suspend fun getRouterDeviceTopologyData(device: RouterDevice): Resource<RouterDeviceTopologyData, DeviceError.NoTopologyDataFound> {
-        val deviceInfo = remoteRouterDeviceDataSource.loadRouterDeviceInfo(device)
-            .dataOrElse { error -> return Failure(DeviceError.NoTopologyDataFound) }
-        val email = appPreferences.currentUserEmailPref.get()
-            ?: return Failure(DeviceError.NoTopologyDataFound)
-        localRouterDeviceDataSource.saveRouterDevice(deviceInfo, email)
-            .dataOrElse { error -> return Failure(DeviceError.NoTopologyDataFound) }
-
-        val connectedDevices = remoteRouterDeviceDataSource.loadConnectedDevicesForRouterDevice(device)
-            .dataOrElse { error -> return Failure(DeviceError.NoTopologyDataFound) }
-
-        localRouterDeviceDataSource.saveConnectedDevices(device, connectedDevices)
-            .dataOrElse { error -> return Failure(DeviceError.NoTopologyDataFound) }
-
-        return localRouterDeviceDataSource.loadTopologyData(device)
-            .mapError { error -> return Failure(DeviceError.NoTopologyDataFound) }
-    }
-
-    override suspend fun removeRouterDevice(device: RouterDevice): Resource<Unit, DeviceError.NoDevicesFound> {
-        val email = appPreferences.currentUserEmailPref.get()
-            ?: return Failure(DeviceError.NoDevicesFound)
-        localRouterDeviceDataSource.removeRouterDevice(device, email)
-            .dataOrElse { error -> return Failure(DeviceError.NoDevicesFound) }
-
-        val macAddress = appPreferences.currentRouterDeviceMacAddressPref.get()
-            ?: return Failure(DeviceError.NoDevicesFound)
-        if (device.macAddress == macAddress) {
-            appPreferences.currentRouterDeviceMacAddressPref.reset()
-        }
-
-        return Success(Unit)
-    }
-
-    override suspend fun selectRouterDevice(device: RouterDevice): Resource.Success<Unit> {
+    override suspend fun selectRouterDevice(device: RouterDevice): Success<Unit> {
         appPreferences.currentRouterDeviceMacAddressPref.set(device.macAddress)
-        return Resource.Success(Unit)
+        return Success(Unit)
     }
 
     override suspend fun getSelectRouterDevice(): Resource<RouterDevice, DeviceError.NoDeviceFound> {
@@ -107,14 +59,29 @@ class RouterDeviceRepositoryImpl(
             .mapError { error -> DeviceError.NoDeviceFound }
     }
 
-    override suspend fun factoryResetRouterDevice(device: RouterDevice): Resource<Unit, DeviceError.FactoryResetDevice> {
-        return remoteRouterDeviceDataSource.factoryResetDevice(device)
-            .mapError { error -> DeviceError.FactoryResetDevice }
+    override suspend fun doAction(device: RouterDevice, action: RouterDeviceAction): Resource<Unit, DeviceError.NoDeviceFound> {
+        return when(action) {
+            RouterDeviceAction.Restart -> remoteRouterDeviceDataSource.restartDevice(device)
+                .mapError { error -> DeviceError.NoDeviceFound }
+            RouterDeviceAction.FactoryReset -> remoteRouterDeviceDataSource.factoryResetDevice(device)
+                .mapError { error -> DeviceError.NoDeviceFound }
+            RouterDeviceAction.Remove -> removeRouterDevice(device)
+        }
     }
 
-    override suspend fun restartRouterDevice(device: RouterDevice): Resource<Unit, DeviceError.RestartDevice> {
-        return remoteRouterDeviceDataSource.restartDevice(device)
-            .mapError { error -> DeviceError.RestartDevice }
+    private suspend fun removeRouterDevice(device: RouterDevice): Resource<Unit, DeviceError.NoDeviceFound> {
+        val email = appPreferences.currentUserEmailPref.get()
+            ?: return Failure(DeviceError.NoDeviceFound)
+        localRouterDeviceDataSource.removeRouterDevice(device, email)
+            .dataOrElse { error -> return Failure(DeviceError.NoDeviceFound) }
+
+        val macAddress = appPreferences.currentRouterDeviceMacAddressPref.get()
+            ?: return Failure(DeviceError.NoDeviceFound)
+        if (device.macAddress == macAddress) {
+            appPreferences.currentRouterDeviceMacAddressPref.reset()
+        }
+
+        return Success(Unit)
     }
 
     override suspend fun setupRouterDevice(device: RouterDevice, settings: RouterDeviceSettings): Resource<Unit, DeviceError.SetupDevice> {

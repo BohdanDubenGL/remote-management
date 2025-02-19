@@ -6,7 +6,6 @@ sealed interface IoDeviceError : ResourceError {
     data object NoAvailableRouterDevices : IoDeviceError
     data object CantConnectToRouterDevice : IoDeviceError
 
-    data object NoDeviceInfoFound : IoDeviceError
     data object LoadConnectedDevicesForRouterDevice : IoDeviceError
     data object FactoryResetDevice : IoDeviceError
     data object RestartDevice : IoDeviceError
@@ -21,7 +20,6 @@ sealed interface IoDeviceError : ResourceError {
     interface RemoveRouterDevice : IoDeviceError
     interface FindLocalRouterDevice : IoDeviceError
 
-    data object NoTopologyDataFound : IoDeviceError
     data object NoDeviceFound : FindRouterDeviceByMacAddress, FindLocalRouterDevice, LoadDeviceInfo
 
     data class NetworkError(val throwable: Throwable)

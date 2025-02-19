@@ -17,10 +17,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
+import com.globallogic.rdkb.remotemanagement.domain.entity.ConnectedDevice
 import com.globallogic.rdkb.remotemanagement.domain.entity.RouterDevice
-import com.globallogic.rdkb.remotemanagement.domain.entity.RouterDeviceTopologyData
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.GetLocalRouterDeviceUseCase
-import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.GetRouterDeviceTopologyDataUseCase
+import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.GetRouterDeviceConnectedDevicesUseCase
 import com.globallogic.rdkb.remotemanagement.domain.utils.Resource
 import com.globallogic.rdkb.remotemanagement.domain.utils.ResourceState
 import com.globallogic.rdkb.remotemanagement.domain.utils.dataOrElse
@@ -93,8 +93,8 @@ private fun TopologyContent(
         ) {
             TopologyDiagram(
                 Network("Internet"),
-                Router(uiState.topologyData.routerDevice.name),
-                uiState.topologyData.connectedDevices.map { Client(it.hostName) }
+                Router(uiState.routerDevice.modelName),
+                uiState.connectedDevices.map { Client(it.hostName) }
             )
         }
     }
@@ -102,7 +102,7 @@ private fun TopologyContent(
 
 class TopologyViewModel(
     private val getLocalRouterDevice: GetLocalRouterDeviceUseCase,
-    private val getRouterDeviceTopologyData: GetRouterDeviceTopologyDataUseCase,
+    private val getRouterDeviceConnectedDevices: GetRouterDeviceConnectedDevicesUseCase,
 ) : MviViewModel<ResourceState<TopologyUiState, UiResourceError>>(ResourceState.None) {
 
     override suspend fun onSubscribeState() = loadTopologyData()
@@ -112,9 +112,9 @@ class TopologyViewModel(
         updateState { state ->
             val routerDevice = getLocalRouterDevice()
                 .dataOrElse { error -> return@updateState Resource.Success(TopologyUiState.NoData) }
-            val topologyData = getRouterDeviceTopologyData(routerDevice)
+            val connectedDevices = getRouterDeviceConnectedDevices(routerDevice)
                 .dataOrElse { error -> return@updateState Resource.Success(TopologyUiState.NoData) }
-            Resource.Success(TopologyUiState.Data(routerDevice = routerDevice, topologyData = topologyData))
+            Resource.Success(TopologyUiState.Data(routerDevice = routerDevice, connectedDevices = connectedDevices))
         }
     }
 }
@@ -123,6 +123,6 @@ sealed interface TopologyUiState {
     data object NoData : TopologyUiState
     data class Data(
         val routerDevice: RouterDevice,
-        val topologyData: RouterDeviceTopologyData
+        val connectedDevices: List<ConnectedDevice>,
     ) : TopologyUiState
 }

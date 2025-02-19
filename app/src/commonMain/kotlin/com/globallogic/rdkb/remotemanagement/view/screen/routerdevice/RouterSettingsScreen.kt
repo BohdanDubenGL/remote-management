@@ -14,10 +14,9 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.globallogic.rdkb.remotemanagement.domain.entity.RouterDevice
-import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.FactoryResetRouterDeviceUseCase
+import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.DoRouterDeviceActionUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.GetSelectedRouterDeviceUseCase
-import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.RemoveRouterDeviceUseCase
-import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.RestartRouterDeviceUseCase
+import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.RouterDeviceAction
 import com.globallogic.rdkb.remotemanagement.domain.utils.Resource
 import com.globallogic.rdkb.remotemanagement.domain.utils.ResourceState
 import com.globallogic.rdkb.remotemanagement.domain.utils.dataOrElse
@@ -95,9 +94,7 @@ private fun RouterSettingsContent(
 
 class RouterSettingsViewModel(
     private val getSelectedRouterDevice: GetSelectedRouterDeviceUseCase,
-    private val restartRouterDevice: RestartRouterDeviceUseCase,
-    private val factoryResetRouterDevice: FactoryResetRouterDeviceUseCase,
-    private val removeRouterDevice: RemoveRouterDeviceUseCase,
+    private val doRouterDeviceAction: DoRouterDeviceActionUseCase
 ) : MviViewModel<ResourceState<RouterSettingsUiState, UiResourceError>>(ResourceState.None) {
 
     override suspend fun onInitState() = loadRouterDevice()
@@ -114,7 +111,7 @@ class RouterSettingsViewModel(
         if (state is Resource.Success) {
             val data = state.data
             if (data is RouterSettingsUiState.DeviceLoaded) updateState {
-                restartRouterDevice(data.routerDevice)
+                doRouterDeviceAction(data.routerDevice, RouterDeviceAction.Restart)
                     .onFailure { loadRouterDevice() }
                     .flatMapData { state }
                     .flatMapError { error -> state }
@@ -128,7 +125,7 @@ class RouterSettingsViewModel(
         if (state is Resource.Success) {
             val data = state.data
             if (data is RouterSettingsUiState.DeviceLoaded) updateState {
-                factoryResetRouterDevice(data.routerDevice)
+                doRouterDeviceAction(data.routerDevice, RouterDeviceAction.FactoryReset)
                     .onFailure { loadRouterDevice() }
                     .flatMapData { state }
                     .flatMapError { error -> state }
@@ -142,7 +139,7 @@ class RouterSettingsViewModel(
         if (state is Resource.Success) {
             val data = state.data
             if (data is RouterSettingsUiState.DeviceLoaded) updateState {
-                removeRouterDevice(data.routerDevice)
+                doRouterDeviceAction(data.routerDevice, RouterDeviceAction.Remove)
                     .onFailure { loadRouterDevice() }
                     .map { RouterSettingsUiState.DeviceRemoved }
                     .flatMapError { error -> state }

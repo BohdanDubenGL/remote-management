@@ -1,6 +1,6 @@
 package com.globallogic.rdkb.remotemanagement.data.repository.impl
 
-import com.globallogic.rdkb.remotemanagement.data.datasource.UserDataSource
+import com.globallogic.rdkb.remotemanagement.data.datasource.LocalUserDataSource
 import com.globallogic.rdkb.remotemanagement.data.error.IoUserError
 import com.globallogic.rdkb.remotemanagement.data.preferences.AppPreferences
 import com.globallogic.rdkb.remotemanagement.domain.entity.ChangeAccountSettingsData
@@ -18,13 +18,13 @@ import com.globallogic.rdkb.remotemanagement.domain.utils.onSuccess
 
 class UserRepositoryImpl(
     private val appPreferences: AppPreferences,
-    private val userDataSource: UserDataSource,
+    private val localUserDataSource: LocalUserDataSource,
 ) : UserRepository {
 
     override suspend fun currentLoggedInUser(): Resource<User, UserError.NoLoggedInUser> {
         val email = appPreferences.currentUserEmailPref.get()
             ?: return Failure(UserError.NoLoggedInUser)
-        return userDataSource.findUserByEmail(email).mapError { error ->
+        return localUserDataSource.findUserByEmail(email).mapError { error ->
             when (error) {
                 is IoUserError.DatabaseError -> UserError.NoLoggedInUser
                 IoUserError.UserNotFound -> UserError.NoLoggedInUser
@@ -35,7 +35,7 @@ class UserRepositoryImpl(
     override suspend fun changeAccountSettings(settingsData: ChangeAccountSettingsData): Resource<User, UserError.ChangeAccountSettingsError> {
         val email = appPreferences.currentUserEmailPref.get()
             ?: return Failure(UserError.UserNotFound)
-        val user = userDataSource.findUserByCredentials(email, settingsData.currentPassword)
+        val user = localUserDataSource.findUserByCredentials(email, settingsData.currentPassword)
             .mapError { error ->
                 when (error) {
                     is IoUserError.DatabaseError -> UserError.WrongCredentials
@@ -43,7 +43,7 @@ class UserRepositoryImpl(
                 }
             }
             .dataOrElse { error -> return Failure(error) }
-        userDataSource.updateUser(user.email, settingsData.email, settingsData.username, settingsData.password)
+        localUserDataSource.updateUser(user.email, settingsData.email, settingsData.username, settingsData.password)
             .mapError { error ->
                 when (error) {
                     is IoUserError.DatabaseError -> UserError.UserNotFound
@@ -56,7 +56,7 @@ class UserRepositoryImpl(
     }
 
     override suspend fun getUserByEmail(email: String): Resource<User, UserError.UserNotFound> {
-        return userDataSource.findUserByEmail(email).mapError { error ->
+        return localUserDataSource.findUserByEmail(email).mapError { error ->
             when (error) {
                 is IoUserError.DatabaseError -> UserError.UserNotFound
                 IoUserError.UserNotFound -> UserError.UserNotFound
@@ -65,7 +65,7 @@ class UserRepositoryImpl(
     }
 
     override suspend fun register(registrationData: RegistrationData): Resource<User, UserError.RegistrationError> {
-        return userDataSource.addUser(registrationData.email, registrationData.username, registrationData.password)
+        return localUserDataSource.addUser(registrationData.email, registrationData.username, registrationData.password)
             .onSuccess { user -> appPreferences.currentUserEmailPref.set(user.email) }
             .mapError { error ->
                 when (error) {
@@ -76,7 +76,7 @@ class UserRepositoryImpl(
     }
 
     override suspend fun login(loginData: LoginData): Resource<User, UserError.LoginError> {
-        return userDataSource.findUserByCredentials(loginData.email, loginData.password)
+        return localUserDataSource.findUserByCredentials(loginData.email, loginData.password)
             .onSuccess { user -> appPreferences.currentUserEmailPref.set(user.email) }
             .mapError { error ->
                 when (error) {

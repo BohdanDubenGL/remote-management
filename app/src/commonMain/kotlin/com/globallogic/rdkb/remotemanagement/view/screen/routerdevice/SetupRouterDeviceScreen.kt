@@ -24,7 +24,6 @@ import androidx.navigation.NavController
 import com.globallogic.rdkb.remotemanagement.domain.entity.BandSettings
 import com.globallogic.rdkb.remotemanagement.domain.entity.RouterDevice
 import com.globallogic.rdkb.remotemanagement.domain.entity.RouterDeviceSettings
-import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.GetRouterDeviceInfoUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.GetSelectedRouterDeviceUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.SetupRouterDeviceUseCase
 import com.globallogic.rdkb.remotemanagement.domain.utils.dataOrElse
@@ -134,7 +133,6 @@ private fun SetupRouterDeviceContent(
 
 class SetupRouterDeviceViewModel(
     private val getSelectedRouterDevice: GetSelectedRouterDeviceUseCase,
-    private val getRouterDeviceInfo: GetRouterDeviceInfoUseCase,
     private val setupRouterDevice: SetupRouterDeviceUseCase,
 ) : MviViewModel<SetupRouterDeviceUiState>(SetupRouterDeviceUiState()) {
 
@@ -158,11 +156,9 @@ class SetupRouterDeviceViewModel(
     private fun loadRouterDevice() = launchUpdateState { state ->
         val routerDevice = getSelectedRouterDevice()
             .dataOrElse { error -> return@launchUpdateState state }
-        val routerDeviceInfo = getRouterDeviceInfo(routerDevice)
-            .dataOrElse { error -> return@launchUpdateState state }
         state.copy(
             routerDevice = routerDevice,
-            bandsSettings = routerDeviceInfo.availableBands
+            bandsSettings = routerDevice.availableBands
                 .map { BandSettings(it, "", "", false) }
         )
     }

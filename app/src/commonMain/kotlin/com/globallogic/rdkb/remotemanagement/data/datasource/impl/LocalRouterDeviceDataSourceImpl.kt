@@ -8,12 +8,9 @@ import com.globallogic.rdkb.remotemanagement.data.db.dto.UserRouterDeviceDto
 import com.globallogic.rdkb.remotemanagement.data.error.IoDeviceError
 import com.globallogic.rdkb.remotemanagement.domain.entity.ConnectedDevice
 import com.globallogic.rdkb.remotemanagement.domain.entity.RouterDevice
-import com.globallogic.rdkb.remotemanagement.domain.entity.RouterDeviceInfo
-import com.globallogic.rdkb.remotemanagement.domain.entity.RouterDeviceTopologyData
 import com.globallogic.rdkb.remotemanagement.domain.utils.Resource
 import com.globallogic.rdkb.remotemanagement.domain.utils.Resource.Failure
 import com.globallogic.rdkb.remotemanagement.domain.utils.Resource.Success
-import com.globallogic.rdkb.remotemanagement.domain.utils.dataOrElse
 import com.globallogic.rdkb.remotemanagement.domain.utils.runCatchingSafe
 import kotlinx.datetime.Clock
 
@@ -25,7 +22,7 @@ class LocalRouterDeviceDataSourceImpl(
         val devices = runCatchingSafe { deviceDao.findRouterDevicesForUser(userEmail) }
             .getOrElse { error -> return Failure(IoDeviceError.DatabaseError(error)) }
 
-        return Success(devices.map(RouterDeviceMapper::toRouterDevice))
+        return Success(devices.map(RouterDeviceMapper::toRouterDeviceInfo))
     }
 
     override suspend fun findRouterDeviceByMacAddress(macAddress: String): Resource<RouterDevice, IoDeviceError.FindRouterDeviceByMacAddress> {
@@ -33,7 +30,7 @@ class LocalRouterDeviceDataSourceImpl(
             .getOrElse { error -> return Failure(IoDeviceError.DatabaseError(error)) }
             ?: return Failure(IoDeviceError.NoDeviceFound)
 
-        return Success(RouterDeviceMapper.toRouterDevice(device))
+        return Success(RouterDeviceMapper.toRouterDeviceInfo(device))
     }
 
     override suspend fun saveConnectedDevices(device: RouterDevice, connectedDevices: List<ConnectedDevice>): Resource<Unit, IoDeviceError.SaveConnectedDevices> {
@@ -52,7 +49,7 @@ class LocalRouterDeviceDataSourceImpl(
         return Success(connectedDevices.map(ConnectedDeviceMapper::toConnectedDevice))
     }
 
-    override suspend fun loadDeviceInfo(device: RouterDevice): Resource<RouterDeviceInfo, IoDeviceError.LoadDeviceInfo> {
+    override suspend fun loadDeviceInfo(device: RouterDevice): Resource<RouterDevice, IoDeviceError.LoadDeviceInfo> {
         val routerDevice =
             runCatchingSafe { deviceDao.findRouterDeviceByMacAddress(device.macAddress) }
                 .getOrElse { error -> return Failure(IoDeviceError.DatabaseError(error)) }
@@ -61,24 +58,7 @@ class LocalRouterDeviceDataSourceImpl(
         return Success(RouterDeviceMapper.toRouterDeviceInfo(routerDevice))
     }
 
-    override suspend fun loadTopologyData(device: RouterDevice): Resource<RouterDeviceTopologyData, IoDeviceError.NoTopologyDataFound> {
-        val routerDevice = findRouterDeviceByMacAddress(device.macAddress)
-            .dataOrElse { error -> return Failure(IoDeviceError.NoTopologyDataFound) }
-        val deviceInfo = loadDeviceInfo(device)
-            .dataOrElse { error -> return Failure(IoDeviceError.NoTopologyDataFound) }
-        val connectedDevices = loadConnectedDevices(device)
-            .dataOrElse { error -> return Failure(IoDeviceError.NoTopologyDataFound) }
-
-        return Success(
-            RouterDeviceTopologyData(
-                lanConnected = deviceInfo.lanConnected,
-                routerDevice = routerDevice,
-                connectedDevices = connectedDevices
-            )
-        )
-    }
-
-    override suspend fun saveRouterDevice(device: RouterDeviceInfo, userEmail: String): Resource<Unit, IoDeviceError.SaveRouterDevice> {
+    override suspend fun saveRouterDevice(device: RouterDevice, userEmail: String): Resource<Unit, IoDeviceError.SaveRouterDevice> {
         val deviceDto = RouterDeviceMapper.toRouterDeviceInfo(device)
 
         runCatchingSafe { deviceDao.insertRouterDevice(deviceDto) }
@@ -119,17 +99,12 @@ class LocalRouterDeviceDataSourceImpl(
             .getOrElse { error -> return Failure(IoDeviceError.DatabaseError(error)) }
             ?: return Failure(IoDeviceError.NoDeviceFound)
 
-        return Success(RouterDeviceMapper.toRouterDevice(device))
+        return Success(RouterDeviceMapper.toRouterDeviceInfo(device))
     }
 }
 
 private object RouterDeviceMapper {
-    fun toRouterDevice(device: RouterDeviceDto): RouterDevice = RouterDevice(
-        name = device.modelName,
-        ip = device.ipAddress,
-        macAddress = device.macAddress
-    )
-    fun toRouterDeviceInfo(device: RouterDeviceDto): RouterDeviceInfo = RouterDeviceInfo(
+    fun toRouterDeviceInfo(device: RouterDeviceDto): RouterDevice = RouterDevice(
         lanConnected = device.lanConnected,
         connectedExtender = device.connectedExtender,
         modelName = device.modelName,
@@ -143,7 +118,7 @@ private object RouterDeviceMapper {
         totalUploadTraffic = device.totalUploadTraffic,
         availableBands = device.availableBands.split(",").toSet()
     )
-    fun toRouterDeviceInfo(device: RouterDeviceInfo): RouterDeviceDto = RouterDeviceDto(
+    fun toRouterDeviceInfo(device: RouterDevice): RouterDeviceDto = RouterDeviceDto(
         lanConnected = device.lanConnected,
         connectedExtender = device.connectedExtender,
         modelName = device.modelName,

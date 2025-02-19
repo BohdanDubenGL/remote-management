@@ -29,7 +29,6 @@ import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdeviceconnecti
 import com.globallogic.rdkb.remotemanagement.domain.utils.ResourceState
 import com.globallogic.rdkb.remotemanagement.domain.utils.dataOrElse
 import com.globallogic.rdkb.remotemanagement.domain.utils.map
-import com.globallogic.rdkb.remotemanagement.domain.utils.mapError
 import com.globallogic.rdkb.remotemanagement.domain.utils.mapErrorToData
 import com.globallogic.rdkb.remotemanagement.view.base.MviViewModel
 import com.globallogic.rdkb.remotemanagement.view.component.AppButton
@@ -116,13 +115,13 @@ private fun RouterDeviceListContent(
                                 )
                                 Spacer(modifier = Modifier.weight(1F))
                                 AppTitleText(
-                                    text = routerDevice.name,
+                                    text = routerDevice.modelName,
                                     color = MaterialTheme.colorScheme.tertiary
                                 )
                             }
 
-                            AppTextProperty(name = "Name:", value = routerDevice.name)
-                            AppTextProperty(name = "IP address:", value = routerDevice.ip)
+                            AppTextProperty(name = "Name:", value = routerDevice.modelName)
+                            AppTextProperty(name = "IP address:", value = routerDevice.ipAddress)
                             AppTextProperty(name = "MAC address:", value = routerDevice.macAddress)
                         }
                     }

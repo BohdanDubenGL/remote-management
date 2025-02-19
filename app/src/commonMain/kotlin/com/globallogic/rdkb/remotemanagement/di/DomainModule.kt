@@ -1,16 +1,12 @@
 package com.globallogic.rdkb.remotemanagement.di
 
+import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.DoRouterDeviceActionUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.user.LoginUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.user.LogoutUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.user.RegistrationUseCase
-import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.FactoryResetRouterDeviceUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.GetLocalRouterDeviceUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.GetRouterDeviceConnectedDevicesUseCase
-import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.GetRouterDeviceInfoUseCase
-import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.GetRouterDeviceTopologyDataUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.GetSelectedRouterDeviceUseCase
-import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.RemoveRouterDeviceUseCase
-import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.RestartRouterDeviceUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.SelectRouterDeviceUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.SetupRouterDeviceUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdeviceconnection.AddRouterDeviceManuallyUseCase
@@ -36,12 +32,8 @@ val domainModule: Module = module {
     factoryOf(::GetCurrentLoggedInUserUseCase)
     factoryOf(::ChangeAccountSettingsUseCase)
 
-    factoryOf(::RemoveRouterDeviceUseCase)
-    factoryOf(::FactoryResetRouterDeviceUseCase)
+    factoryOf(::DoRouterDeviceActionUseCase)
     factoryOf(::GetRouterDeviceConnectedDevicesUseCase)
-    factoryOf(::GetRouterDeviceInfoUseCase)
-    factoryOf(::GetRouterDeviceTopologyDataUseCase)
-    factoryOf(::RestartRouterDeviceUseCase)
     factoryOf(::SetupRouterDeviceUseCase)
     factoryOf(::SelectRouterDeviceUseCase)
     factoryOf(::GetSelectedRouterDeviceUseCase)

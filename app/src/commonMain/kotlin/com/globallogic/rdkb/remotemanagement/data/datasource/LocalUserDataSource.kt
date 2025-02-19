@@ -4,7 +4,7 @@ import com.globallogic.rdkb.remotemanagement.data.error.IoUserError
 import com.globallogic.rdkb.remotemanagement.domain.entity.User
 import com.globallogic.rdkb.remotemanagement.domain.utils.Resource
 
-interface UserDataSource {
+interface LocalUserDataSource {
     suspend fun addUser(email: String, name: String, password: String): Resource<User, IoUserError.AddUser>
 
     suspend fun updateUser(email: String, newEmail: String, newName: String, newPassword: String): Resource<User, IoUserError.UpdateUser>

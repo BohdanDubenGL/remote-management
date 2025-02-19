@@ -3,8 +3,6 @@ package com.globallogic.rdkb.remotemanagement.data.datasource
 import com.globallogic.rdkb.remotemanagement.data.error.IoDeviceError
 import com.globallogic.rdkb.remotemanagement.domain.entity.ConnectedDevice
 import com.globallogic.rdkb.remotemanagement.domain.entity.RouterDevice
-import com.globallogic.rdkb.remotemanagement.domain.entity.RouterDeviceInfo
-import com.globallogic.rdkb.remotemanagement.domain.entity.RouterDeviceTopologyData
 import com.globallogic.rdkb.remotemanagement.domain.utils.Resource
 
 interface LocalRouterDeviceDataSource {
@@ -17,11 +15,9 @@ interface LocalRouterDeviceDataSource {
 
     suspend fun loadConnectedDevices(device: RouterDevice): Resource<List<ConnectedDevice>, IoDeviceError.LoadConnectedDevices>
 
-    suspend fun loadDeviceInfo(device: RouterDevice): Resource<RouterDeviceInfo, IoDeviceError.LoadDeviceInfo>
+    suspend fun loadDeviceInfo(device: RouterDevice): Resource<RouterDevice, IoDeviceError.LoadDeviceInfo>
 
-    suspend fun loadTopologyData(device: RouterDevice): Resource<RouterDeviceTopologyData, IoDeviceError.NoTopologyDataFound>
-
-    suspend fun saveRouterDevice(device: RouterDeviceInfo, userEmail: String): Resource<Unit, IoDeviceError.SaveRouterDevice>
+    suspend fun saveRouterDevice(device: RouterDevice, userEmail: String): Resource<Unit, IoDeviceError.SaveRouterDevice>
 
     suspend fun removeRouterDevice(device: RouterDevice, userEmail: String): Resource<Unit, IoDeviceError.RemoveRouterDevice>
 

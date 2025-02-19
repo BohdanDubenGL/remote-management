@@ -1,6 +1,6 @@
 package com.globallogic.rdkb.remotemanagement.data.datasource.impl
 
-import com.globallogic.rdkb.remotemanagement.data.datasource.UserDataSource
+import com.globallogic.rdkb.remotemanagement.data.datasource.LocalUserDataSource
 import com.globallogic.rdkb.remotemanagement.data.db.UserDao
 import com.globallogic.rdkb.remotemanagement.data.db.dto.UserDto
 import com.globallogic.rdkb.remotemanagement.data.error.IoUserError
@@ -10,9 +10,9 @@ import com.globallogic.rdkb.remotemanagement.domain.utils.Resource.Failure
 import com.globallogic.rdkb.remotemanagement.domain.utils.Resource.Success
 import com.globallogic.rdkb.remotemanagement.domain.utils.runCatchingSafe
 
-class UserDataSourceImpl(
+class LocalUserDataSourceImpl(
     private val userDao: UserDao
-): UserDataSource {
+): LocalUserDataSource {
 
     override suspend fun addUser(email: String, name: String, password: String): Resource<User, IoUserError.AddUser> {
         val userFromDb = runCatchingSafe { userDao.findUserByEmail(email) }
