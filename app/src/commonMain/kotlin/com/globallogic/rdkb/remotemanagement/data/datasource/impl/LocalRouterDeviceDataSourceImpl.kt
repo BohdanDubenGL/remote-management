@@ -11,7 +11,8 @@ import com.globallogic.rdkb.remotemanagement.domain.entity.RouterDevice
 import com.globallogic.rdkb.remotemanagement.domain.entity.RouterDeviceInfo
 import com.globallogic.rdkb.remotemanagement.domain.entity.RouterDeviceTopologyData
 import com.globallogic.rdkb.remotemanagement.domain.utils.Resource
-import com.globallogic.rdkb.remotemanagement.domain.utils.buildResource
+import com.globallogic.rdkb.remotemanagement.domain.utils.Resource.Failure
+import com.globallogic.rdkb.remotemanagement.domain.utils.Resource.Success
 import com.globallogic.rdkb.remotemanagement.domain.utils.dataOrElse
 import com.globallogic.rdkb.remotemanagement.domain.utils.runCatchingSafe
 import kotlinx.datetime.Clock
@@ -20,85 +21,105 @@ class LocalRouterDeviceDataSourceImpl(
     private val deviceDao: RouterDeviceDao,
 ) : LocalRouterDeviceDataSource {
 
-    override suspend fun loadRouterDevicesForUser(userEmail: String): Resource<List<RouterDevice>, IoDeviceError.LoadRouterDevicesForUser> = buildResource {
+    override suspend fun loadRouterDevicesForUser(userEmail: String): Resource<List<RouterDevice>, IoDeviceError.LoadRouterDevicesForUser> {
         val devices = runCatchingSafe { deviceDao.findRouterDevicesForUser(userEmail) }
-            .getOrElse { error -> return failure(IoDeviceError.DatabaseError(error)) }
+            .getOrElse { error -> return Failure(IoDeviceError.DatabaseError(error)) }
 
-        return success(devices.map(RouterDeviceMapper::toRouterDevice))
+        return Success(devices.map(RouterDeviceMapper::toRouterDevice))
     }
 
-    override suspend fun findRouterDeviceByMacAddress(macAddress: String): Resource<RouterDevice, IoDeviceError.FindRouterDeviceByMacAddress> = buildResource {
+    override suspend fun findRouterDeviceByMacAddress(macAddress: String): Resource<RouterDevice, IoDeviceError.FindRouterDeviceByMacAddress> {
         val device = runCatchingSafe { deviceDao.findRouterDeviceByMacAddress(macAddress) }
-            .getOrElse { error -> return failure(IoDeviceError.DatabaseError(error)) }
-            ?: return failure(IoDeviceError.NoDeviceFound)
+            .getOrElse { error -> return Failure(IoDeviceError.DatabaseError(error)) }
+            ?: return Failure(IoDeviceError.NoDeviceFound)
 
-        return success(RouterDeviceMapper.toRouterDevice(device))
+        return Success(RouterDeviceMapper.toRouterDevice(device))
     }
 
-    override suspend fun saveConnectedDevices(device: RouterDevice, connectedDevices: List<ConnectedDevice>): Resource<Unit, IoDeviceError.SaveConnectedDevices> = buildResource {
-        val connectedDevicesDto = connectedDevices.map { ConnectedDeviceMapper.toConnectedDevice(device, it) }
+    override suspend fun saveConnectedDevices(device: RouterDevice, connectedDevices: List<ConnectedDevice>): Resource<Unit, IoDeviceError.SaveConnectedDevices> {
+        val connectedDevicesDto =
+            connectedDevices.map { ConnectedDeviceMapper.toConnectedDevice(device, it) }
         runCatchingSafe { deviceDao.insertConnectedDevices(*connectedDevicesDto.toTypedArray()) }
-            .getOrElse { error -> return failure(IoDeviceError.DatabaseError(error)) }
+            .getOrElse { error -> return Failure(IoDeviceError.DatabaseError(error)) }
 
-        return success(Unit)
+        return Success(Unit)
     }
 
-    override suspend fun loadConnectedDevices(device: RouterDevice): Resource<List<ConnectedDevice>, IoDeviceError.LoadConnectedDevices> = buildResource {
+    override suspend fun loadConnectedDevices(device: RouterDevice): Resource<List<ConnectedDevice>, IoDeviceError.LoadConnectedDevices> {
         val connectedDevices = runCatchingSafe { deviceDao.findConnectedDevices(device.macAddress) }
-            .getOrElse { error -> return failure(IoDeviceError.DatabaseError(error)) }
+            .getOrElse { error -> return Failure(IoDeviceError.DatabaseError(error)) }
 
-        return success(connectedDevices.map(ConnectedDeviceMapper::toConnectedDevice))
+        return Success(connectedDevices.map(ConnectedDeviceMapper::toConnectedDevice))
     }
 
-    override suspend fun loadDeviceInfo(device: RouterDevice): Resource<RouterDeviceInfo, IoDeviceError.LoadDeviceInfo> = buildResource {
-        val routerDevice = runCatchingSafe { deviceDao.findRouterDeviceByMacAddress(device.macAddress) }
-            .getOrElse { error -> return failure(IoDeviceError.DatabaseError(error)) }
-            ?: return failure(IoDeviceError.NoDeviceFound)
+    override suspend fun loadDeviceInfo(device: RouterDevice): Resource<RouterDeviceInfo, IoDeviceError.LoadDeviceInfo> {
+        val routerDevice =
+            runCatchingSafe { deviceDao.findRouterDeviceByMacAddress(device.macAddress) }
+                .getOrElse { error -> return Failure(IoDeviceError.DatabaseError(error)) }
+                ?: return Failure(IoDeviceError.NoDeviceFound)
 
-        return success(RouterDeviceMapper.toRouterDeviceInfo(routerDevice))
+        return Success(RouterDeviceMapper.toRouterDeviceInfo(routerDevice))
     }
 
-    override suspend fun loadTopologyData(device: RouterDevice): Resource<RouterDeviceTopologyData, IoDeviceError.NoTopologyDataFound> = buildResource {
+    override suspend fun loadTopologyData(device: RouterDevice): Resource<RouterDeviceTopologyData, IoDeviceError.NoTopologyDataFound> {
         val routerDevice = findRouterDeviceByMacAddress(device.macAddress)
-            .dataOrElse { error -> return failure(IoDeviceError.NoTopologyDataFound) }
+            .dataOrElse { error -> return Failure(IoDeviceError.NoTopologyDataFound) }
         val deviceInfo = loadDeviceInfo(device)
-            .dataOrElse { error -> return failure(IoDeviceError.NoTopologyDataFound) }
+            .dataOrElse { error -> return Failure(IoDeviceError.NoTopologyDataFound) }
         val connectedDevices = loadConnectedDevices(device)
-            .dataOrElse { error -> return failure(IoDeviceError.NoTopologyDataFound) }
+            .dataOrElse { error -> return Failure(IoDeviceError.NoTopologyDataFound) }
 
-        return success(RouterDeviceTopologyData(
-            lanConnected = deviceInfo.lanConnected,
-            routerDevice = routerDevice,
-            connectedDevices = connectedDevices
-        ))
+        return Success(
+            RouterDeviceTopologyData(
+                lanConnected = deviceInfo.lanConnected,
+                routerDevice = routerDevice,
+                connectedDevices = connectedDevices
+            )
+        )
     }
 
-    override suspend fun saveRouterDevice(device: RouterDeviceInfo, userEmail: String): Resource<Unit, IoDeviceError.SaveRouterDevice> = buildResource {
+    override suspend fun saveRouterDevice(device: RouterDeviceInfo, userEmail: String): Resource<Unit, IoDeviceError.SaveRouterDevice> {
         val deviceDto = RouterDeviceMapper.toRouterDeviceInfo(device)
 
         runCatchingSafe { deviceDao.insertRouterDevice(deviceDto) }
-            .getOrElse { error -> return failure(IoDeviceError.DatabaseError(error)) }
-        runCatchingSafe { deviceDao.insertUserRouterDevice(UserRouterDeviceDto(userEmail, device.macAddress)) }
-            .getOrElse { error -> return failure(IoDeviceError.DatabaseError(error)) }
+            .getOrElse { error -> return Failure(IoDeviceError.DatabaseError(error)) }
+        runCatchingSafe {
+            deviceDao.insertUserRouterDevice(
+                UserRouterDeviceDto(
+                    userEmail,
+                    device.macAddress
+                )
+            )
+        }
+            .getOrElse { error -> return Failure(IoDeviceError.DatabaseError(error)) }
 
-        return success(Unit)
+        return Success(Unit)
     }
 
-    override suspend fun removeRouterDevice(device: RouterDevice, userEmail: String): Resource<Unit, IoDeviceError.RemoveRouterDevice> = buildResource {
-        runCatchingSafe { deviceDao.deleteUserRouterDevice(UserRouterDeviceDto(userEmail, device.macAddress)) }
-            .getOrElse { error -> return failure(IoDeviceError.DatabaseError(error)) }
+    override suspend fun removeRouterDevice(device: RouterDevice, userEmail: String): Resource<Unit, IoDeviceError.RemoveRouterDevice> {
+        runCatchingSafe {
+            deviceDao.deleteUserRouterDevice(
+                UserRouterDeviceDto(
+                    userEmail,
+                    device.macAddress
+                )
+            )
+        }
+            .getOrElse { error -> return Failure(IoDeviceError.DatabaseError(error)) }
         runCatchingSafe { deviceDao.deleteRouterDeviceByMacAddress(device.macAddress) }
-            .getOrElse { error -> return failure(IoDeviceError.DatabaseError(error)) }
+            .getOrElse { error -> return Failure(IoDeviceError.DatabaseError(error)) }
 
-        return success(Unit)
+        return Success(Unit)
     }
 
-    override suspend fun findLocalRouterDevice(userEmail: String): Resource<RouterDevice, IoDeviceError.FindLocalRouterDevice> = buildResource {
-        val device = runCatchingSafe { deviceDao.findRouterDevicesForUser(userEmail).firstOrNull { it.lanConnected } }
-            .getOrElse { error -> return failure(IoDeviceError.DatabaseError(error)) }
-            ?: return failure(IoDeviceError.NoDeviceFound)
+    override suspend fun findLocalRouterDevice(userEmail: String): Resource<RouterDevice, IoDeviceError.FindLocalRouterDevice> {
+        val device = runCatchingSafe {
+            deviceDao.findRouterDevicesForUser(userEmail).firstOrNull { it.lanConnected }
+        }
+            .getOrElse { error -> return Failure(IoDeviceError.DatabaseError(error)) }
+            ?: return Failure(IoDeviceError.NoDeviceFound)
 
-        return success(RouterDeviceMapper.toRouterDevice(device))
+        return Success(RouterDeviceMapper.toRouterDevice(device))
     }
 }
 

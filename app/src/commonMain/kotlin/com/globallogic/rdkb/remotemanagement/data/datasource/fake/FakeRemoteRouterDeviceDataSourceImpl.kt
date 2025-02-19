@@ -7,7 +7,7 @@ import com.globallogic.rdkb.remotemanagement.domain.entity.RouterDevice
 import com.globallogic.rdkb.remotemanagement.domain.entity.RouterDeviceInfo
 import com.globallogic.rdkb.remotemanagement.domain.entity.RouterDeviceSettings
 import com.globallogic.rdkb.remotemanagement.domain.utils.Resource
-import com.globallogic.rdkb.remotemanagement.domain.utils.buildResource
+import com.globallogic.rdkb.remotemanagement.domain.utils.Resource.Success
 
 fun RemoteRouterDeviceDataSource.fake(): RemoteRouterDeviceDataSource =
     FakeRemoteRouterDeviceDataSourceImpl(this)
@@ -33,37 +33,37 @@ private class FakeRemoteRouterDeviceDataSourceImpl(
         ),
     )
 
-    override suspend fun loadRouterDeviceInfo(device: RouterDevice): Resource<RouterDeviceInfo, IoDeviceError.NoDeviceInfoFound> = buildResource {
+    override suspend fun loadRouterDeviceInfo(device: RouterDevice): Resource<RouterDeviceInfo, IoDeviceError.NoDeviceInfoFound> {
         return when (device.macAddress) {
-            hardcodedDevice.macAddress -> success(hardcodedDevice.toRouterDeviceInfo())
+            hardcodedDevice.macAddress -> Success(hardcodedDevice.toRouterDeviceInfo())
             else -> original.loadRouterDeviceInfo(device)
         }
     }
 
-    override suspend fun loadConnectedDevicesForRouterDevice(device: RouterDevice): Resource<List<ConnectedDevice>, IoDeviceError.LoadConnectedDevicesForRouterDevice> = buildResource {
+    override suspend fun loadConnectedDevicesForRouterDevice(device: RouterDevice): Resource<List<ConnectedDevice>, IoDeviceError.LoadConnectedDevicesForRouterDevice> {
         return when (device.macAddress) {
-            hardcodedDevice.macAddress -> success(hardcodedDevice.toConnectedDevices())
+            hardcodedDevice.macAddress -> Success(hardcodedDevice.toConnectedDevices())
             else -> original.loadConnectedDevicesForRouterDevice(device)
         }
     }
 
-    override suspend fun factoryResetDevice(device: RouterDevice): Resource<Unit, IoDeviceError.FactoryResetDevice> = buildResource {
+    override suspend fun factoryResetDevice(device: RouterDevice): Resource<Unit, IoDeviceError.FactoryResetDevice> {
         return when (device.macAddress) {
-            hardcodedDevice.macAddress -> success(Unit)
+            hardcodedDevice.macAddress -> Success(Unit)
             else -> original.factoryResetDevice(device)
         }
     }
 
-    override suspend fun restartDevice(device: RouterDevice): Resource<Unit, IoDeviceError.RestartDevice> = buildResource {
+    override suspend fun restartDevice(device: RouterDevice): Resource<Unit, IoDeviceError.RestartDevice> {
         return when (device.macAddress) {
-            hardcodedDevice.macAddress -> success(Unit)
+            hardcodedDevice.macAddress -> Success(Unit)
             else -> original.restartDevice(device)
         }
     }
 
-    override suspend fun setupDevice(device: RouterDevice, settings: RouterDeviceSettings): Resource<Unit, IoDeviceError.SetupDevice> = buildResource {
+    override suspend fun setupDevice(device: RouterDevice, settings: RouterDeviceSettings): Resource<Unit, IoDeviceError.SetupDevice> {
         return when (device.macAddress) {
-            hardcodedDevice.macAddress -> success(Unit)
+            hardcodedDevice.macAddress -> Success(Unit)
             else -> original.setupDevice(device, settings)
         }
     }

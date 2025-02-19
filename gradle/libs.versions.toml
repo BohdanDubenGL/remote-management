@@ -5,16 +5,16 @@ kotlin = "2.1.10"
 kotlinx-coroutines = "1.10.1"
 kotlin-serialization-json = "1.8.0"
 kotlin-datetime = "0.6.2"
-ksp = "2.1.10-1.0.29"
+ksp = "2.1.10-1.0.30"
 
-android-gradle-plugin = "8.8.0" # "8.8.0-alpha05" for IDEA
+android-gradle-plugin = "8.8.1" # "8.8.0-alpha05" for IDEA
 android-compileSdk = "35"
 android-minSdk = "24"
 android-targetSdk = "35"
 compose-multiplatform = "1.7.3"
 
 koin = "4.0.2"
-ktor = "3.0.3"
+ktor = "3.1.0"
 
 androidx-activityCompose = "1.10.0"
 androidx-appcompat = "1.7.0"
@@ -22,13 +22,14 @@ androidx-constraintlayout = "2.2.0"
 androidx-core-ktx = "1.15.0"
 androidx-lifecycle = "2.8.4"
 androidx-material = "1.12.0"
-androidx-navigation = "2.8.0-alpha12"
+androidx-navigation = "2.8.0-alpha12" # 2.8.0-alpha13 crashes
 androidx-datastore = "1.1.2"
-androidx-room = "2.7.0-alpha13"
-androidx-sqlite = "2.5.0-alpha13"
+androidx-room = "2.7.0-alpha13" # 2.7.0-beta01 crashes
+androidx-sqlite = "2.5.0-beta01"
 
 cryptography = "0.4.0"
 
+#tests
 test-androidx-espresso-core = "3.6.1"
 test-androidx-test-junit = "1.2.1"
 test-junit = "4.13.2"
@@ -77,7 +78,7 @@ cryptography-provider-apple = { module = "dev.whyoleg.cryptography:cryptography-
 cryptography-provider-jdk = { module = "dev.whyoleg.cryptography:cryptography-provider-jdk", version.ref = "cryptography" }
 cryptography-provider-webcrypto = { module = "dev.whyoleg.cryptography:cryptography-provider-webcrypto", version.ref = "cryptography" }
 
-
+# tests
 test-kotlin = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
 test-kotlin-junit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlin" }
 test-junit = { module = "junit:junit", version.ref = "test-junit" }

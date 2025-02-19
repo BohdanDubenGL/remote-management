@@ -5,7 +5,7 @@ import com.globallogic.rdkb.remotemanagement.data.error.IoDeviceError
 import com.globallogic.rdkb.remotemanagement.domain.entity.FoundRouterDevice
 import com.globallogic.rdkb.remotemanagement.domain.entity.RouterDevice
 import com.globallogic.rdkb.remotemanagement.domain.utils.Resource
-import com.globallogic.rdkb.remotemanagement.domain.utils.buildResource
+import com.globallogic.rdkb.remotemanagement.domain.utils.Resource.Success
 import com.globallogic.rdkb.remotemanagement.domain.utils.flatMapData
 import com.globallogic.rdkb.remotemanagement.domain.utils.map
 
@@ -21,18 +21,17 @@ private class FakeRouterDeviceConnectionDataSourceImpl(
         ipAddress = "192.168.1.150",
     )
 
-    override suspend fun findAvailableRouterDevices(): Resource<List<FoundRouterDevice>, IoDeviceError.NoAvailableRouterDevices> = buildResource {
-        return success(listOf(hardcodedDevice.toFoundRouterDevice()))
+    override suspend fun findAvailableRouterDevices(): Resource<List<FoundRouterDevice>, IoDeviceError.NoAvailableRouterDevices> {
+        return Success(listOf(hardcodedDevice.toFoundRouterDevice()))
             .flatMapData { fake ->
-                original.findAvailableRouterDevices().map { it + fake }
+                original.findAvailableRouterDevices().map { fake + it }
             }
     }
 
-    override suspend fun connectToRouterDevice(macAddress: String): Resource<RouterDevice, IoDeviceError.CantConnectToRouterDevice> = buildResource {
-        return if (macAddress == hardcodedDevice.macAddress) {
-            success(hardcodedDevice.toRouterDevice())
-        } else {
-            original.connectToRouterDevice(macAddress)
+    override suspend fun connectToRouterDevice(macAddress: String): Resource<RouterDevice, IoDeviceError.CantConnectToRouterDevice> {
+        return when (macAddress) {
+            hardcodedDevice.macAddress -> Success(hardcodedDevice.toRouterDevice())
+            else -> original.connectToRouterDevice(macAddress)
         }
     }
 

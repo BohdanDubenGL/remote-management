@@ -13,15 +13,6 @@ interface ResourceError
 
 data class ThrowableResourceError(val throwable: Throwable) : ResourceError
 
-object BuildResourceScope {
-    fun <Data> success(data: Data): Success<Data> = Success(data)
-    fun <Error: ResourceError> failure(error: Error): Failure<Error> = Failure(error)
-}
-
-inline fun <Data, Error: ResourceError> buildResource(block: BuildResourceScope.() -> Resource<Data, Error>): Resource<Data, Error> {
-    return BuildResourceScope.block()
-}
-
 sealed interface Resource<out Data, out Error: ResourceError> : ResourceState<Data, Error> {
     val data: Data? get() = null
     val error: Error? get() = null
@@ -87,24 +78,24 @@ inline fun <Data, Error: ResourceError, Result> Resource<Data, Error>.fold(
 }
 
 inline fun <Data, Error: ResourceError, NewData, NewError: ResourceError> Resource<Data, Error>.flatMap(
-    onSuccess: BuildResourceScope.(Data) -> Resource<NewData, NewError>,
-    onFailure: BuildResourceScope.(Error) -> Resource<NewData, NewError>,
-): Resource<NewData, NewError> = fold({ BuildResourceScope.onSuccess(it) }, { BuildResourceScope.onFailure(it) })
+    onSuccess: (Data) -> Resource<NewData, NewError>,
+    onFailure: (Error) -> Resource<NewData, NewError>,
+): Resource<NewData, NewError> = fold(onSuccess, onFailure)
 
 inline fun <Data, Error: ResourceError, NewData, NewError: ResourceError> Resource<Data, Error>.flatMap(
-    flatMap: BuildResourceScope.(Data?, Error?) -> Resource<NewData, NewError>
-): Resource<NewData, NewError> = BuildResourceScope.flatMap(data, error)
+    flatMap: (Data?, Error?) -> Resource<NewData, NewError>
+): Resource<NewData, NewError> = flatMap(data, error)
 
 inline fun <Data, Error: ResourceError, NewData> Resource<Data, Error>.flatMapData(
-    flatMapData: BuildResourceScope.(Data) -> Resource<NewData, Error>
+    flatMapData: (Data) -> Resource<NewData, Error>
 ): Resource<NewData, Error> = when (this) {
-    is Success -> BuildResourceScope.flatMapData(data)
+    is Success -> flatMapData(data)
     is Failure -> this
 }
 
 inline fun <Data, Error: ResourceError, NewError: ResourceError> Resource<Data, Error>.flatMapError(
-    flatMapError: BuildResourceScope.(Error) -> Resource<Data, NewError>
+    flatMapError: (Error) -> Resource<Data, NewError>
 ): Resource<Data, NewError> = when (this) {
     is Success -> this
-    is Failure -> BuildResourceScope.flatMapError(error)
+    is Failure -> flatMapError(error)
 }

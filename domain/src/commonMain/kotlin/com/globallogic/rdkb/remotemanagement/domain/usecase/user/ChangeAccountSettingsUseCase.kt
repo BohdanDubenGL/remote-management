@@ -7,7 +7,7 @@ import com.globallogic.rdkb.remotemanagement.domain.verification.EmailVerifier
 import com.globallogic.rdkb.remotemanagement.domain.verification.PasswordVerifier
 import com.globallogic.rdkb.remotemanagement.domain.verification.UserNameVerifier
 import com.globallogic.rdkb.remotemanagement.domain.utils.Resource
-import com.globallogic.rdkb.remotemanagement.domain.utils.buildResource
+import com.globallogic.rdkb.remotemanagement.domain.utils.Resource.Failure
 import com.globallogic.rdkb.remotemanagement.domain.utils.map
 
 class ChangeAccountSettingsUseCase(
@@ -18,19 +18,33 @@ class ChangeAccountSettingsUseCase(
 ) {
     suspend operator fun invoke(settingsData: ChangeAccountSettingsData): Resource<Unit, UserError.ChangeAccountSettingsError> = changeAccountSettings(settingsData)
 
-    suspend fun changeAccountSettings(settingsData: ChangeAccountSettingsData): Resource<Unit, UserError.ChangeAccountSettingsError> = buildResource {
+    suspend fun changeAccountSettings(settingsData: ChangeAccountSettingsData): Resource<Unit, UserError.ChangeAccountSettingsError> {
         if (!userNameVerifier.verifyUserNameLength(settingsData.username))
-            return failure(UserError.WrongUsernameLength(userNameVerifier.minLength, userNameVerifier.maxLength))
+            return Failure(
+                UserError.WrongUsernameLength(
+                    userNameVerifier.minLength,
+                    userNameVerifier.maxLength
+                )
+            )
         if (!userNameVerifier.verifyUserNameFormat(settingsData.username))
-            return failure(UserError.WrongUsernameFormat)
+            return Failure(UserError.WrongUsernameFormat)
         if (!emailVerifier.verifyEmailFormat(settingsData.email))
-            return failure(UserError.WrongEmailFormat)
+            return Failure(UserError.WrongEmailFormat)
         if (!passwordVerifier.verifyPasswordLength(settingsData.password))
-            return failure(UserError.WrongPasswordLength(passwordVerifier.minLength, passwordVerifier.maxLength))
+            return Failure(
+                UserError.WrongPasswordLength(
+                    passwordVerifier.minLength,
+                    passwordVerifier.maxLength
+                )
+            )
         if (!passwordVerifier.verifyPasswordFormat(settingsData.password))
-            return failure(UserError.WrongPasswordFormat)
-        if (!passwordVerifier.verifyConfirmPassword(settingsData.password, settingsData.confirmPassword))
-            return failure(UserError.ConfirmPasswordDoesntMatch)
+            return Failure(UserError.WrongPasswordFormat)
+        if (!passwordVerifier.verifyConfirmPassword(
+                settingsData.password,
+                settingsData.confirmPassword
+            )
+        )
+            return Failure(UserError.ConfirmPasswordDoesntMatch)
 
         return userRepository.changeAccountSettings(settingsData).map { Unit }
     }

@@ -4,7 +4,7 @@ import com.globallogic.rdkb.remotemanagement.domain.error.UserError
 import com.globallogic.rdkb.remotemanagement.domain.repository.UserRepository
 import com.globallogic.rdkb.remotemanagement.domain.verification.EmailVerifier
 import com.globallogic.rdkb.remotemanagement.domain.utils.Resource
-import com.globallogic.rdkb.remotemanagement.domain.utils.buildResource
+import com.globallogic.rdkb.remotemanagement.domain.utils.Resource.Failure
 import com.globallogic.rdkb.remotemanagement.domain.utils.map
 import com.globallogic.rdkb.remotemanagement.domain.utils.mapErrorToData
 
@@ -14,9 +14,9 @@ class VerifyEmailForAuthenticationUseCase(
 ) {
     suspend operator fun invoke(email: String): Resource<EmailVerification, UserError.WrongEmailFormat> = verifyEmailForAuthentication(email)
 
-    suspend fun verifyEmailForAuthentication(email: String): Resource<EmailVerification, UserError.WrongEmailFormat> = buildResource {
+    suspend fun verifyEmailForAuthentication(email: String): Resource<EmailVerification, UserError.WrongEmailFormat> {
         if (!emailVerifier.verifyEmailFormat(email))
-            return failure(UserError.WrongEmailFormat)
+            return Failure(UserError.WrongEmailFormat)
 
         return userRepository.getUserByEmail(email)
             .map { user -> EmailVerification.EmailIsUsed(email, user.username) }

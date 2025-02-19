@@ -2,6 +2,7 @@ package com.globallogic.rdkb.remotemanagement.data.network
 
 import io.ktor.client.HttpClient
 import io.ktor.client.HttpClientConfig
+import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.plugins.logging.LogLevel
@@ -13,6 +14,7 @@ import io.ktor.http.ContentType
 import io.ktor.serialization.kotlinx.KotlinxSerializationConverter
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
+import kotlin.time.Duration.Companion.seconds
 
 expect fun PlatformHttpClient(config: HttpClientConfig<*>.() -> Unit = {}): HttpClient
 
@@ -24,6 +26,11 @@ fun RdkCentralHttpClient(): HttpClient = PlatformHttpClient {
     install(Logging) {
         level = LogLevel.ALL
         logger = Logger.SIMPLE
+    }
+    install(HttpTimeout) {
+        socketTimeoutMillis = 30.seconds.inWholeMilliseconds
+        connectTimeoutMillis = 30.seconds.inWholeMilliseconds
+        requestTimeoutMillis = 30.seconds.inWholeMilliseconds
     }
     install(ContentNegotiation) {
         val json = Json {
