@@ -20,7 +20,7 @@ fun main() {
             state = windowState,
             onCloseRequest = ::exitApplication,
             title = "RdkB RemoteManagement",
-            resizable = false,
+//            resizable = false,
             content = { App() },
         )
     }

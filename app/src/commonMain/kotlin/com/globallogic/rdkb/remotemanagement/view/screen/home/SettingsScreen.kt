@@ -2,37 +2,33 @@ package com.globallogic.rdkb.remotemanagement.view.screen.home
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Text
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import com.globallogic.rdkb.remotemanagement.domain.entity.User
 import com.globallogic.rdkb.remotemanagement.domain.usecase.user.GetCurrentLoggedInUserUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.user.LogoutUseCase
+import com.globallogic.rdkb.remotemanagement.domain.utils.dataOrElse
+import com.globallogic.rdkb.remotemanagement.domain.utils.map
+import com.globallogic.rdkb.remotemanagement.view.base.MviViewModel
+import com.globallogic.rdkb.remotemanagement.view.component.AppButton
+import com.globallogic.rdkb.remotemanagement.view.component.AppCard
+import com.globallogic.rdkb.remotemanagement.view.component.AppIcon
+import com.globallogic.rdkb.remotemanagement.view.component.AppLayoutVerticalSections
+import com.globallogic.rdkb.remotemanagement.view.component.AppTextProperty
 import com.globallogic.rdkb.remotemanagement.view.navigation.LocalNavController
 import com.globallogic.rdkb.remotemanagement.view.navigation.Screen
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
@@ -43,7 +39,6 @@ fun SettingsScreen(
     val uiState by settingsViewModel.uiState.collectAsStateWithLifecycle()
     SettingsContent(
         uiState = uiState,
-        loadCurrentUser = settingsViewModel::loadCurrentUser,
         onLogout = settingsViewModel::logout,
         onLoggedOut = {
             navController.navigate(Screen.Authentication) {
@@ -57,80 +52,83 @@ fun SettingsScreen(
 @Composable
 private fun SettingsContent(
     uiState: SettingsUiState,
-    loadCurrentUser: () -> Unit,
     onLogout: () -> Unit,
     onLoggedOut: () -> Unit,
     onChangeAccountSettings: () -> Unit
 ) {
     SideEffect {
         if (uiState.loggedOut) onLoggedOut()
-        else loadCurrentUser()
     }
 
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-        modifier = Modifier.fillMaxSize().padding(24.dp, 8.dp)
-    ) {
-        Card(
-            shape = RoundedCornerShape(4.dp),
-            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-            modifier = Modifier
-                .padding(24.dp, 8.dp)
-        ) {
+    AppLayoutVerticalSections(
+        topSection = {
             Column(
-                verticalArrangement = Arrangement.Center,
-                modifier = Modifier
-                    .padding(16.dp, 8.dp)
-                    .fillMaxWidth()
-                    .height(48.dp)
+                verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.fillMaxSize(),
             ) {
-                Row {
-                    Text("User email: ")
-                    Text(uiState.currentUser?.email.orEmpty())
+                AppIcon(
+                    imageVector = Icons.Default.Person,
+                    modifier = Modifier.size(128.dp),
+                )
+                AppCard {
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterVertically),
+                        modifier = Modifier
+                            .padding(horizontal = 16.dp, vertical = 8.dp)
+                            .fillMaxWidth()
+                    ) {
+                        AppTextProperty(
+                            name = "User email: ",
+                            value = uiState.currentUser?.email.orEmpty(),
+                        )
+                        AppTextProperty(
+                            name = "User name: ",
+                            value = uiState.currentUser?.username.orEmpty(),
+                        )
+                    }
                 }
             }
-        }
-        Spacer(modifier = Modifier.height(32.dp))
-        Column(
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-            modifier = Modifier.padding(horizontal = 32.dp)
-        ) {
-            Button(
-                modifier = Modifier.fillMaxWidth().height(50.dp),
-                onClick = onChangeAccountSettings,
-                content = { Text(text = "Change account settings") }
-            )
-            Button(
-                modifier = Modifier.fillMaxWidth().height(50.dp),
-                onClick = onLogout,
-                content = { Text(text = "Logout") }
-            )
-        }
-    }
+        },
+        bottomSection = {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterVertically),
+                modifier = Modifier.fillMaxSize().padding(horizontal = 32.dp)
+            ) {
+                AppButton(
+                    text = "Change account settings",
+                    modifier = Modifier.fillMaxWidth(),
+                    onClick = onChangeAccountSettings
+                )
+                AppButton(
+                    text = "Logout",
+                    modifier = Modifier.fillMaxWidth(),
+                    onClick = onLogout,
+                )
+            }
+        },
+        modifier = Modifier.fillMaxSize()
+    )
 }
 
 class SettingsViewModel(
     private val getCurrentLoggedInUser: GetCurrentLoggedInUserUseCase,
     private val logoutUser: LogoutUseCase,
-) : ViewModel() {
-    private val _uiState: MutableStateFlow<SettingsUiState> = MutableStateFlow(SettingsUiState())
-    val uiState: StateFlow<SettingsUiState> get() = _uiState.asStateFlow()
+) : MviViewModel<SettingsUiState>(SettingsUiState()) {
 
-    fun loadCurrentUser() {
-        viewModelScope.launch {
-            getCurrentLoggedInUser()
-                .onSuccess { currentUser -> _uiState.update { it.copy(currentUser = currentUser) } }
-                .onFailure { it.printStackTrace() }
-        }
+    override suspend fun onInitState() = loadCurrentUser()
+
+    private fun loadCurrentUser() = launchUpdateState { state ->
+        getCurrentLoggedInUser()
+            .map { currentUser -> state.copy(currentUser = currentUser) }
+            .dataOrElse { error -> state }
     }
 
-    fun logout() {
-        viewModelScope.launch {
-            logoutUser()
-                .onSuccess { loggedOut -> _uiState.update { it.copy(loggedOut = loggedOut) } }
-                .onFailure { it.printStackTrace() }
-        }
+    fun logout() = launchUpdateState { state ->
+        logoutUser()
+            .map { state.copy(loggedOut = true) }
+            .dataOrElse { error -> state.copy(loggedOut = false) }
     }
 }
 

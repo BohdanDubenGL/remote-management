@@ -1,53 +1,93 @@
 package com.globallogic.rdkb.remotemanagement.data.repository.impl
 
-import com.globallogic.rdkb.remotemanagement.data.datasource.UserDataSource
+import com.globallogic.rdkb.remotemanagement.data.datasource.LocalUserDataSource
+import com.globallogic.rdkb.remotemanagement.data.error.IoUserError
 import com.globallogic.rdkb.remotemanagement.data.preferences.AppPreferences
 import com.globallogic.rdkb.remotemanagement.domain.entity.ChangeAccountSettingsData
 import com.globallogic.rdkb.remotemanagement.domain.entity.LoginData
 import com.globallogic.rdkb.remotemanagement.domain.entity.RegistrationData
 import com.globallogic.rdkb.remotemanagement.domain.entity.User
+import com.globallogic.rdkb.remotemanagement.domain.error.UserError
 import com.globallogic.rdkb.remotemanagement.domain.repository.UserRepository
-import com.globallogic.rdkb.remotemanagement.domain.utils.runCatchingSafe
+import com.globallogic.rdkb.remotemanagement.domain.utils.Resource
+import com.globallogic.rdkb.remotemanagement.domain.utils.Resource.Failure
+import com.globallogic.rdkb.remotemanagement.domain.utils.Resource.Success
+import com.globallogic.rdkb.remotemanagement.domain.utils.dataOrElse
+import com.globallogic.rdkb.remotemanagement.domain.utils.mapError
+import com.globallogic.rdkb.remotemanagement.domain.utils.onSuccess
 
 class UserRepositoryImpl(
     private val appPreferences: AppPreferences,
-    private val userDataSource: UserDataSource,
+    private val localUserDataSource: LocalUserDataSource,
 ) : UserRepository {
-    private suspend fun currentUserEmail(): Result<String?> = runCatchingSafe { appPreferences.currentUserEmailPref.get() }
 
-    override suspend fun currentLoggedInUser(): Result<User?> {
-        return currentUserEmail()
-            .mapCatching { email ->
-                when (email) {
-                    null -> null
-                    else -> userDataSource.findUserByEmail(email).getOrThrow()
+    override suspend fun currentLoggedInUser(): Resource<User, UserError.NoLoggedInUser> {
+        val email = appPreferences.currentUserEmailPref.get()
+            ?: return Failure(UserError.NoLoggedInUser)
+        return localUserDataSource.findUserByEmail(email).mapError { error ->
+            when (error) {
+                is IoUserError.DatabaseError -> UserError.NoLoggedInUser
+                IoUserError.UserNotFound -> UserError.NoLoggedInUser
+            }
+        }
+    }
+
+    override suspend fun changeAccountSettings(settingsData: ChangeAccountSettingsData): Resource<User, UserError.ChangeAccountSettingsError> {
+        val email = appPreferences.currentUserEmailPref.get()
+            ?: return Failure(UserError.UserNotFound)
+        val user = localUserDataSource.findUserByCredentials(email, settingsData.currentPassword)
+            .mapError { error ->
+                when (error) {
+                    is IoUserError.DatabaseError -> UserError.WrongCredentials
+                    is IoUserError.UserNotFound -> UserError.WrongCredentials
+                }
+            }
+            .dataOrElse { error -> return Failure(error) }
+        localUserDataSource.updateUser(user.email, settingsData.email, settingsData.username, settingsData.password)
+            .mapError { error ->
+                when (error) {
+                    is IoUserError.DatabaseError -> UserError.UserNotFound
+                    is IoUserError.UserNotFound -> UserError.UserNotFound
+                }
+            }
+            .dataOrElse { error -> return Failure(error) }
+        return currentLoggedInUser()
+            .mapError { error -> UserError.UserNotFound }
+    }
+
+    override suspend fun getUserByEmail(email: String): Resource<User, UserError.UserNotFound> {
+        return localUserDataSource.findUserByEmail(email).mapError { error ->
+            when (error) {
+                is IoUserError.DatabaseError -> UserError.UserNotFound
+                IoUserError.UserNotFound -> UserError.UserNotFound
+            }
+        }
+    }
+
+    override suspend fun register(registrationData: RegistrationData): Resource<User, UserError.RegistrationError> {
+        return localUserDataSource.addUser(registrationData.email, registrationData.username, registrationData.password)
+            .onSuccess { user -> appPreferences.currentUserEmailPref.set(user.email) }
+            .mapError { error ->
+                when (error) {
+                    is IoUserError.DatabaseError -> UserError.UserAlreadyExist
+                    IoUserError.UserAlreadyExist -> UserError.UserAlreadyExist
                 }
             }
     }
 
-    override suspend fun changeAccountSettings(settingsData: ChangeAccountSettingsData): Result<User?> {
-        currentUserEmail()
-            .mapCatching { email -> email ?: error("No user") }
-            .mapCatching { email -> userDataSource.updateUser(email, settingsData.email, "", settingsData.password) }
-        return currentLoggedInUser()
-    }
-
-    override suspend fun isEmailUsed(email: String): Result<Boolean> {
-        return userDataSource.isEmailUsed(email)
-    }
-
-    override suspend fun register(registrationData: RegistrationData): Result<User> {
-        return userDataSource.addUser(registrationData.email, "", registrationData.passwordHash)
+    override suspend fun login(loginData: LoginData): Resource<User, UserError.LoginError> {
+        return localUserDataSource.findUserByCredentials(loginData.email, loginData.password)
             .onSuccess { user -> appPreferences.currentUserEmailPref.set(user.email) }
+            .mapError { error ->
+                when (error) {
+                    is IoUserError.DatabaseError -> UserError.WrongCredentials
+                    IoUserError.UserNotFound -> UserError.WrongCredentials
+                }
+            }
     }
 
-    override suspend fun login(loginData: LoginData): Result<User?> {
-        return userDataSource.findUserByCredentials(loginData.email, loginData.passwordHash)
-            .onSuccess { user -> if (user != null) appPreferences.currentUserEmailPref.set(user.email) }
-    }
-
-    override suspend fun logout(): Result<Boolean> = runCatchingSafe {
+    override suspend fun logout(): Resource<Unit, UserError.LogoutError> {
         appPreferences.currentUserEmailPref.reset()
-        true
+        return Success(Unit)
     }
 }

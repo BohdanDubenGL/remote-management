@@ -2,13 +2,11 @@ package com.globallogic.rdkb.remotemanagement.di
 
 import com.globallogic.rdkb.remotemanagement.data.datasource.LocalRouterDeviceDataSource
 import com.globallogic.rdkb.remotemanagement.data.datasource.RemoteRouterDeviceDataSource
-import com.globallogic.rdkb.remotemanagement.data.datasource.RouterDeviceConnectionDataSource
-import com.globallogic.rdkb.remotemanagement.data.datasource.UserDataSource
+import com.globallogic.rdkb.remotemanagement.data.datasource.LocalUserDataSource
 import com.globallogic.rdkb.remotemanagement.data.datasource.fake.fake
 import com.globallogic.rdkb.remotemanagement.data.datasource.impl.LocalRouterDeviceDataSourceImpl
 import com.globallogic.rdkb.remotemanagement.data.datasource.impl.RemoteRouterDeviceDataSourceImpl
-import com.globallogic.rdkb.remotemanagement.data.datasource.impl.RouterDeviceConnectionDataSourceImpl
-import com.globallogic.rdkb.remotemanagement.data.datasource.impl.UserDataSourceImpl
+import com.globallogic.rdkb.remotemanagement.data.datasource.impl.LocalUserDataSourceImpl
 import com.globallogic.rdkb.remotemanagement.data.db.AppDatabase
 import com.globallogic.rdkb.remotemanagement.data.db.RouterDeviceDao
 import com.globallogic.rdkb.remotemanagement.data.db.UserDao
@@ -36,10 +34,10 @@ val dataModule: Module = module {
     singleOf(::RouterDeviceConnectionRepositoryImpl).bind<RouterDeviceConnectionRepository>()
     singleOf(::RouterDeviceRepositoryImpl).bind<RouterDeviceRepository>()
 
-    singleOf(::UserDataSourceImpl).bind<UserDataSource>()
+    singleOf(::LocalUserDataSourceImpl).bind<LocalUserDataSource>()
     singleOf(::LocalRouterDeviceDataSourceImpl).bind<LocalRouterDeviceDataSource>()
-    single { RemoteRouterDeviceDataSourceImpl(get()).fake() }.bind<RemoteRouterDeviceDataSource>() //fake
-    single { RouterDeviceConnectionDataSourceImpl().fake() }.bind<RouterDeviceConnectionDataSource>() //fake
+    singleOf(::RemoteRouterDeviceDataSourceImpl).bind<RemoteRouterDeviceDataSourceImpl>()
+    single { get<RemoteRouterDeviceDataSourceImpl>().fake() }.bind<RemoteRouterDeviceDataSource>() //fake
 
     singleOf(::RdkCentralHttpClient).bind<HttpClient>()
     singleOf(::RdkCentralApiServiceImpl).bind<RdkCentralApiService>()

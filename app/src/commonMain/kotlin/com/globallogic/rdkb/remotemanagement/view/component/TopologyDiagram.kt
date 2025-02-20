@@ -31,13 +31,17 @@ data class Client(val name: String)
 data class NodeState(val position: Offset, val label: String, val color: Color)
 
 @Composable
-fun TopologyDiagram(network: Network, router: Router, clients: List<Client>) {
+fun TopologyDiagram(
+    network: Network,
+    router: Router,
+    clients: List<Client>
+) {
     val networkState = remember { mutableStateOf(NodeState(Offset(300f, 100f), network.name, Color.Blue)) }
     val routerState = remember { mutableStateOf(NodeState(Offset(300f, 300f), router.name, Color.Red)) }
     val clientStates = remember { clients.mapIndexed { i, client -> mutableStateOf(NodeState(Offset(100f + i * 200f, 500f), client.name, Color.Green)) } }
     val textMeasurer = rememberTextMeasurer()
 
-    Canvas(modifier = Modifier.background(Color.White).fillMaxSize().pointerInput(Unit) {
+    Canvas(modifier = Modifier.fillMaxSize().pointerInput(Unit) {
         networkState.value = networkState.value.copy(position = Offset(size.width / 2F, size.height / 4F))
         routerState.value = routerState.value.copy(position = Offset(size.width / 2F, size.height / 2F))
         val offset = size.width / clients.size.inc().toFloat()
@@ -76,7 +80,7 @@ fun DrawScope.drawNode(node: NodeState, textMeasurer: TextMeasurer) {
 }
 
 fun DrawScope.drawArrow(start: Offset, end: Offset) {
-    val nodeRadius = 40f // Adjust based on node size
+    val nodeRadius = 40f
     val arrowHeadSize = 20f
     val angle = atan2((end.y - start.y).toDouble(), (end.x - start.x).toDouble()).toFloat()
     val startOffset = Offset(

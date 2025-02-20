@@ -1,4 +1,5 @@
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
+import org.jetbrains.kotlin.compose.compiler.gradle.ComposeFeatureFlag
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
@@ -66,6 +67,8 @@ kotlin {
             implementation(libs.ktor.client.logging)
             implementation(libs.ktor.client.content.negotiation)
             implementation(libs.ktor.client.json)
+
+            implementation(libs.cryptography.core)
         }
         androidMain.dependencies {
             implementation(libs.kotlinx.coroutines.android)
@@ -82,6 +85,8 @@ kotlin {
         }
         iosMain.dependencies {
             implementation(libs.ktor.client.darwin)
+
+            implementation(libs.cryptography.provider.apple)
         }
         desktopMain.dependencies {
             implementation(libs.kotlinx.coroutines.swing)
@@ -89,6 +94,8 @@ kotlin {
             implementation(compose.desktop.currentOs)
 
             implementation(libs.ktor.client.okhttp)
+
+            implementation(libs.cryptography.provider.jdk)
         }
     }
 }
@@ -114,6 +121,10 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
+}
+
+composeCompiler {
+    featureFlags.set(setOf(ComposeFeatureFlag.StrongSkipping, ComposeFeatureFlag.OptimizeNonSkippingGroups))
 }
 
 compose.desktop.application {

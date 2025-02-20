@@ -1,10 +1,15 @@
 package com.globallogic.rdkb.remotemanagement.data.datasource.fake
 
 import com.globallogic.rdkb.remotemanagement.data.datasource.RemoteRouterDeviceDataSource
+import com.globallogic.rdkb.remotemanagement.data.error.IoDeviceError
 import com.globallogic.rdkb.remotemanagement.domain.entity.ConnectedDevice
+import com.globallogic.rdkb.remotemanagement.domain.entity.FoundRouterDevice
 import com.globallogic.rdkb.remotemanagement.domain.entity.RouterDevice
-import com.globallogic.rdkb.remotemanagement.domain.entity.RouterDeviceInfo
 import com.globallogic.rdkb.remotemanagement.domain.entity.RouterDeviceSettings
+import com.globallogic.rdkb.remotemanagement.domain.utils.Resource
+import com.globallogic.rdkb.remotemanagement.domain.utils.Resource.Success
+import com.globallogic.rdkb.remotemanagement.domain.utils.flatMapData
+import com.globallogic.rdkb.remotemanagement.domain.utils.map
 
 fun RemoteRouterDeviceDataSource.fake(): RemoteRouterDeviceDataSource =
     FakeRemoteRouterDeviceDataSourceImpl(this)
@@ -30,37 +35,44 @@ private class FakeRemoteRouterDeviceDataSourceImpl(
         ),
     )
 
-    override suspend fun loadRouterDeviceInfo(device: RouterDevice): Result<RouterDeviceInfo> {
-        return when (device.macAddress) {
-            hardcodedDevice.macAddress -> Result.success(hardcodedDevice.toRouterDeviceInfo())
-            else -> original.loadRouterDeviceInfo(device)
+    override suspend fun findAvailableRouterDevices(): Resource<List<FoundRouterDevice>, IoDeviceError.NoAvailableRouterDevices> {
+        return Success(listOf(hardcodedDevice.toFoundRouterDevice()))
+            .flatMapData { fake ->
+                original.findAvailableRouterDevices().map { fake + it }
+            }
+    }
+
+    override suspend fun findRouterDeviceByMacAddress(macAddress: String): Resource<RouterDevice, IoDeviceError.CantConnectToRouterDevice> {
+        return when (macAddress) {
+            hardcodedDevice.macAddress -> Success(hardcodedDevice.toRouterDeviceInfo())
+            else -> original.findRouterDeviceByMacAddress(macAddress)
         }
     }
 
-    override suspend fun loadConnectedDevicesForRouterDevice(device: RouterDevice): Result<List<ConnectedDevice>> {
+    override suspend fun loadConnectedDevicesForRouterDevice(device: RouterDevice): Resource<List<ConnectedDevice>, IoDeviceError.LoadConnectedDevicesForRouterDevice> {
         return when (device.macAddress) {
-            hardcodedDevice.macAddress -> Result.success(hardcodedDevice.toConnectedDevices())
+            hardcodedDevice.macAddress -> Success(hardcodedDevice.toConnectedDevices())
             else -> original.loadConnectedDevicesForRouterDevice(device)
         }
     }
 
-    override suspend fun factoryResetDevice(device: RouterDevice): Result<Unit> {
+    override suspend fun factoryResetDevice(device: RouterDevice): Resource<Unit, IoDeviceError.FactoryResetDevice> {
         return when (device.macAddress) {
-            hardcodedDevice.macAddress -> Result.success(Unit)
+            hardcodedDevice.macAddress -> Success(Unit)
             else -> original.factoryResetDevice(device)
         }
     }
 
-    override suspend fun restartDevice(device: RouterDevice): Result<Unit> {
+    override suspend fun restartDevice(device: RouterDevice): Resource<Unit, IoDeviceError.RestartDevice> {
         return when (device.macAddress) {
-            hardcodedDevice.macAddress -> Result.success(Unit)
+            hardcodedDevice.macAddress -> Success(Unit)
             else -> original.restartDevice(device)
         }
     }
 
-    override suspend fun setupDevice(device: RouterDevice, settings: RouterDeviceSettings): Result<Unit> {
+    override suspend fun setupDevice(device: RouterDevice, settings: RouterDeviceSettings): Resource<Unit, IoDeviceError.SetupDevice> {
         return when (device.macAddress) {
-            hardcodedDevice.macAddress -> Result.success(Unit)
+            hardcodedDevice.macAddress -> Success(Unit)
             else -> original.setupDevice(device, settings)
         }
     }
@@ -81,8 +93,9 @@ private class FakeRemoteRouterDeviceDataSourceImpl(
         val availableBands: Set<String> = setOf("5GHz", "2.4GHz", "6GHz"),
         val connectedDevices: List<FakeConnectedDevice> = emptyList(),
     ) {
-        fun toRouterDeviceInfo(): RouterDeviceInfo = RouterDeviceInfo(lanConnected, connectedExtender, modelName, ipAddress, macAddress, firmwareVersion, serialNumber, processorLoadPercent, memoryUsagePercent, totalDownloadTraffic, totalUploadTraffic, availableBands)
+        fun toFoundRouterDevice(): FoundRouterDevice = FoundRouterDevice(name, ipAddress, macAddress)
         fun toConnectedDevices(): List<ConnectedDevice> = connectedDevices.map { it.toDomain() }
+        fun toRouterDeviceInfo(): RouterDevice = RouterDevice(lanConnected, connectedExtender, modelName, ipAddress, macAddress, firmwareVersion, serialNumber, processorLoadPercent, memoryUsagePercent, totalDownloadTraffic, totalUploadTraffic, availableBands)
     }
 
     data class FakeConnectedDevice(

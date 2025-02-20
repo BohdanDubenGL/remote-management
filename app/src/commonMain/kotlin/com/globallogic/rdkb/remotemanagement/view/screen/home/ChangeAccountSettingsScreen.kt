@@ -3,28 +3,33 @@ package com.globallogic.rdkb.remotemanagement.view.screen.home
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.Button
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.lifecycle.ViewModel
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import com.globallogic.rdkb.remotemanagement.domain.entity.ChangeAccountSettingsData
+import com.globallogic.rdkb.remotemanagement.domain.error.UserError
 import com.globallogic.rdkb.remotemanagement.domain.usecase.user.ChangeAccountSettingsUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.user.GetCurrentLoggedInUserUseCase
+import com.globallogic.rdkb.remotemanagement.domain.utils.dataOrElse
+import com.globallogic.rdkb.remotemanagement.domain.utils.map
+import com.globallogic.rdkb.remotemanagement.view.base.MviViewModel
+import com.globallogic.rdkb.remotemanagement.view.component.AppButton
+import com.globallogic.rdkb.remotemanagement.view.component.AppLayoutVerticalSections
+import com.globallogic.rdkb.remotemanagement.view.component.AppLoading
+import com.globallogic.rdkb.remotemanagement.view.component.AppPasswordTextField
+import com.globallogic.rdkb.remotemanagement.view.component.AppTextField
+import com.globallogic.rdkb.remotemanagement.view.component.AppTitleText
+import com.globallogic.rdkb.remotemanagement.view.component.SetupBottomNavigation
+import com.globallogic.rdkb.remotemanagement.view.navigation.BottomNavigationState
 import com.globallogic.rdkb.remotemanagement.view.navigation.LocalNavController
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
@@ -36,8 +41,8 @@ fun ChangeAccountSettingsScreen(
 
     ChangeAccountSettingsContent(
         uiState = uiState,
-        loadCurrentUserData = changeAccountSettingsViewModel::loadCurrentUserData,
         onEmailEntered = changeAccountSettingsViewModel::onEmailEntered,
+        onUserNameEntered = changeAccountSettingsViewModel::onUsernameEntered,
         onCurrentPasswordEntered = changeAccountSettingsViewModel::onCurrentPasswordEntered,
         onNewPasswordEntered = changeAccountSettingsViewModel::onNewPasswordEntered,
         onConfirmNewPasswordEntered = changeAccountSettingsViewModel::onConfirmNewPasswordEntered,
@@ -49,8 +54,8 @@ fun ChangeAccountSettingsScreen(
 @Composable
 private fun ChangeAccountSettingsContent(
     uiState: ChangeAccountSettingsUiState,
-    loadCurrentUserData: () -> Unit,
     onEmailEntered: (String) -> Unit,
+    onUserNameEntered: (String) -> Unit,
     onCurrentPasswordEntered: (String) -> Unit,
     onNewPasswordEntered: (String) -> Unit,
     onConfirmNewPasswordEntered: (String) -> Unit,
@@ -58,107 +63,143 @@ private fun ChangeAccountSettingsContent(
     onDataSaved: () -> Unit,
 ) {
     SideEffect {
-        when {
-            uiState.dataSaved -> onDataSaved()
-            !uiState.userDataLoaded -> loadCurrentUserData()
-        }
+        if (uiState.dataSaved) onDataSaved()
     }
+    SetupBottomNavigation(bottomNavigationState = BottomNavigationState.Hidden)
 
     if (uiState.userDataLoaded) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
-            modifier = Modifier.fillMaxSize()
-        ) {
-            TextField(
-                value = uiState.email,
-                onValueChange = onEmailEntered,
-                label = { Text(text = "Email") },
-                placeholder = { Text(text = "Enter your email") }
-            )
-            TextField(
-                value = uiState.currentPassword,
-                onValueChange = onCurrentPasswordEntered,
-                label = { Text(text = "Current Password") },
-                placeholder = { Text(text = "Enter your current password") },
-                visualTransformation = PasswordVisualTransformation()
-            )
-            TextField(
-                value = uiState.newPassword,
-                onValueChange = onNewPasswordEntered,
-                label = { Text(text = "New Password") },
-                placeholder = { Text(text = "Enter new password") },
-                visualTransformation = PasswordVisualTransformation()
-            )
-            TextField(
-                value = uiState.confirmNewPassword,
-                onValueChange = onConfirmNewPasswordEntered,
-                label = { Text(text = "Confirm New Password") },
-                placeholder = { Text(text = "Re-enter new password") },
-                visualTransformation = PasswordVisualTransformation()
-            )
-            Button(
-                onClick = onSaveClicked,
-                content = { Text("Save") }
-            )
-        }
+        AppLayoutVerticalSections(
+            modifier = Modifier.fillMaxSize(),
+            topSectionWeight = 8F,
+            topSection = {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterVertically),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState()),
+                ) {
+                    AppTitleText(text = "Enter new data")
+                    AppTextField(
+                        value = uiState.email,
+                        onValueChange = onEmailEntered,
+                        label = "Email",
+                        placeholder = "Enter your email",
+                        isError = uiState.emailError.isNotBlank(),
+                        errorMessage = uiState.emailError,
+                        enabled = false,
+                    )
+                    AppTextField(
+                        value = uiState.username,
+                        onValueChange = onUserNameEntered,
+                        label = "Username",
+                        placeholder = "Enter your username",
+                        isError = uiState.usernameError.isNotBlank(),
+                        errorMessage = uiState.usernameError,
+                    )
+                    AppPasswordTextField(
+                        value = uiState.newPassword,
+                        onValueChange = onNewPasswordEntered,
+                        label = "Password",
+                        placeholder = "Enter password",
+                        isError = uiState.newPasswordError.isNotBlank(),
+                        errorMessage = uiState.newPasswordError,
+                    )
+                    AppPasswordTextField(
+                        value = uiState.confirmNewPassword,
+                        onValueChange = onConfirmNewPasswordEntered,
+                        label = "Confirm Password",
+                        placeholder = "Re-enter password",
+                        isError = uiState.confirmNewPasswordError.isNotBlank(),
+                        errorMessage = uiState.confirmNewPasswordError,
+                    )
+                    AppTitleText(text = "Confirm it is you", modifier = Modifier.padding(top = 16.dp))
+                    AppPasswordTextField(
+                        value = uiState.currentPassword,
+                        onValueChange = onCurrentPasswordEntered,
+                        label = "Current Password",
+                        placeholder = "Enter your current password",
+                        isError = uiState.currentPasswordError.isNotBlank(),
+                        errorMessage = uiState.currentPasswordError,
+                    )
+                }
+            },
+            bottomSection = {
+                AppButton(
+                    text = "Save",
+                    onClick = onSaveClicked,
+                )
+            }
+        )
     } else {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
-            modifier = Modifier.fillMaxSize()
-        ) {
-            Text("Loading...")
-        }
+        AppLoading(
+            content = { AppTitleText(text = "Loading...") }
+        )
     }
 }
 
 class ChangeAccountSettingsViewModel(
     private val getCurrentLoggedInUser: GetCurrentLoggedInUserUseCase,
     private val changeAccountSettings: ChangeAccountSettingsUseCase,
-) : ViewModel() {
-    private val _uiState: MutableStateFlow<ChangeAccountSettingsUiState> = MutableStateFlow(ChangeAccountSettingsUiState())
-    val uiState: StateFlow<ChangeAccountSettingsUiState> get() = _uiState.asStateFlow()
+) : MviViewModel<ChangeAccountSettingsUiState>(ChangeAccountSettingsUiState()) {
 
-    fun loadCurrentUserData() {
-        viewModelScope.launch {
-            getCurrentLoggedInUser()
-                .onSuccess { currentUser -> _uiState.update { it.copy(email = currentUser?.email.orEmpty(), userDataLoaded = true) } }
-                .onFailure { it.printStackTrace() }
-        }
+    override suspend fun onInitState() = loadCurrentUserData()
+
+    private fun loadCurrentUserData() = launchUpdateState { state ->
+        getCurrentLoggedInUser()
+            .map { currentUser -> state.copy(email = currentUser.email, username = currentUser.username, userDataLoaded = true) }
+            .dataOrElse { error -> state.copy(userDataLoaded = true) }
     }
 
-    fun onEmailEntered(email: String) {
-        _uiState.update { it.copy(email = email) }
+    fun onEmailEntered(email: String) = updateState { state ->
+        state.copy(email = email, emailError = "")
     }
 
-    fun onCurrentPasswordEntered(currentPassword: String) {
-        _uiState.update { it.copy(currentPassword = currentPassword) }
+    fun onUsernameEntered(username: String) = updateState { state ->
+        state.copy(username = username, usernameError = "")
     }
 
-    fun onNewPasswordEntered(newPassword: String) {
-        _uiState.update { it.copy(newPassword = newPassword) }
+    fun onCurrentPasswordEntered(currentPassword: String) = updateState { state ->
+        state.copy(currentPassword = currentPassword, currentPasswordError = "")
     }
 
-    fun onConfirmNewPasswordEntered(confirmNewPassword: String) {
-        _uiState.update { it.copy(confirmNewPassword = confirmNewPassword) }
+    fun onNewPasswordEntered(newPassword: String) = updateState { state ->
+        state.copy(newPassword = newPassword, newPasswordError = "")
     }
 
-    fun saveData() {
-        viewModelScope.launch {
-            val state = _uiState.value
-            changeAccountSettings(ChangeAccountSettingsData(state.email, state.newPassword, state.confirmNewPassword))
-                .onSuccess { _uiState.update { it.copy(dataSaved = true) } }
-                .onFailure { it.printStackTrace() }
-        }
+    fun onConfirmNewPasswordEntered(confirmNewPassword: String) = updateState { state ->
+        state.copy(confirmNewPassword = confirmNewPassword, confirmNewPasswordError = "")
+    }
+
+    fun saveData() = launchUpdateState { state ->
+        changeAccountSettings(ChangeAccountSettingsData(state.email, state.username, state.newPassword, state.confirmNewPassword, state.currentPassword))
+            .map { state.copy(dataSaved = true) }
+            .dataOrElse { error ->
+                when(error) {
+                    is UserError.UserNotFound -> state.copy(emailError = "user not found", usernameError = "", newPasswordError = "", confirmNewPasswordError = "", currentPasswordError = "")
+                    is UserError.WrongEmailFormat -> state.copy(emailError = "wrong email format", usernameError = "", newPasswordError = "", confirmNewPasswordError = "", currentPasswordError = "")
+                    is UserError.WrongUsernameFormat -> state.copy(usernameError = "wrong username format", emailError = "", newPasswordError = "", confirmNewPasswordError = "", currentPasswordError = "")
+                    is UserError.WrongUsernameLength -> state.copy(usernameError = "username length should be in ${error.min} and ${error.max}", emailError = "", newPasswordError = "", confirmNewPasswordError = "", currentPasswordError = "")
+                    is UserError.WrongPasswordFormat -> state.copy(newPasswordError = "wrong password format", emailError = "", usernameError = "", confirmNewPasswordError = "", currentPasswordError = "")
+                    is UserError.WrongPasswordLength -> state.copy(newPasswordError = "password length should be in ${error.min} and ${error.max}", emailError = "", usernameError = "", confirmNewPasswordError = "", currentPasswordError = "")
+                    is UserError.ConfirmPasswordDoesntMatch -> state.copy(confirmNewPasswordError = "confirm password doesn't match", emailError = "", usernameError = "", newPasswordError = "", currentPasswordError = "")
+                    is UserError.WrongCredentials -> state.copy(currentPasswordError = "wrong password", emailError = "", usernameError = "", newPasswordError = "", confirmNewPasswordError = "")
+                }
+            }
     }
 }
 
 data class ChangeAccountSettingsUiState(
+    val username: String = "",
+    val usernameError: String = "",
     val email: String = "",
-    val currentPassword: String = "",
+    val emailError: String = "",
     val newPassword: String = "",
+    val newPasswordError: String = "",
     val confirmNewPassword: String = "",
+    val confirmNewPasswordError: String = "",
+    val currentPassword: String = "",
+    val currentPasswordError: String = "",
     val userDataLoaded: Boolean = false,
     val dataSaved: Boolean = false,
 )

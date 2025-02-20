@@ -21,10 +21,21 @@ class ScaffoldController(
 
     fun bottomBarItemsFor(graphName: String): List<BottomBarRoute<Screen>> = routes.getOrElse(graphName, ::emptyList)
 
+    private val _bottomNavigationState: MutableStateFlow<BottomNavigationState> = MutableStateFlow(BottomNavigationState.Default)
+    val bottomNavigationState: StateFlow<BottomNavigationState> get() = _bottomNavigationState.asStateFlow()
 
-    private val _floatingActionButtonState: MutableStateFlow<FloatingActionButtonState> = MutableStateFlow(
-        FloatingActionButtonState.Hidden
-    )
+    fun setBottomNavigationState(state: BottomNavigationState): () -> Unit {
+        if (_bottomNavigationState.value != state) {
+            _bottomNavigationState.value = state
+        }
+        return {
+            if (_bottomNavigationState.value == state) {
+                _bottomNavigationState.value = BottomNavigationState.Default
+            }
+        }
+    }
+
+    private val _floatingActionButtonState: MutableStateFlow<FloatingActionButtonState> = MutableStateFlow(FloatingActionButtonState.Hidden)
     val floatingActionButtonState: StateFlow<FloatingActionButtonState> get() = _floatingActionButtonState.asStateFlow()
 
     fun setFloatingActionButtonState(state: FloatingActionButtonState): () -> Unit {
@@ -48,6 +59,14 @@ sealed interface FloatingActionButtonState {
     ) : FloatingActionButtonState
 }
 
+sealed interface BottomNavigationState {
+    data object Default : BottomNavigationState
+    data object Hidden : BottomNavigationState
+    data class Shown(
+        val routes: List<BottomBarRoute<Screen>> = emptyList()
+    ): BottomNavigationState
+}
+
 data class BottomBarRoute<T : Any>(
     val name: StringResource?,
     val route: T,
@@ -55,5 +74,5 @@ data class BottomBarRoute<T : Any>(
     val inactiveIcon: ImageVector,
     val graph: Graph
 ) {
-    constructor(route: T, graph: Graph) : this(getRouteTitle(route::class.qualifiedName), route, Icons.Filled.Settings, Icons.Outlined.Settings, graph)
+    constructor(route: T, graph: Graph) : this(getRouteBottomBarTitle(route::class.qualifiedName), route, Icons.Filled.Settings, Icons.Outlined.Settings, graph)
 }
