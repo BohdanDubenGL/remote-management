@@ -21,6 +21,7 @@ sealed interface IoDeviceError : ResourceError {
     interface FindLocalRouterDevice : IoDeviceError
 
     data object NoDeviceFound : FindRouterDeviceByMacAddress, FindLocalRouterDevice, LoadDeviceInfo
+    data object WifiSettings : FindRouterDeviceByMacAddress, FindLocalRouterDevice, LoadDeviceInfo
 
     data class NetworkError(val throwable: Throwable)
     data class DatabaseError(val throwable: Throwable) : LoadRouterDevicesForUser, FindRouterDeviceByMacAddress,

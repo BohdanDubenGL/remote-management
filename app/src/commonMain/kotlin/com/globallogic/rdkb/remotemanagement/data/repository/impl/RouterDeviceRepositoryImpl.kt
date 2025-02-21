@@ -6,6 +6,7 @@ import com.globallogic.rdkb.remotemanagement.data.preferences.AppPreferences
 import com.globallogic.rdkb.remotemanagement.domain.entity.ConnectedDevice
 import com.globallogic.rdkb.remotemanagement.domain.entity.RouterDevice
 import com.globallogic.rdkb.remotemanagement.domain.entity.RouterDeviceSettings
+import com.globallogic.rdkb.remotemanagement.domain.entity.WifiSettings
 import com.globallogic.rdkb.remotemanagement.domain.error.DeviceError
 import com.globallogic.rdkb.remotemanagement.domain.repository.RouterDeviceRepository
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.RouterDeviceAction
@@ -40,6 +41,11 @@ class RouterDeviceRepositoryImpl(
             .mapError { error -> DeviceError.NoConnectedDevicesFound }
     }
 
+    override suspend fun getRouterDeviceWifiSettings(device: RouterDevice): Resource<WifiSettings, DeviceError.WifiSettings> {
+        return remoteRouterDeviceDataSource.loadWifiSettings(device)
+            .mapError { error -> DeviceError.WifiSettings }
+    }
+
     override suspend fun selectRouterDevice(device: RouterDevice): Success<Unit> {
         appPreferences.currentRouterDeviceMacAddressPref.set(device.macAddress)
         return Success(Unit)
@@ -61,7 +67,7 @@ class RouterDeviceRepositoryImpl(
 
     override suspend fun doAction(device: RouterDevice, action: RouterDeviceAction): Resource<Unit, DeviceError.NoDeviceFound> {
         return when(action) {
-            RouterDeviceAction.Restart -> remoteRouterDeviceDataSource.restartDevice(device)
+            RouterDeviceAction.Restart -> remoteRouterDeviceDataSource.rebootDevice(device)
                 .mapError { error -> DeviceError.NoDeviceFound }
             RouterDeviceAction.FactoryReset -> remoteRouterDeviceDataSource.factoryResetDevice(device)
                 .mapError { error -> DeviceError.NoDeviceFound }

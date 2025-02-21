@@ -10,6 +10,7 @@ import com.globallogic.rdkb.remotemanagement.data.network.service.model.GetPrope
 import com.globallogic.rdkb.remotemanagement.data.network.service.model.SetPropertyResponse
 import com.globallogic.rdkb.remotemanagement.domain.utils.Resource
 import com.globallogic.rdkb.remotemanagement.domain.utils.ThrowableResourceError
+import com.globallogic.rdkb.remotemanagement.domain.utils.map
 import io.ktor.client.HttpClient
 import io.ktor.client.request.parameter
 import io.ktor.client.request.port
@@ -18,7 +19,7 @@ import io.ktor.client.request.url
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
 
-class RdkCentralApiServiceImpl(
+class RdkCentralNetworkApiServiceImpl(
     private val httpClient: HttpClient
 ) : RdkCentralApiService {
 
@@ -30,9 +31,9 @@ class RdkCentralApiServiceImpl(
         }
     }
 
-    override suspend fun <T> getDeviceProperties(
+    override suspend fun getDeviceProperties(
         deviceMacAddress: String,
-        vararg properties: RouterDeviceProperty.Get<T>
+        vararg properties: RouterDeviceProperty.Property,
     ): Resource<GetPropertyResponse, ThrowableResourceError> {
         return httpClient.safeGet<GetPropertyResponse> {
             url("/api/v2/device/mac:$deviceMacAddress/config")
@@ -41,9 +42,9 @@ class RdkCentralApiServiceImpl(
         }
     }
 
-    override suspend fun <T> getDeviceNamespace(
+    override suspend fun getDeviceNamespace(
         deviceMacAddress: String,
-        vararg properties: RouterDeviceProperty.Get<T>
+        vararg properties: RouterDeviceProperty.Namespace,
     ): Resource<GetNamespaceResponse, ThrowableResourceError> {
         return httpClient.safeGet<GetNamespaceResponse> {
             url("/api/v2/device/mac:$deviceMacAddress/config")
@@ -54,10 +55,10 @@ class RdkCentralApiServiceImpl(
 
     // curl -X PATCH http://webpa.rdkcentral.com:9003/api/v2/device/mac:4e07b781a3b8/config -d '{"parameters": [ {"dataType": 0, "name": "Device.WiFi.SSID.10001.SSID", "value": "Filogic_5G2"}]}' -H 'Authorization:Basic d3B1c2VyOndlYnBhQDEyMzQ1Njc4OTAK'
     // {"parameters":[{"name":"Device.WiFi.SSID.10001.SSID","message":"Success"}],"statusCode":200}
-    override suspend fun <T> setDeviceProperty(
+    override suspend fun setDeviceProperty(
         deviceMacAddress: String,
-        deviceProperty: RouterDeviceProperty.Set<T>,
-        value: T,
+        deviceProperty: RouterDeviceProperty.Property,
+        value: String,
     ): Resource<SetPropertyResponse, ThrowableResourceError> {
         return httpClient.safePatch {
             url("/api/v2/device/mac:$deviceMacAddress/config")
@@ -68,7 +69,10 @@ class RdkCentralApiServiceImpl(
     override suspend fun doDeviceAction(
         deviceMacAddress: String,
         deviceAction: RouterDeviceProperty.Action
-    ): Resource<Boolean, ThrowableResourceError> {
-        TODO("Not yet implemented")
+    ): Resource<Unit, ThrowableResourceError> {
+        return httpClient.safePatch<SetPropertyResponse> {
+            url("/api/v2/device/mac:$deviceMacAddress/config")
+            setBody("{\"parameters\": [ {\"dataType\": 0, \"name\": \"${deviceAction.name}\", \"value\": \"${deviceAction.value}\"}]}")
+        }.map { Unit }
     }
 }

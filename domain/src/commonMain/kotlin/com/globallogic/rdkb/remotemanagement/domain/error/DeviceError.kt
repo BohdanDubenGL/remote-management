@@ -11,4 +11,5 @@ sealed interface DeviceError : ResourceError {
     data object NoDeviceFound : DeviceError
     data object NoDevicesFound : DeviceError
     data object NoConnectedDevicesFound : DeviceError
+    data object WifiSettings : DeviceError
 }

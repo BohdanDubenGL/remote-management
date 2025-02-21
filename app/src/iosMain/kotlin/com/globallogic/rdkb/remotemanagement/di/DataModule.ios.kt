@@ -18,6 +18,5 @@ actual val platformDataModule: Module = module {
     single { createDataStore(dataStoreFileName) }.bind<DataStore<Preferences>>()
     single { createRoomDatabase(createDatabaseBuilder<AppDatabase>(AppDatabase.fileName)) }.bind<AppDatabase>()
 
-    singleOf(::PermissionController).bind<PermissionController>()
     singleOf(::WifiScanner).bind<WifiScanner>()
 }

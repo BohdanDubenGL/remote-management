@@ -6,6 +6,8 @@ import com.globallogic.rdkb.remotemanagement.domain.entity.ConnectedDevice
 import com.globallogic.rdkb.remotemanagement.domain.entity.FoundRouterDevice
 import com.globallogic.rdkb.remotemanagement.domain.entity.RouterDevice
 import com.globallogic.rdkb.remotemanagement.domain.entity.RouterDeviceSettings
+import com.globallogic.rdkb.remotemanagement.domain.entity.Wifi
+import com.globallogic.rdkb.remotemanagement.domain.entity.WifiSettings
 import com.globallogic.rdkb.remotemanagement.domain.utils.Resource
 import com.globallogic.rdkb.remotemanagement.domain.utils.Resource.Success
 import com.globallogic.rdkb.remotemanagement.domain.utils.flatMapData
@@ -19,7 +21,7 @@ private class FakeRemoteRouterDeviceDataSourceImpl(
 ) : RemoteRouterDeviceDataSource by original {
     private val hardcodedDevice: FakeRouterDevice = FakeRouterDevice(
         name = "Hardcoded Router",
-        macAddress = "dc:a6:32:0e:b8:bb",
+        macAddress = "dc:a6:32:0e:b9:bb",
         modelName = "ar1840",
         ipAddress = "192.168.1.150",
         firmwareVersion = "v1.0.8",
@@ -56,6 +58,13 @@ private class FakeRemoteRouterDeviceDataSourceImpl(
         }
     }
 
+    override suspend fun loadWifiSettings(device: RouterDevice): Resource<WifiSettings, IoDeviceError.WifiSettings> {
+        return when (device.macAddress) {
+            hardcodedDevice.macAddress -> Success(WifiSettings(hardcodedDevice.wifiSettings.map { it.toDomain() }))
+            else -> original.loadWifiSettings(device)
+        }
+    }
+
     override suspend fun factoryResetDevice(device: RouterDevice): Resource<Unit, IoDeviceError.FactoryResetDevice> {
         return when (device.macAddress) {
             hardcodedDevice.macAddress -> Success(Unit)
@@ -63,10 +72,10 @@ private class FakeRemoteRouterDeviceDataSourceImpl(
         }
     }
 
-    override suspend fun restartDevice(device: RouterDevice): Resource<Unit, IoDeviceError.RestartDevice> {
+    override suspend fun rebootDevice(device: RouterDevice): Resource<Unit, IoDeviceError.RestartDevice> {
         return when (device.macAddress) {
             hardcodedDevice.macAddress -> Success(Unit)
-            else -> original.restartDevice(device)
+            else -> original.rebootDevice(device)
         }
     }
 
@@ -90,12 +99,16 @@ private class FakeRemoteRouterDeviceDataSourceImpl(
         val memoryUsagePercent: Int = 20,
         val totalDownloadTraffic: Long = 1900L,
         val totalUploadTraffic: Long = 11800L,
-        val availableBands: Set<String> = setOf("5GHz", "2.4GHz", "6GHz"),
+        val wifiSettings: Set<FakeWifiSettings> = setOf(
+            FakeWifiSettings("2.4GHz", "2.4 wifi"),
+            FakeWifiSettings("5GHz", "5 wifi"),
+            FakeWifiSettings("6GHz", "6 wifi"),
+        ),
         val connectedDevices: List<FakeConnectedDevice> = emptyList(),
     ) {
         fun toFoundRouterDevice(): FoundRouterDevice = FoundRouterDevice(name, ipAddress, macAddress)
         fun toConnectedDevices(): List<ConnectedDevice> = connectedDevices.map { it.toDomain() }
-        fun toRouterDeviceInfo(): RouterDevice = RouterDevice(lanConnected, connectedExtender, modelName, ipAddress, macAddress, firmwareVersion, serialNumber, processorLoadPercent, memoryUsagePercent, totalDownloadTraffic, totalUploadTraffic, availableBands)
+        fun toRouterDeviceInfo(): RouterDevice = RouterDevice(lanConnected, connectedExtender, modelName, ipAddress, macAddress, firmwareVersion, serialNumber, processorLoadPercent, memoryUsagePercent, totalDownloadTraffic, totalUploadTraffic, wifiSettings.map { it.band }.toSet())
     }
 
     data class FakeConnectedDevice(
@@ -107,5 +120,12 @@ private class FakeRemoteRouterDeviceDataSourceImpl(
         val bandWidth: String = "160 MHz",
     ) {
         fun toDomain(): ConnectedDevice = ConnectedDevice(macAddress, hostName, ssid, channel, rssi, bandWidth)
+    }
+
+    data class FakeWifiSettings(
+        val band: String,
+        val ssid: String,
+    ) {
+        fun toDomain(): Wifi = Wifi(band, ssid)
     }
 }
