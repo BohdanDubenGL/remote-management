@@ -12,7 +12,9 @@ import com.globallogic.rdkb.remotemanagement.data.db.RouterDeviceDao
 import com.globallogic.rdkb.remotemanagement.data.db.UserDao
 import com.globallogic.rdkb.remotemanagement.data.network.RdkCentralHttpClient
 import com.globallogic.rdkb.remotemanagement.data.network.service.RdkCentralApiService
-import com.globallogic.rdkb.remotemanagement.data.network.service.impl.RdkCentralApiServiceImpl
+import com.globallogic.rdkb.remotemanagement.data.network.service.RdkCentralService
+import com.globallogic.rdkb.remotemanagement.data.network.service.impl.RdkCentralNetworkApiServiceImpl
+import com.globallogic.rdkb.remotemanagement.data.network.service.impl.RdkCentralServiceImpl
 import com.globallogic.rdkb.remotemanagement.data.preferences.AppPreferences
 import com.globallogic.rdkb.remotemanagement.data.preferences.impl.AppPreferencesImpl
 import com.globallogic.rdkb.remotemanagement.data.repository.impl.RouterDeviceConnectionRepositoryImpl
@@ -40,7 +42,8 @@ val dataModule: Module = module {
     single { get<RemoteRouterDeviceDataSourceImpl>().fake() }.bind<RemoteRouterDeviceDataSource>() //fake
 
     singleOf(::RdkCentralHttpClient).bind<HttpClient>()
-    singleOf(::RdkCentralApiServiceImpl).bind<RdkCentralApiService>()
+    singleOf(::RdkCentralNetworkApiServiceImpl).bind<RdkCentralApiService>()
+    singleOf(::RdkCentralServiceImpl).bind<RdkCentralService>()
 
     singleOf(::AppPreferencesImpl).bind<AppPreferences>()
 

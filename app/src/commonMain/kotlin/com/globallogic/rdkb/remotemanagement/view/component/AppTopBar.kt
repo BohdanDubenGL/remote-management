@@ -30,8 +30,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
+import com.globallogic.rdkb.remotemanagement.data.utils.Platform
+import com.globallogic.rdkb.remotemanagement.data.utils.current
 import com.globallogic.rdkb.remotemanagement.view.navigation.LocalNavController
 import com.globallogic.rdkb.remotemanagement.view.navigation.LocalScaffoldController
 import com.globallogic.rdkb.remotemanagement.view.navigation.ScaffoldController
@@ -41,13 +44,17 @@ import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun AppTopBar(
-    height: Dp,
     navController: NavController = LocalNavController.current,
     scaffoldController: ScaffoldController = LocalScaffoldController.current,
 ) {
     val currentBackStackEntry by navController.currentBackStackEntryAsState()
     val previousBackStackEntry by remember(currentBackStackEntry) { mutableStateOf(navController.previousBackStackEntry) }
     val routeTitle by remember(currentBackStackEntry) { mutableStateOf(getRouteTitle(currentBackStackEntry?.destination?.route)) }
+
+    val height = when (Platform.current) {
+        Platform.Android -> 104.dp
+        else -> 64.dp
+    }
 
     AppTopBar(
         height = height,

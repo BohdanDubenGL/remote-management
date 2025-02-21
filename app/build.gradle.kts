@@ -32,6 +32,7 @@ kotlin {
 
     sourceSets {
         val desktopMain by getting
+        val desktopTest by getting
 
         commonMain.dependencies {
             implementation(projects.domain)
@@ -97,6 +98,12 @@ kotlin {
 
             implementation(libs.cryptography.provider.jdk)
         }
+        desktopTest.dependencies {
+            implementation(libs.test.junit.jupiter.api)
+            runtimeOnly(libs.test.junit.jupiter.engiene)
+            implementation(libs.test.mockk)
+            implementation(libs.test.strikt)
+        }
     }
 }
 
@@ -154,4 +161,8 @@ tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompilationTask<*>>().con
     if (name != "kspCommonMainKotlinMetadata" ) {
         dependsOn("kspCommonMainKotlinMetadata")
     }
+}
+
+tasks.named<Test>("desktopTest") {
+    useJUnitPlatform()
 }

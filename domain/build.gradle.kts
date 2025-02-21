@@ -23,15 +23,18 @@ kotlin {
     }
 
     sourceSets {
-        val jvmMain by getting
         commonMain.dependencies {
             implementation(libs.kotlinx.coroutines.core)
         }
-        commonTest.dependencies {
-//            implementation(libs.test.kotlin.junit)
-        }
-        jvmMain.dependencies {
-
+        jvmTest.dependencies {
+            implementation(libs.test.junit.jupiter.api)
+            runtimeOnly(libs.test.junit.jupiter.engiene)
+            implementation(libs.test.mockk)
+            implementation(libs.test.strikt)
         }
     }
+}
+
+tasks.named<Test>("jvmTest") {
+    useJUnitPlatform()
 }
