@@ -121,7 +121,7 @@ private fun RouterDeviceListContent(
                             }
 
                             AppTextProperty(name = "Name:", value = routerDevice.modelName)
-                            AppTextProperty(name = "IP address:", value = routerDevice.ipAddress)
+                            AppTextProperty(name = "IP address:", value = routerDevice.ipAddressV4)
                             AppTextProperty(name = "MAC address:", value = routerDevice.macAddress)
                         }
                     }

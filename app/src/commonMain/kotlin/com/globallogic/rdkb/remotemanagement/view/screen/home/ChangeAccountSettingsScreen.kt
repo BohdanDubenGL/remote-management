@@ -74,7 +74,7 @@ private fun ChangeAccountSettingsContent(
             topSection = {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterVertically),
+                    verticalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterVertically),
                     modifier = Modifier
                         .fillMaxSize()
                         .verticalScroll(rememberScrollState()),
@@ -113,7 +113,7 @@ private fun ChangeAccountSettingsContent(
                         isError = uiState.confirmNewPasswordError.isNotBlank(),
                         errorMessage = uiState.confirmNewPasswordError,
                     )
-                    AppTitleText(text = "Confirm it is you", modifier = Modifier.padding(top = 16.dp))
+                    AppTitleText(text = "Confirm it is you", modifier = Modifier.padding(top = 8.dp))
                     AppPasswordTextField(
                         value = uiState.currentPassword,
                         onValueChange = onCurrentPasswordEntered,

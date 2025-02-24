@@ -40,8 +40,8 @@ sealed interface RouterDeviceProperty {
     abstract class Action(override val name: String, val value: String): RouterDeviceProperty
 
     data object ModelName : Property(name = "Device.DeviceInfo.ModelName")
+    data object Manufacturer : Property(name = "Device.DeviceInfo.Manufacturer")
     data object SoftwareVersion : Property(name = "Device.DeviceInfo.SoftwareVersion")
-    data object AdditionalSoftwareVersion : Property(name = "Device.DeviceInfo.AdditionalSoftwareVersion")
     data object IpAddressV4 : Property(name = "Device.DeviceInfo.X_COMCAST-COM_WAN_IP")
     data object IpAddressV6 : Property(name = "Device.DeviceInfo.X_COMCAST-COM_WAN_IPv6")
     data object MacAddress : Property(name = "Device.DeviceInfo.X_COMCAST-COM_WAN_MAC")

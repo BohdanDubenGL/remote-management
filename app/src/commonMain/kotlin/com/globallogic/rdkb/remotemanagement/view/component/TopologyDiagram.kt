@@ -4,16 +4,26 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Devices
+import androidx.compose.material.icons.filled.NetworkWifi
+import androidx.compose.material.icons.filled.Phone
+import androidx.compose.material.icons.filled.Public
+import androidx.compose.material.icons.filled.Router
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.vector.VectorPainter
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextMeasurer
@@ -24,11 +34,11 @@ import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.sin
 
-data class Network(val name: String)
-data class Router(val name: String)
-data class Client(val name: String)
+data class Network(val name: String, val icon: ImageVector = Icons.Default.Public)
+data class Router(val name: String, val icon: ImageVector = Icons.Default.Router)
+data class Client(val name: String, val icon: ImageVector = Icons.Default.Phone)
 
-data class NodeState(val position: Offset, val label: String, val color: Color)
+data class NodeState(val position: Offset, val label: String, val icon: VectorPainter, val color: Color)
 
 @Composable
 fun TopologyDiagram(
@@ -36,9 +46,13 @@ fun TopologyDiagram(
     router: Router,
     clients: List<Client>
 ) {
-    val networkState = remember { mutableStateOf(NodeState(Offset(300f, 100f), network.name, Color.Blue)) }
-    val routerState = remember { mutableStateOf(NodeState(Offset(300f, 300f), router.name, Color.Red)) }
-    val clientStates = remember { clients.mapIndexed { i, client -> mutableStateOf(NodeState(Offset(100f + i * 200f, 500f), client.name, Color.Green)) } }
+    val networkVectorPainter = rememberVectorPainter(network.icon)
+    val routerVectorPainter = rememberVectorPainter(router.icon)
+    val clientsVectorPainter = clients.associateWith { rememberVectorPainter(it.icon) }
+
+    val networkState = remember { mutableStateOf(NodeState(Offset(300f, 100f), network.name, networkVectorPainter, Color.Blue)) }
+    val routerState = remember { mutableStateOf(NodeState(Offset(300f, 300f), router.name, routerVectorPainter, Color.Red)) }
+    val clientStates = remember { clients.mapIndexed { i, client -> mutableStateOf(NodeState(Offset(100f + i * 200f, 500f), client.name, clientsVectorPainter[client]!!, Color.Green)) } }
     val textMeasurer = rememberTextMeasurer()
 
     Canvas(modifier = Modifier.fillMaxSize().pointerInput(Unit) {

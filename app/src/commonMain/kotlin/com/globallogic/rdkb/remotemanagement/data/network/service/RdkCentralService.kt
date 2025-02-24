@@ -7,8 +7,8 @@ interface RdkCentralService {
     suspend fun getAvailableDevices(): Resource<List<String>, ThrowableResourceError>
 
     suspend fun getModelName(macAddress: String): Resource<String, ThrowableResourceError>
+    suspend fun getManufacturer(macAddress: String): Resource<String, ThrowableResourceError>
     suspend fun getSoftwareVersion(macAddress: String): Resource<String, ThrowableResourceError>
-    suspend fun getAdditionalSoftwareVersion(macAddress: String): Resource<String, ThrowableResourceError>
     suspend fun getIpAddressV4(macAddress: String): Resource<String, ThrowableResourceError>
     suspend fun getIpAddressV6(macAddress: String): Resource<String, ThrowableResourceError>
     suspend fun getMacAddress(macAddress: String): Resource<String, ThrowableResourceError>

@@ -63,10 +63,11 @@ class RemoteRouterDeviceDataSourceImpl(
         val formattedMacAddress = macAddress.replace(":", "")
 
         val name = async { rdkCentralService.getModelName(formattedMacAddress) }
-        val ip = async { rdkCentralService.getIpAddressV4(formattedMacAddress) }
+        val manufacturer = async { rdkCentralService.getManufacturer(formattedMacAddress) }
+        val ipv4 = async { rdkCentralService.getIpAddressV4(formattedMacAddress) }
+        val ipv6 = async { rdkCentralService.getIpAddressV6(formattedMacAddress) }
         val mac = async { rdkCentralService.getMacAddress(formattedMacAddress) }
         val softwareVersion = async { rdkCentralService.getSoftwareVersion(formattedMacAddress) }
-        val additionalSoftwareVersion = async { rdkCentralService.getAdditionalSoftwareVersion(formattedMacAddress) }
         val serialNumber = async { rdkCentralService.getSerialNumber(formattedMacAddress) }
         val bands = async { rdkCentralService.getOperatingFrequencyBands(formattedMacAddress) }
         val totalMemory = async { rdkCentralService.getTotalMemory(formattedMacAddress) }
@@ -75,10 +76,11 @@ class RemoteRouterDeviceDataSourceImpl(
         val device = RouterDevice(
             lanConnected = true,
             modelName = name.await().dataOrElse { error -> return@coroutineScope Failure(IoDeviceError.CantConnectToRouterDevice) },
-            ipAddress = ip.await().dataOrElse { error -> return@coroutineScope Failure(IoDeviceError.CantConnectToRouterDevice) },
+            manufacturer = manufacturer.await().dataOrElse { error -> return@coroutineScope Failure(IoDeviceError.CantConnectToRouterDevice) },
+            ipAddressV4 = ipv4.await().dataOrElse { error -> return@coroutineScope Failure(IoDeviceError.CantConnectToRouterDevice) },
+            ipAddressV6 = ipv6.await().dataOrElse { error -> return@coroutineScope Failure(IoDeviceError.CantConnectToRouterDevice) },
             macAddress = mac.await().dataOrElse { error -> return@coroutineScope Failure(IoDeviceError.CantConnectToRouterDevice) },
             firmwareVersion = softwareVersion.await().dataOrElse { error -> return@coroutineScope Failure(IoDeviceError.CantConnectToRouterDevice) },
-            additionalFirmwareVersion = additionalSoftwareVersion.await().dataOrElse { error -> return@coroutineScope Failure(IoDeviceError.CantConnectToRouterDevice) },
             serialNumber = serialNumber.await().dataOrElse { error -> return@coroutineScope Failure(IoDeviceError.CantConnectToRouterDevice) },
             totalMemory = totalMemory.await().dataOrElse { error -> return@coroutineScope Failure(IoDeviceError.CantConnectToRouterDevice) },
             freeMemory = freeMemory.await().dataOrElse { error -> return@coroutineScope Failure(IoDeviceError.CantConnectToRouterDevice) },

@@ -86,12 +86,13 @@ private fun RouterDeviceContent(
                 }
 
                 AppTextProperty(name = "Name:", value = uiState.routerDevice.modelName)
-                AppTextProperty(name = "IP:", value = uiState.routerDevice.ipAddress)
+                AppTextProperty(name = "Manufacturer:", value = uiState.routerDevice.manufacturer)
+                AppTextProperty(name = "IP v4:", value = uiState.routerDevice.ipAddressV4)
+                AppTextProperty(name = "IP v6:", value = uiState.routerDevice.ipAddressV6)
                 AppTextProperty(name = "Mac address:", value = uiState.routerDevice.macAddress)
                 AppTextProperty(name = "Lan connected:", value = uiState.routerDevice.lanConnected)
                 AppTextProperty(name = "Model name:", value = uiState.routerDevice.modelName)
                 AppTextProperty(name = "Firmware version:", value = uiState.routerDevice.firmwareVersion, vertical = true)
-                AppTextProperty(name = "Additional firmware version:", value = uiState.routerDevice.additionalFirmwareVersion, vertical = true)
                 AppTextProperty(name = "Total memory:", value = uiState.routerDevice.totalMemory)
                 AppTextProperty(name = "Free memory:", value = "${uiState.routerDevice.freeMemory} (${uiState.routerDevice.freeMemoryPercent}%)")
                 AppTextProperty(name = "Available bands:", value = uiState.routerDevice.availableBands.joinToString(separator = ","))

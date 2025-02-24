@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "1bb1dda5ddf804da2e4618797d79b319",
+    "identityHash": "4a47c6cce5ffade18c85d783e225a95d",
     "entities": [
       {
         "tableName": "user",
@@ -36,7 +36,7 @@
       },
       {
         "tableName": "router_device",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`macAddress` TEXT NOT NULL, `lanConnected` INTEGER NOT NULL, `modelName` TEXT NOT NULL, `ipAddress` TEXT NOT NULL, `firmwareVersion` TEXT NOT NULL, `additionalFirmwareVersion` TEXT NOT NULL, `serialNumber` TEXT NOT NULL, `totalMemory` INTEGER NOT NULL, `freeMemory` INTEGER NOT NULL, `availableBands` TEXT NOT NULL, `updatedAt` INTEGER NOT NULL, PRIMARY KEY(`macAddress`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`macAddress` TEXT NOT NULL, `lanConnected` INTEGER NOT NULL, `modelName` TEXT NOT NULL, `manufacturer` TEXT NOT NULL, `ipAddressV4` TEXT NOT NULL, `ipAddressV6` TEXT NOT NULL, `firmwareVersion` TEXT NOT NULL, `serialNumber` TEXT NOT NULL, `totalMemory` INTEGER NOT NULL, `freeMemory` INTEGER NOT NULL, `availableBands` TEXT NOT NULL, `updatedAt` INTEGER NOT NULL, PRIMARY KEY(`macAddress`))",
         "fields": [
           {
             "fieldPath": "macAddress",
@@ -57,20 +57,26 @@
             "notNull": true
           },
           {
-            "fieldPath": "ipAddress",
-            "columnName": "ipAddress",
+            "fieldPath": "manufacturer",
+            "columnName": "manufacturer",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "ipAddressV4",
+            "columnName": "ipAddressV4",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "ipAddressV6",
+            "columnName": "ipAddressV6",
             "affinity": "TEXT",
             "notNull": true
           },
           {
             "fieldPath": "firmwareVersion",
             "columnName": "firmwareVersion",
-            "affinity": "TEXT",
-            "notNull": true
-          },
-          {
-            "fieldPath": "additionalFirmwareVersion",
-            "columnName": "additionalFirmwareVersion",
             "affinity": "TEXT",
             "notNull": true
           },
@@ -225,7 +231,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '1bb1dda5ddf804da2e4618797d79b319')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '4a47c6cce5ffade18c85d783e225a95d')"
     ]
   }
 }

@@ -33,12 +33,12 @@ class RdkCentralServiceImpl(
         return rdkCentralApiService.getDevicePropertyAsValue(macAddress.formatMac(), RouterDeviceProperty.ModelName)
     }
 
-    override suspend fun getSoftwareVersion(macAddress: String): Resource<String, ThrowableResourceError> {
-        return rdkCentralApiService.getDevicePropertyAsValue(macAddress.formatMac(), RouterDeviceProperty.SoftwareVersion)
+    override suspend fun getManufacturer(macAddress: String): Resource<String, ThrowableResourceError> {
+        return rdkCentralApiService.getDevicePropertyAsValue(macAddress.formatMac(), RouterDeviceProperty.Manufacturer)
     }
 
-    override suspend fun getAdditionalSoftwareVersion(macAddress: String): Resource<String, ThrowableResourceError> {
-        return rdkCentralApiService.getDevicePropertyAsValue(macAddress.formatMac(), RouterDeviceProperty.AdditionalSoftwareVersion)
+    override suspend fun getSoftwareVersion(macAddress: String): Resource<String, ThrowableResourceError> {
+        return rdkCentralApiService.getDevicePropertyAsValue(macAddress.formatMac(), RouterDeviceProperty.SoftwareVersion)
     }
 
     override suspend fun getIpAddressV4(macAddress: String): Resource<String, ThrowableResourceError> {

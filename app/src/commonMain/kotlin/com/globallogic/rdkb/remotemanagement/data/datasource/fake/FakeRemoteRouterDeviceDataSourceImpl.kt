@@ -23,7 +23,7 @@ private class FakeRemoteRouterDeviceDataSourceImpl(
         name = "Hardcoded Router",
         macAddress = "dc:a6:32:0e:b9:bb",
         modelName = "ar1840",
-        ipAddress = "192.168.1.150",
+        ipAddressV4 = "192.168.1.150",
         firmwareVersion = "v1.0.8",
         connectedDevices = listOf(
             FakeConnectedDevice(
@@ -90,13 +90,14 @@ private class FakeRemoteRouterDeviceDataSourceImpl(
 
     private data class FakeRouterDevice(
         val name: String = "Controller",
+        val manufacturer: String = "Controller",
         val macAddress: String = "9a:1a:22:49:73:3c",
         val lanConnected: Boolean = true,
         val connectedExtender: Int = 0,
         val modelName: String = "ar1840",
-        val ipAddress: String = "192.168.1.150",
+        val ipAddressV4: String = "192.168.1.150",
+        val ipAddressV6: String = "192.168.1.151",
         val firmwareVersion: String = "v1.0.8",
-        val additionalFirmwareVersion: String = "v1.0.16",
         val serialNumber: String = "BS100651024E6CA9",
         val totalMemory: Long = 1024,
         val freeMemory: Long = 128,
@@ -109,17 +110,18 @@ private class FakeRemoteRouterDeviceDataSourceImpl(
     ) {
         fun toFoundRouterDevice(): FoundRouterDevice = FoundRouterDevice(
             name = name,
-            ip = ipAddress,
+            ip = ipAddressV4,
             macAddress = macAddress
         )
         fun toConnectedDevices(): List<ConnectedDevice> = connectedDevices.map { it.toDomain() }
         fun toRouterDeviceInfo(): RouterDevice = RouterDevice(
             lanConnected = lanConnected,
             modelName = modelName,
-            ipAddress = ipAddress,
+            manufacturer = manufacturer,
+            ipAddressV4 = ipAddressV4,
+            ipAddressV6 = ipAddressV6,
             macAddress = macAddress,
             firmwareVersion = firmwareVersion,
-            additionalFirmwareVersion = additionalFirmwareVersion,
             serialNumber = serialNumber,
             totalMemory = totalMemory,
             freeMemory = freeMemory,
