@@ -15,15 +15,19 @@ class LoginUseCase(
     suspend operator fun invoke(loginData: LoginData): Resource<User, UserError.LoginError> = login(loginData)
 
     suspend fun login(loginData: LoginData): Resource<User, UserError.LoginError> {
-        if (!passwordVerifier.verifyPasswordLength(loginData.password))
-            return Failure(
-                UserError.WrongPasswordLength(
-                    passwordVerifier.minLength,
-                    passwordVerifier.maxLength
-                )
-            )
-        if (!passwordVerifier.verifyPasswordFormat(loginData.password))
-            return Failure(UserError.WrongPasswordFormat)
+        val passwordErrors = passwordVerifier.verifyPassword(loginData.password)
+        if (passwordErrors.isNotEmpty()) {
+            val userError = when (val error = passwordErrors.first()) {
+                is PasswordVerifier.Error.EmptyPassword -> UserError.WrongPasswordFormat
+                is PasswordVerifier.Error.WrongLength -> UserError.WrongPasswordLength(error.min, error.max)
+                is PasswordVerifier.Error.DigitsRequired -> UserError.WrongPasswordFormat
+                is PasswordVerifier.Error.UppercaseRequired -> UserError.WrongPasswordFormat
+                is PasswordVerifier.Error.LowercaseRequired -> UserError.WrongPasswordFormat
+                is PasswordVerifier.Error.SpecialRequired -> UserError.WrongPasswordFormat
+                is PasswordVerifier.Error.NotMatch -> null
+            }
+            if (userError != null) return Failure(userError)
+        }
 
         return userRepository.login(loginData)
     }

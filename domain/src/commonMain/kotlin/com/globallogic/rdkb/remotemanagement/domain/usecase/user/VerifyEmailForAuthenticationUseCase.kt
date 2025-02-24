@@ -15,7 +15,7 @@ class VerifyEmailForAuthenticationUseCase(
     suspend operator fun invoke(email: String): Resource<EmailVerification, UserError.WrongEmailFormat> = verifyEmailForAuthentication(email)
 
     suspend fun verifyEmailForAuthentication(email: String): Resource<EmailVerification, UserError.WrongEmailFormat> {
-        if (!emailVerifier.verifyEmailFormat(email))
+        if (emailVerifier.verifyEmail(email).isNotEmpty())
             return Failure(UserError.WrongEmailFormat)
 
         return userRepository.getUserByEmail(email)

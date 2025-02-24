@@ -28,23 +28,27 @@ class ChangeAccountSettingsUseCase(
             )
         if (!userNameVerifier.verifyUserNameFormat(settingsData.username))
             return Failure(UserError.WrongUsernameFormat)
-        if (!emailVerifier.verifyEmailFormat(settingsData.email))
-            return Failure(UserError.WrongEmailFormat)
-        if (!passwordVerifier.verifyPasswordLength(settingsData.password))
-            return Failure(
-                UserError.WrongPasswordLength(
-                    passwordVerifier.minLength,
-                    passwordVerifier.maxLength
-                )
-            )
-        if (!passwordVerifier.verifyPasswordFormat(settingsData.password))
-            return Failure(UserError.WrongPasswordFormat)
-        if (!passwordVerifier.verifyConfirmPassword(
-                settingsData.password,
-                settingsData.confirmPassword
-            )
-        )
-            return Failure(UserError.ConfirmPasswordDoesntMatch)
+        val emailErrors = emailVerifier.verifyEmail(settingsData.email)
+        if (emailErrors.isNotEmpty()) {
+            val emailError = when (emailErrors.first()) {
+                EmailVerifier.Error.EmptyEmail -> UserError.WrongEmailFormat
+                EmailVerifier.Error.InvalidFormat -> UserError.WrongEmailFormat
+            }
+            return Failure(emailError)
+        }
+        val passwordErrors = passwordVerifier.verifyConfirmPassword(settingsData.password, settingsData.confirmPassword)
+        if (passwordErrors.isNotEmpty()) {
+            val userError = when (val error = passwordErrors.first()) {
+                is PasswordVerifier.Error.EmptyPassword -> UserError.WrongPasswordFormat
+                is PasswordVerifier.Error.WrongLength -> UserError.WrongPasswordLength(error.min, error.max)
+                is PasswordVerifier.Error.DigitsRequired -> UserError.WrongPasswordFormat
+                is PasswordVerifier.Error.UppercaseRequired -> UserError.WrongPasswordFormat
+                is PasswordVerifier.Error.LowercaseRequired -> UserError.WrongPasswordFormat
+                is PasswordVerifier.Error.SpecialRequired -> UserError.WrongPasswordFormat
+                is PasswordVerifier.Error.NotMatch -> UserError.ConfirmPasswordDoesntMatch
+            }
+            return Failure(userError)
+        }
 
         return userRepository.changeAccountSettings(settingsData).map { Unit }
     }

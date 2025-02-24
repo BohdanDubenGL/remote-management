@@ -47,6 +47,6 @@ val domainModule: Module = module {
     factoryOf(::SearchRouterDevicesUseCase)
 
     factory { UserNameVerifier() }.bind<UserNameVerifier>()
-    factoryOf(::EmailVerifier).bind<EmailVerifier>()
+    factory { EmailVerifier() }.bind<EmailVerifier>()
     factory { PasswordVerifier() }.bind<PasswordVerifier>()
 }

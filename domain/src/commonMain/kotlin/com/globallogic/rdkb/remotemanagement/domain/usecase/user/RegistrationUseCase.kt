@@ -8,6 +8,7 @@ import com.globallogic.rdkb.remotemanagement.domain.verification.PasswordVerifie
 import com.globallogic.rdkb.remotemanagement.domain.verification.UserNameVerifier
 import com.globallogic.rdkb.remotemanagement.domain.utils.Resource
 import com.globallogic.rdkb.remotemanagement.domain.utils.Resource.Failure
+import com.globallogic.rdkb.remotemanagement.domain.verification.EmailVerifier
 
 class RegistrationUseCase(
     private val userRepository: UserRepository,
@@ -26,21 +27,19 @@ class RegistrationUseCase(
             )
         if (!userNameVerifier.verifyUserNameFormat(registrationData.username))
             return Failure(UserError.WrongUsernameFormat)
-        if (!passwordVerifier.verifyPasswordLength(registrationData.password))
-            return Failure(
-                UserError.WrongPasswordLength(
-                    passwordVerifier.minLength,
-                    passwordVerifier.maxLength
-                )
-            )
-        if (!passwordVerifier.verifyPasswordFormat(registrationData.password))
-            return Failure(UserError.WrongPasswordFormat)
-        if (!passwordVerifier.verifyConfirmPassword(
-                registrationData.password,
-                registrationData.confirmPassword
-            )
-        )
-            return Failure(UserError.ConfirmPasswordDoesntMatch)
+        val passwordErrors = passwordVerifier.verifyConfirmPassword(registrationData.password, registrationData.confirmPassword)
+        if (passwordErrors.isNotEmpty()) {
+            val userError = when (val error = passwordErrors.first()) {
+                is PasswordVerifier.Error.EmptyPassword -> UserError.WrongPasswordFormat
+                is PasswordVerifier.Error.WrongLength -> UserError.WrongPasswordLength(error.min, error.max)
+                is PasswordVerifier.Error.DigitsRequired -> UserError.WrongPasswordFormat
+                is PasswordVerifier.Error.UppercaseRequired -> UserError.WrongPasswordFormat
+                is PasswordVerifier.Error.LowercaseRequired -> UserError.WrongPasswordFormat
+                is PasswordVerifier.Error.SpecialRequired -> UserError.WrongPasswordFormat
+                is PasswordVerifier.Error.NotMatch -> UserError.ConfirmPasswordDoesntMatch
+            }
+            return Failure(userError)
+        }
 
         return userRepository.register(registrationData)
     }

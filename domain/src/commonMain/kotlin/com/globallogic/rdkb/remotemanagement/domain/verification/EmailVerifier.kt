@@ -1,7 +1,22 @@
 package com.globallogic.rdkb.remotemanagement.domain.verification
 
-class EmailVerifier {
-    private val emailRegex: Regex = "[a-zA-Z0-9\\+\\.\\_\\%\\-\\+]{1,256}\\@[a-zA-Z0-9][a-zA-Z0-9\\-]{0,64}(\\.[a-zA-Z0-9][a-zA-Z0-9\\-]{0,25})+".toRegex()
+class EmailVerifier(
+    private val emailRegex: Regex = defaultEmailRegex
+) {
+    fun verifyEmail(email: String): List<Error> = buildList {
+        if (email.isBlank()) {
+            add(Error.EmptyEmail)
+            return@buildList
+        }
+        if (!emailRegex.matches(email)) add(Error.InvalidFormat)
+    }
 
-    fun verifyEmailFormat(email: String): Boolean = emailRegex.matches(email)
+    sealed interface Error {
+        data object EmptyEmail : Error
+        data object InvalidFormat : Error
+    }
+
+    companion object {
+        private val defaultEmailRegex: Regex = "^(?!.*\\.\\.)(?!^[._%+\\-])(?!.*[._%+\\-]$)[a-zA-Z0-9._%+\\-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$".toRegex()
+    }
 }
