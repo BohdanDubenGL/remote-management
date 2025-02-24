@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Keyboard
 import androidx.compose.material.icons.filled.Router
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.MaterialTheme
@@ -97,7 +98,7 @@ private fun SearchRouterDeviceContent(
 ) {
     SetupFloatingActionButton(
         floatingActionButtonState = FloatingActionButtonState.Shown(
-            buttonIcon = Icons.Default.Search,
+            buttonIcon = Icons.Default.Keyboard,
             iconDescription = "Add manually",
             buttonAction = addDeviceManually
         )

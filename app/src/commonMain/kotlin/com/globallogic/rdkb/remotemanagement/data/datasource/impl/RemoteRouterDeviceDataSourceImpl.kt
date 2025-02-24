@@ -55,7 +55,7 @@ class RemoteRouterDeviceDataSourceImpl(
 
     private fun isMacAddressSimilarToCurrentWifi(macAddress: String, currentWifiInfo: WifiInfo?): Boolean {
         val currentWifiBssid = currentWifiInfo?.bssid?.replace(":", "")
-        val similarBytes = 2
+        val similarBytes = 8
         return macAddress.take(similarBytes).equals(currentWifiBssid?.take(similarBytes), ignoreCase = true)
     }
 
@@ -66,21 +66,22 @@ class RemoteRouterDeviceDataSourceImpl(
         val ip = async { rdkCentralService.getIpAddressV4(formattedMacAddress) }
         val mac = async { rdkCentralService.getMacAddress(formattedMacAddress) }
         val softwareVersion = async { rdkCentralService.getSoftwareVersion(formattedMacAddress) }
+        val additionalSoftwareVersion = async { rdkCentralService.getAdditionalSoftwareVersion(formattedMacAddress) }
         val serialNumber = async { rdkCentralService.getSerialNumber(formattedMacAddress) }
         val bands = async { rdkCentralService.getOperatingFrequencyBands(formattedMacAddress) }
+        val totalMemory = async { rdkCentralService.getTotalMemory(formattedMacAddress) }
+        val freeMemory = async { rdkCentralService.getFreeMemory(formattedMacAddress) }
 
         val device = RouterDevice(
             lanConnected = true,
-            connectedExtender = 0,
             modelName = name.await().dataOrElse { error -> return@coroutineScope Failure(IoDeviceError.CantConnectToRouterDevice) },
             ipAddress = ip.await().dataOrElse { error -> return@coroutineScope Failure(IoDeviceError.CantConnectToRouterDevice) },
             macAddress = mac.await().dataOrElse { error -> return@coroutineScope Failure(IoDeviceError.CantConnectToRouterDevice) },
             firmwareVersion = softwareVersion.await().dataOrElse { error -> return@coroutineScope Failure(IoDeviceError.CantConnectToRouterDevice) },
+            additionalFirmwareVersion = additionalSoftwareVersion.await().dataOrElse { error -> return@coroutineScope Failure(IoDeviceError.CantConnectToRouterDevice) },
             serialNumber = serialNumber.await().dataOrElse { error -> return@coroutineScope Failure(IoDeviceError.CantConnectToRouterDevice) },
-            processorLoadPercent = 0,
-            memoryUsagePercent = 0,
-            totalDownloadTraffic = 0,
-            totalUploadTraffic = 0,
+            totalMemory = totalMemory.await().dataOrElse { error -> return@coroutineScope Failure(IoDeviceError.CantConnectToRouterDevice) },
+            freeMemory = freeMemory.await().dataOrElse { error -> return@coroutineScope Failure(IoDeviceError.CantConnectToRouterDevice) },
             availableBands = bands.await().dataOrElse { error -> return@coroutineScope Failure(IoDeviceError.CantConnectToRouterDevice) },
         )
         Success(device)
@@ -101,14 +102,15 @@ class RemoteRouterDeviceDataSourceImpl(
         val isActive = async { rdkCentralService.getConnectedDeviceActive(macAddress, index) }
         val hostName = async { rdkCentralService.getConnectedDeviceHostName(macAddress, index) }
         val mac = async { rdkCentralService.getConnectedDeviceMacAddress(macAddress, index) }
+        val ip = async { rdkCentralService.getConnectedDeviceIpAddress(macAddress, index) }
+        val vendorClassId = async { rdkCentralService.getConnectedDeviceVendorClassId(macAddress, index) }
 
         ConnectedDevice(
             macAddress = mac.await().dataOrElse { error -> return@coroutineScope null },
             hostName = hostName.await().dataOrElse { error -> return@coroutineScope null },
-            ssid = "",
-            channel = 0,
-            rssi = 0,
-            bandWidth = "",
+            ipAddress = ip.await().dataOrElse { error -> return@coroutineScope null },
+            isActive = isActive.await().dataOrElse { error -> return@coroutineScope null },
+            vendorClassId = vendorClassId.await().dataOrElse { error -> return@coroutineScope null },
         )
     }
 

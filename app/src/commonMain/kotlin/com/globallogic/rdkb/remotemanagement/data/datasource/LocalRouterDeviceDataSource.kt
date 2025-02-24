@@ -15,8 +15,6 @@ interface LocalRouterDeviceDataSource {
 
     suspend fun loadConnectedDevices(device: RouterDevice): Resource<List<ConnectedDevice>, IoDeviceError.LoadConnectedDevices>
 
-    suspend fun loadDeviceInfo(device: RouterDevice): Resource<RouterDevice, IoDeviceError.LoadDeviceInfo>
-
     suspend fun saveRouterDevice(device: RouterDevice, userEmail: String): Resource<Unit, IoDeviceError.SaveRouterDevice>
 
     suspend fun removeRouterDevice(device: RouterDevice, userEmail: String): Resource<Unit, IoDeviceError.RemoveRouterDevice>

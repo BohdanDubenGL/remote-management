@@ -49,28 +49,12 @@ class LocalRouterDeviceDataSourceImpl(
         return Success(connectedDevices.map(ConnectedDeviceMapper::toConnectedDevice))
     }
 
-    override suspend fun loadDeviceInfo(device: RouterDevice): Resource<RouterDevice, IoDeviceError.LoadDeviceInfo> {
-        val routerDevice =
-            runCatchingSafe { deviceDao.findRouterDeviceByMacAddress(device.macAddress) }
-                .getOrElse { error -> return Failure(IoDeviceError.DatabaseError(error)) }
-                ?: return Failure(IoDeviceError.NoDeviceFound)
-
-        return Success(RouterDeviceMapper.toRouterDeviceInfo(routerDevice))
-    }
-
     override suspend fun saveRouterDevice(device: RouterDevice, userEmail: String): Resource<Unit, IoDeviceError.SaveRouterDevice> {
         val deviceDto = RouterDeviceMapper.toRouterDeviceInfo(device)
 
         runCatchingSafe { deviceDao.insertRouterDevice(deviceDto) }
             .getOrElse { error -> return Failure(IoDeviceError.DatabaseError(error)) }
-        runCatchingSafe {
-            deviceDao.insertUserRouterDevice(
-                UserRouterDeviceDto(
-                    userEmail,
-                    device.macAddress
-                )
-            )
-        }
+        runCatchingSafe { deviceDao.insertUserRouterDevice(UserRouterDeviceDto(userEmail, device.macAddress)) }
             .getOrElse { error -> return Failure(IoDeviceError.DatabaseError(error)) }
 
         return Success(Unit)
@@ -106,30 +90,26 @@ class LocalRouterDeviceDataSourceImpl(
 private object RouterDeviceMapper {
     fun toRouterDeviceInfo(device: RouterDeviceDto): RouterDevice = RouterDevice(
         lanConnected = device.lanConnected,
-        connectedExtender = device.connectedExtender,
         modelName = device.modelName,
         ipAddress = device.ipAddress,
         macAddress = device.macAddress,
         firmwareVersion = device.firmwareVersion,
+        additionalFirmwareVersion = device.additionalFirmwareVersion,
         serialNumber = device.serialNumber,
-        processorLoadPercent = device.processorLoadPercent,
-        memoryUsagePercent = device.memoryUsagePercent,
-        totalDownloadTraffic = device.totalDownloadTraffic,
-        totalUploadTraffic = device.totalUploadTraffic,
+        totalMemory = device.totalMemory,
+        freeMemory = device.freeMemory,
         availableBands = device.availableBands.split(",").toSet()
     )
     fun toRouterDeviceInfo(device: RouterDevice): RouterDeviceDto = RouterDeviceDto(
         lanConnected = device.lanConnected,
-        connectedExtender = device.connectedExtender,
         modelName = device.modelName,
         ipAddress = device.ipAddress,
         macAddress = device.macAddress,
         firmwareVersion = device.firmwareVersion,
+        additionalFirmwareVersion = device.additionalFirmwareVersion,
         serialNumber = device.serialNumber,
-        processorLoadPercent = device.processorLoadPercent,
-        memoryUsagePercent = device.memoryUsagePercent,
-        totalDownloadTraffic = device.totalDownloadTraffic,
-        totalUploadTraffic = device.totalUploadTraffic,
+        totalMemory = device.totalMemory,
+        freeMemory = device.freeMemory,
         availableBands = device.availableBands.joinToString(separator = ","),
         updatedAt = Clock.System.now().toEpochMilliseconds()
     )
@@ -137,21 +117,19 @@ private object RouterDeviceMapper {
 
 private object ConnectedDeviceMapper {
     fun toConnectedDevice(device: ConnectedDeviceDto): ConnectedDevice = ConnectedDevice(
+        isActive = device.isActive,
         macAddress = device.macAddress,
         hostName = device.hostName,
-        ssid = device.ssid,
-        channel = device.channel,
-        rssi = device.rssi,
-        bandWidth = device.bandWidth
+        ipAddress = device.ipAddress,
+        vendorClassId = device.vendorClassId,
     )
 
     fun toConnectedDevice(routerDevice: RouterDevice, device: ConnectedDevice): ConnectedDeviceDto = ConnectedDeviceDto(
         routerDeviceMacAddress = routerDevice.macAddress,
+        isActive = device.isActive,
         macAddress = device.macAddress,
         hostName = device.hostName,
-        ssid = device.ssid,
-        channel = device.channel,
-        rssi = device.rssi,
-        bandWidth = device.bandWidth
+        ipAddress = device.ipAddress,
+        vendorClassId = device.vendorClassId,
     )
 }

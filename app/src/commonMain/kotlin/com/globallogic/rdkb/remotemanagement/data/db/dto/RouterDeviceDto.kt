@@ -7,15 +7,13 @@ import androidx.room.PrimaryKey
 data class RouterDeviceDto(
     @PrimaryKey val macAddress: String,
     val lanConnected: Boolean,
-    val connectedExtender: Int,
     val modelName: String,
     val ipAddress: String,
     val firmwareVersion: String,
+    val additionalFirmwareVersion: String,
     val serialNumber: String,
-    val processorLoadPercent: Int,
-    val memoryUsagePercent: Int,
-    val totalDownloadTraffic: Long,
-    val totalUploadTraffic: Long,
+    val totalMemory: Long,
+    val freeMemory: Long,
     val availableBands: String,
     val updatedAt: Long,
 )

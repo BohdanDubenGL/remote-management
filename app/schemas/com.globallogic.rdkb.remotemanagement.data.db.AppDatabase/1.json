@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "6513d9f581650e634b32e9901e37e0d8",
+    "identityHash": "1bb1dda5ddf804da2e4618797d79b319",
     "entities": [
       {
         "tableName": "user",
@@ -36,7 +36,7 @@
       },
       {
         "tableName": "router_device",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`macAddress` TEXT NOT NULL, `lanConnected` INTEGER NOT NULL, `connectedExtender` INTEGER NOT NULL, `modelName` TEXT NOT NULL, `ipAddress` TEXT NOT NULL, `firmwareVersion` TEXT NOT NULL, `serialNumber` TEXT NOT NULL, `processorLoadPercent` INTEGER NOT NULL, `memoryUsagePercent` INTEGER NOT NULL, `totalDownloadTraffic` INTEGER NOT NULL, `totalUploadTraffic` INTEGER NOT NULL, `availableBands` TEXT NOT NULL, `updatedAt` INTEGER NOT NULL, PRIMARY KEY(`macAddress`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`macAddress` TEXT NOT NULL, `lanConnected` INTEGER NOT NULL, `modelName` TEXT NOT NULL, `ipAddress` TEXT NOT NULL, `firmwareVersion` TEXT NOT NULL, `additionalFirmwareVersion` TEXT NOT NULL, `serialNumber` TEXT NOT NULL, `totalMemory` INTEGER NOT NULL, `freeMemory` INTEGER NOT NULL, `availableBands` TEXT NOT NULL, `updatedAt` INTEGER NOT NULL, PRIMARY KEY(`macAddress`))",
         "fields": [
           {
             "fieldPath": "macAddress",
@@ -47,12 +47,6 @@
           {
             "fieldPath": "lanConnected",
             "columnName": "lanConnected",
-            "affinity": "INTEGER",
-            "notNull": true
-          },
-          {
-            "fieldPath": "connectedExtender",
-            "columnName": "connectedExtender",
             "affinity": "INTEGER",
             "notNull": true
           },
@@ -75,32 +69,26 @@
             "notNull": true
           },
           {
+            "fieldPath": "additionalFirmwareVersion",
+            "columnName": "additionalFirmwareVersion",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
             "fieldPath": "serialNumber",
             "columnName": "serialNumber",
             "affinity": "TEXT",
             "notNull": true
           },
           {
-            "fieldPath": "processorLoadPercent",
-            "columnName": "processorLoadPercent",
+            "fieldPath": "totalMemory",
+            "columnName": "totalMemory",
             "affinity": "INTEGER",
             "notNull": true
           },
           {
-            "fieldPath": "memoryUsagePercent",
-            "columnName": "memoryUsagePercent",
-            "affinity": "INTEGER",
-            "notNull": true
-          },
-          {
-            "fieldPath": "totalDownloadTraffic",
-            "columnName": "totalDownloadTraffic",
-            "affinity": "INTEGER",
-            "notNull": true
-          },
-          {
-            "fieldPath": "totalUploadTraffic",
-            "columnName": "totalUploadTraffic",
+            "fieldPath": "freeMemory",
+            "columnName": "freeMemory",
             "affinity": "INTEGER",
             "notNull": true
           },
@@ -175,7 +163,7 @@
       },
       {
         "tableName": "connected_device",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`macAddress` TEXT NOT NULL, `routerDeviceMacAddress` TEXT NOT NULL, `hostName` TEXT NOT NULL, `ssid` TEXT NOT NULL, `channel` INTEGER NOT NULL, `rssi` INTEGER NOT NULL, `bandWidth` TEXT NOT NULL, PRIMARY KEY(`macAddress`), FOREIGN KEY(`routerDeviceMacAddress`) REFERENCES `router_device`(`macAddress`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`macAddress` TEXT NOT NULL, `routerDeviceMacAddress` TEXT NOT NULL, `isActive` INTEGER NOT NULL, `hostName` TEXT NOT NULL, `ipAddress` TEXT NOT NULL, `vendorClassId` TEXT NOT NULL, PRIMARY KEY(`macAddress`), FOREIGN KEY(`routerDeviceMacAddress`) REFERENCES `router_device`(`macAddress`) ON UPDATE NO ACTION ON DELETE CASCADE )",
         "fields": [
           {
             "fieldPath": "macAddress",
@@ -190,32 +178,26 @@
             "notNull": true
           },
           {
+            "fieldPath": "isActive",
+            "columnName": "isActive",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
             "fieldPath": "hostName",
             "columnName": "hostName",
             "affinity": "TEXT",
             "notNull": true
           },
           {
-            "fieldPath": "ssid",
-            "columnName": "ssid",
+            "fieldPath": "ipAddress",
+            "columnName": "ipAddress",
             "affinity": "TEXT",
             "notNull": true
           },
           {
-            "fieldPath": "channel",
-            "columnName": "channel",
-            "affinity": "INTEGER",
-            "notNull": true
-          },
-          {
-            "fieldPath": "rssi",
-            "columnName": "rssi",
-            "affinity": "INTEGER",
-            "notNull": true
-          },
-          {
-            "fieldPath": "bandWidth",
-            "columnName": "bandWidth",
+            "fieldPath": "vendorClassId",
+            "columnName": "vendorClassId",
             "affinity": "TEXT",
             "notNull": true
           }
@@ -243,7 +225,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '6513d9f581650e634b32e9901e37e0d8')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '1bb1dda5ddf804da2e4618797d79b319')"
     ]
   }
 }

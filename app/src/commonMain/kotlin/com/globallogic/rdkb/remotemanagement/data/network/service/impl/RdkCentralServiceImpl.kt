@@ -71,6 +71,15 @@ class RdkCentralServiceImpl(
     }
 
 
+    override suspend fun getTotalMemory(macAddress: String): Resource<Long, ThrowableResourceError> {
+        return rdkCentralApiService.getDevicePropertyAsValue(macAddress.formatMac(), RouterDeviceProperty.TotalMemory, String::toLongOrNull)
+    }
+
+    override suspend fun getFreeMemory(macAddress: String): Resource<Long, ThrowableResourceError> {
+        return rdkCentralApiService.getDevicePropertyAsValue(macAddress.formatMac(), RouterDeviceProperty.FreeMemory, String::toLongOrNull)
+    }
+
+
     override suspend fun getConnectedDevicesCount(macAddress: String): Resource<Int, ThrowableResourceError> {
         return rdkCentralApiService.getDevicePropertyAsValue(macAddress.formatMac(), RouterDeviceProperty.ConnectedDeviceCount, String::toIntOrNull)
     }
@@ -85,6 +94,14 @@ class RdkCentralServiceImpl(
 
     override suspend fun getConnectedDeviceMacAddress(macAddress: String, index: Int): Resource<String, ThrowableResourceError> {
         return rdkCentralApiService.getDevicePropertyAsValue(macAddress.formatMac(), RouterDeviceProperty.ConnectedDeviceMacAddress(index))
+    }
+
+    override suspend fun getConnectedDeviceIpAddress(macAddress: String, index: Int): Resource<String, ThrowableResourceError> {
+        return rdkCentralApiService.getDevicePropertyAsValue(macAddress.formatMac(), RouterDeviceProperty.ConnectedDeviceIpAddress(index))
+    }
+
+    override suspend fun getConnectedDeviceVendorClassId(macAddress: String, index: Int): Resource<String, ThrowableResourceError> {
+        return rdkCentralApiService.getDevicePropertyAsValue(macAddress.formatMac(), RouterDeviceProperty.ConnectedDeviceVendorClassId(index))
     }
 
 

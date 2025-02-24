@@ -14,6 +14,7 @@ import com.globallogic.rdkb.remotemanagement.domain.utils.Resource
 import com.globallogic.rdkb.remotemanagement.domain.utils.Resource.Failure
 import com.globallogic.rdkb.remotemanagement.domain.utils.Resource.Success
 import com.globallogic.rdkb.remotemanagement.domain.utils.dataOrElse
+import com.globallogic.rdkb.remotemanagement.domain.utils.map
 import com.globallogic.rdkb.remotemanagement.domain.utils.mapError
 
 class RouterDeviceRepositoryImpl(
@@ -26,16 +27,25 @@ class RouterDeviceRepositoryImpl(
         val email = appPreferences.currentUserEmailPref.get()
             ?: return Failure(DeviceError.NoDevicesFound)
 
+        val savedDevices = localRouterDeviceDataSource.loadRouterDevicesForUser(email)
+            .dataOrElse { error -> emptyList() }
+        savedDevices.forEach { savedDevice ->
+            remoteRouterDeviceDataSource.findRouterDeviceByMacAddress(savedDevice.macAddress)
+                .map { updatedDevice -> localRouterDeviceDataSource.saveRouterDevice(updatedDevice, email) }
+        }
+
         return localRouterDeviceDataSource.loadRouterDevicesForUser(email)
             .mapError { error -> DeviceError.NoDevicesFound }
     }
 
     override suspend fun getRouterDeviceConnectedDevices(device: RouterDevice): Resource<List<ConnectedDevice>, DeviceError.NoConnectedDevicesFound> {
         val connectedDevices = remoteRouterDeviceDataSource.loadConnectedDevicesForRouterDevice(device)
-            .dataOrElse { error -> return Failure(DeviceError.NoConnectedDevicesFound) }
+            .dataOrElse { error -> null }
 
-        localRouterDeviceDataSource.saveConnectedDevices(device, connectedDevices)
-            .dataOrElse { error -> return Failure(DeviceError.NoConnectedDevicesFound) }
+        if (connectedDevices != null) {
+            localRouterDeviceDataSource.saveConnectedDevices(device, connectedDevices)
+                .dataOrElse { error -> return Failure(DeviceError.NoConnectedDevicesFound) }
+        }
 
         return localRouterDeviceDataSource.loadConnectedDevices(device)
             .mapError { error -> DeviceError.NoConnectedDevicesFound }

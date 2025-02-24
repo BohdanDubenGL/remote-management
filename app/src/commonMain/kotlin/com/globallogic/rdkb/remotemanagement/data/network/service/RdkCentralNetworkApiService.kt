@@ -47,17 +47,20 @@ sealed interface RouterDeviceProperty {
     data object MacAddress : Property(name = "Device.DeviceInfo.X_COMCAST-COM_WAN_MAC")
     data object SerialNumber : Property(name = "Device.DeviceInfo.SerialNumber")
     data class OperatingFrequencyBand(val radio: Int) : Property(name = "Device.WiFi.Radio.$radio.OperatingFrequencyBand") // 10000, 10100, 10200
-    data object KeyPassphrase : Property(name = "Device.WiFi.AccessPoint.{i}.Security.KeyPassphrase")
     data object PreSharedKey : Property(name = "Device.WiFi.AccessPoint.{i}.Security.PreSharedKey")
     data object SecurityModeEnabled : Property(name = "Device.WiFi.AccessPoint.{i}.Security.ModeEnabled")
 
+    data object TotalMemory : Property(name = "Device.DeviceInfo.MemoryStatus.Total")
+    data object FreeMemory : Property(name = "Device.DeviceInfo.MemoryStatus.Total")
+
     data class WifiEnabled(val index: Int) : Property(name = "Device.WiFi.SSID.$index.Enable")
-    data class WifiSsid(val index: Int) : Property(name = "Device.WiFi.SSID.$index.SSID")
 
     data object ConnectedDeviceCount : Property(name = "Device.Hosts.HostNumberOfEntries")
     data class ConnectedDeviceActive(val index: Int) : Property(name = "Device.Hosts.Host.$index.Active")
     data class ConnectedDeviceHostName(val index: Int) : Property(name = "Device.Hosts.Host.$index.HostName")
     data class ConnectedDeviceMacAddress(val index: Int) : Property(name = "Device.Hosts.Host.$index.PhysAddress")
+    data class ConnectedDeviceIpAddress(val index: Int) : Property(name = "Device.Hosts.Host.$index.IPAddress")
+    data class ConnectedDeviceVendorClassId(val index: Int) : Property(name = "Device.Hosts.Host.$index.VendorClassID")
 
     data class ChangeBandSsid(val band: Int) : Property(name = "Device.WiFi.SSID.$band.SSID")
     data class ChangeBandPassword(val band: Int) : Property(name = "Device.WiFi.AccessPoint.$band.Security.KeyPassphrase")

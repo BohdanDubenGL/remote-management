@@ -14,10 +14,10 @@ class PasswordVerifier(
             return@buildList
         }
         if (password.length !in minLength..maxLength) add(Error.WrongLength(minLength, maxLength))
-        if (password.count { it.isDigit() } >= requiredDigits) add(Error.DigitsRequired(requiredDigits))
-        if (password.count { it.isUpperCase() } >= requiredUppercase) add(Error.UppercaseRequired(requiredUppercase))
-        if (password.count { it.isLowerCase() } >= requiredLowercase) add(Error.LowercaseRequired(requiredUppercase))
-        if (password.count { it in specialCharacters } >= requiredSpecial) add(Error.SpecialRequired(requiredUppercase))
+        if (password.count { it.isDigit() } < requiredDigits) add(Error.DigitsRequired(requiredDigits))
+        if (password.count { it.isUpperCase() } < requiredUppercase) add(Error.UppercaseRequired(requiredUppercase))
+        if (password.count { it.isLowerCase() } < requiredLowercase) add(Error.LowercaseRequired(requiredUppercase))
+        if (password.count { it in specialCharacters } < requiredSpecial) add(Error.SpecialRequired(requiredUppercase))
     }
 
     fun verifyConfirmPassword(password: String, confirmPassword: String): List<Error> = buildList {

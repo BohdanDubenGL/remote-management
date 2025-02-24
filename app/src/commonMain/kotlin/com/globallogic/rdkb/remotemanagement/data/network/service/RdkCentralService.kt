@@ -15,10 +15,15 @@ interface RdkCentralService {
     suspend fun getSerialNumber(macAddress: String): Resource<String, ThrowableResourceError>
     suspend fun getOperatingFrequencyBands(macAddress: String): Resource<Set<String>, ThrowableResourceError>
 
+    suspend fun getTotalMemory(macAddress: String): Resource<Long, ThrowableResourceError>
+    suspend fun getFreeMemory(macAddress: String): Resource<Long, ThrowableResourceError>
+
     suspend fun getConnectedDevicesCount(macAddress: String): Resource<Int, ThrowableResourceError>
     suspend fun getConnectedDeviceActive(macAddress: String, index: Int): Resource<Boolean, ThrowableResourceError>
     suspend fun getConnectedDeviceHostName(macAddress: String, index: Int): Resource<String, ThrowableResourceError>
     suspend fun getConnectedDeviceMacAddress(macAddress: String, index: Int): Resource<String, ThrowableResourceError>
+    suspend fun getConnectedDeviceIpAddress(macAddress: String, index: Int): Resource<String, ThrowableResourceError>
+    suspend fun getConnectedDeviceVendorClassId(macAddress: String, index: Int): Resource<String, ThrowableResourceError>
 
     suspend fun getBandSsid(macAddress: String, band: Int): Resource<String, ThrowableResourceError>
     suspend fun setBandSsid(macAddress: String, band: Int, ssid: String): Resource<Unit, ThrowableResourceError>
