@@ -8,6 +8,7 @@ import com.globallogic.rdkb.remotemanagement.domain.entity.ConnectedDevice
 import com.globallogic.rdkb.remotemanagement.domain.entity.RouterDevice
 import com.globallogic.rdkb.remotemanagement.domain.entity.DeviceAccessPointSettings
 import com.globallogic.rdkb.remotemanagement.domain.entity.AccessPointSettings
+import com.globallogic.rdkb.remotemanagement.domain.entity.ConnectedDeviceStats
 import com.globallogic.rdkb.remotemanagement.domain.error.DeviceError
 import com.globallogic.rdkb.remotemanagement.domain.repository.RouterDeviceRepository
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.RouterDeviceAction

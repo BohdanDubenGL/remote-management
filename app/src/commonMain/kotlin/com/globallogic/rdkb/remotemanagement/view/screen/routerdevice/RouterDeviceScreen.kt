@@ -139,6 +139,7 @@ private fun RouterDeviceContent(
                                 AppTextProperty(name = "Security mode:", value = accessPoint.securityMode)
                                 AppTextProperty(name = "Available security modes:", value = accessPoint.availableSecurityModes.joinToString(separator = ","), vertical = true)
                                 AppTextProperty(name = "Band:", value = accessPoint.band)
+                                AppTextProperty(name = "Clients:", value = accessPoint.clientsCount)
                             }
                         }
                     }

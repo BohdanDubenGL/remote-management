@@ -36,6 +36,11 @@ class AccessPointAccessor(
         return rdkCentralPropertyService.getDeviceProperty(macAddress, DeviceProperty.WifiSecurityMode(accessPointId))
     }
 
+    override suspend fun getWifiClientsCount(): Resource<Int, ThrowableResourceError> {
+        return rdkCentralPropertyService.getDeviceProperty(macAddress, DeviceProperty.WifiClientsCount(accessPointId))
+            .map { it.toInt() }
+    }
+
 
     override suspend fun setWifiEnabled(enabled: Boolean): Resource<Unit, ThrowableResourceError> {
         return rdkCentralPropertyService.setDeviceProperty(macAddress, DeviceProperty.WifiEnabled(accessPointId), enabled)

@@ -7,6 +7,7 @@ import com.globallogic.rdkb.remotemanagement.data.db.dto.RouterDeviceDto
 import com.globallogic.rdkb.remotemanagement.data.db.dto.UserRouterDeviceDto
 import com.globallogic.rdkb.remotemanagement.data.error.IoDeviceError
 import com.globallogic.rdkb.remotemanagement.domain.entity.ConnectedDevice
+import com.globallogic.rdkb.remotemanagement.domain.entity.ConnectedDeviceStats
 import com.globallogic.rdkb.remotemanagement.domain.entity.RouterDevice
 import com.globallogic.rdkb.remotemanagement.domain.utils.Resource
 import com.globallogic.rdkb.remotemanagement.domain.utils.Resource.Failure
@@ -122,6 +123,13 @@ private object ConnectedDeviceMapper {
         hostName = device.hostName,
         ipAddress = device.ipAddress,
         vendorClassId = device.vendorClassId,
+        stats = ConnectedDeviceStats(
+            bytesSent = device.bytesSent,
+            bytesReceived = device.bytesReceived,
+            packetsSent = device.packetsSent,
+            packetsReceived = device.packetsReceived,
+            errorsSent = device.errorsSent,
+        )
     )
 
     fun toConnectedDevice(routerDevice: RouterDevice, device: ConnectedDevice): ConnectedDeviceDto = ConnectedDeviceDto(
@@ -131,5 +139,10 @@ private object ConnectedDeviceMapper {
         hostName = device.hostName,
         ipAddress = device.ipAddress,
         vendorClassId = device.vendorClassId,
+        bytesSent = device.stats.bytesSent,
+        bytesReceived = device.stats.bytesReceived,
+        packetsSent = device.stats.packetsSent,
+        packetsReceived = device.stats.packetsReceived,
+        errorsSent = device.stats.errorsSent,
     )
 }

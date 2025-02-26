@@ -16,4 +16,5 @@ data class AccessPoint(
     val ssid: String,
     val availableSecurityModes: List<String>,
     val securityMode: String,
+    val clientsCount: Int,
 )

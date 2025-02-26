@@ -36,6 +36,7 @@ sealed interface DeviceProperty<T: Any> {
     data class ConnectedDeviceMacAddress(val host: Int) : StringProperty(name = "Device.Hosts.Host.$host.PhysAddress")
     data class ConnectedDeviceIpAddress(val host: Int) : StringProperty(name = "Device.Hosts.Host.$host.IPAddress")
     data class ConnectedDeviceVendorClassId(val host: Int) : StringProperty(name = "Device.Hosts.Host.$host.VendorClassID")
+    data class ConnectedDeviceAssociatedDevice(val host: Int) : StringProperty(name = "Device.Hosts.Host.$host.AssociatedDevice")
 
     data class WifiName(val accessPoint: Int) : StringProperty(name = "Device.WiFi.SSID.$accessPoint.Name")
     data class WifiEnabled(val accessPoint: Int) : BooleanProperty(name = "Device.WiFi.SSID.$accessPoint.Enable")
@@ -43,6 +44,13 @@ sealed interface DeviceProperty<T: Any> {
     data class WifiPassword(val accessPoint: Int) : StringProperty(name = "Device.WiFi.AccessPoint.$accessPoint.Security.KeyPassphrase")
     data class WifiSecurityMode(val accessPoint: Int) : StringProperty(name = "Device.WiFi.AccessPoint.$accessPoint.Security.ModeEnabled")
     data class WifiAvailableSecurityModes(val accessPoint: Int) : StringProperty(name = "Device.WiFi.AccessPoint.$accessPoint.Security.ModesSupported")
+    data class WifiClientsCount(val accessPoint: Int) : LongProperty(name = "Device.WiFi.AccessPoint.$accessPoint.AssociatedDeviceNumberOfEntries")
+
+    data class WifiClientBytesSent(val accessPoint: Int, val clientId: Int) : LongProperty(name = "Device.WiFi.AccessPoint.$accessPoint.AssociatedDevice.$clientId.Stats.BytesSent")
+    data class WifiClientBytesReceived(val accessPoint: Int, val clientId: Int) : LongProperty(name = "Device.WiFi.AccessPoint.$accessPoint.AssociatedDevice.$clientId.Stats.BytesReceived")
+    data class WifiClientPacketsSent(val accessPoint: Int, val clientId: Int) : LongProperty(name = "Device.WiFi.AccessPoint.$accessPoint.AssociatedDevice.$clientId.Stats.PacketsSent")
+    data class WifiClientPacketsReceived(val accessPoint: Int, val clientId: Int) : LongProperty(name = "Device.WiFi.AccessPoint.$accessPoint.AssociatedDevice.$clientId.Stats.PacketsReceived")
+    data class WifiClientErrorsSent(val accessPoint: Int, val clientId: Int) : LongProperty(name = "Device.WiFi.AccessPoint.$accessPoint.AssociatedDevice.$clientId.Stats.ErrorsSent")
 
     data object ActionReboot : Action(name = "Device.X_CISCO_COM_DeviceControl.RebootDevice", "Device")
     data object ActionFactoryReset : Action(name = "Device.X_CISCO_COM_DeviceControl.FactoryReset", "Router,Wifi,Firewall,VoIP,Docsis")
