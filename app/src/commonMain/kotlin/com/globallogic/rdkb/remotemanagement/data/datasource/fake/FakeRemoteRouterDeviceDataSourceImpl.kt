@@ -9,6 +9,7 @@ import com.globallogic.rdkb.remotemanagement.domain.entity.DeviceAccessPointSett
 import com.globallogic.rdkb.remotemanagement.domain.entity.AccessPoint
 import com.globallogic.rdkb.remotemanagement.domain.entity.AccessPointGroup
 import com.globallogic.rdkb.remotemanagement.domain.entity.AccessPointSettings
+import com.globallogic.rdkb.remotemanagement.domain.entity.ConnectedDeviceStats
 import com.globallogic.rdkb.remotemanagement.domain.utils.Resource
 import com.globallogic.rdkb.remotemanagement.domain.utils.Resource.Success
 import com.globallogic.rdkb.remotemanagement.domain.utils.flatMapData
@@ -140,6 +141,7 @@ private class FakeRemoteRouterDeviceDataSourceImpl(
         val hostName: String,
         val ipAddress: String,
         val vendorClassId: String = "android",
+        val stats: FakeConnectedDeviceStats = FakeConnectedDeviceStats(),
     ) {
         fun toDomain(): ConnectedDevice = ConnectedDevice(
             isActive = true,
@@ -147,6 +149,7 @@ private class FakeRemoteRouterDeviceDataSourceImpl(
             hostName = hostName,
             ipAddress = ipAddress,
             vendorClassId = vendorClassId,
+            stats = stats.toDomain(),
         )
     }
 
@@ -156,13 +159,31 @@ private class FakeRemoteRouterDeviceDataSourceImpl(
         val ssid: String,
         val availableSecurityModes: List<String> = listOf("public", "private"),
         val securityMode: String = availableSecurityModes.first(),
+        val clientsCount: Int = 0,
     ) {
         fun toDomain(): AccessPoint = AccessPoint(
             enabled = enabled,
             band = band,
             ssid = ssid,
             availableSecurityModes = availableSecurityModes,
-            securityMode = securityMode
+            securityMode = securityMode,
+            clientsCount = clientsCount,
+        )
+    }
+
+    data class FakeConnectedDeviceStats(
+        val bytesSent: Long = 100,
+        val bytesReceived: Long = 200,
+        val packagesSent: Long = 300,
+        val packagesReceived: Long = 400,
+        val errorsReceived: Long = 10,
+    ) {
+        fun toDomain(): ConnectedDeviceStats = ConnectedDeviceStats(
+            bytesSent = bytesSent,
+            bytesReceived = bytesReceived,
+            packetsSent = packagesSent,
+            packetsReceived = packagesReceived,
+            errorsSent = errorsReceived
         )
     }
 }

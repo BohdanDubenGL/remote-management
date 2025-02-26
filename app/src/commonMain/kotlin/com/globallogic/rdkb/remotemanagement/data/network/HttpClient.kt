@@ -24,7 +24,7 @@ fun RdkCentralHttpClient(): HttpClient = PlatformHttpClient {
         header("Authorization", "Basic d3B1c2VyOndlYnBhQDEyMzQ1Njc4OTAK")
     }
     install(Logging) {
-        level = LogLevel.ALL
+        level = LogLevel.NONE
         logger = Logger.SIMPLE
     }
     install(HttpTimeout) {

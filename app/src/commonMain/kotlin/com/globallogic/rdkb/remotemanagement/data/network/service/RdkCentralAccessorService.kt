@@ -42,6 +42,16 @@ interface RdkCentralAccessorService {
         suspend fun getConnectedDeviceMacAddress(): Resource<String, ThrowableResourceError>
         suspend fun getConnectedDeviceIpAddress(): Resource<String, ThrowableResourceError>
         suspend fun getConnectedDeviceVendorClassId(): Resource<String, ThrowableResourceError>
+
+        suspend fun deviceStats(): Resource<ConnectedDeviceStatsAccessor, ThrowableResourceError>
+    }
+
+    interface ConnectedDeviceStatsAccessor {
+        suspend fun getBytesSent(): Resource<Long, ThrowableResourceError>
+        suspend fun getBytesReceived(): Resource<Long, ThrowableResourceError>
+        suspend fun getPacketsSent(): Resource<Long, ThrowableResourceError>
+        suspend fun getPacketsReceived(): Resource<Long, ThrowableResourceError>
+        suspend fun getErrorsSent(): Resource<Long, ThrowableResourceError>
     }
 
     interface AccessPointGroupAccessor {
@@ -59,6 +69,7 @@ interface RdkCentralAccessorService {
         suspend fun getWifiSsid(): Resource<String, ThrowableResourceError>
         suspend fun getWifiSecurityMode(): Resource<String, ThrowableResourceError>
         suspend fun getWifiAvailableSecurityModes(): Resource<List<String>, ThrowableResourceError>
+        suspend fun getWifiClientsCount(): Resource<Int, ThrowableResourceError>
 
         suspend fun setWifiEnabled(enabled: Boolean): Resource<Unit, ThrowableResourceError>
         suspend fun setWifiSsid(ssid: String): Resource<Unit, ThrowableResourceError>

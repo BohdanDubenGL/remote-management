@@ -38,6 +38,7 @@ import com.globallogic.rdkb.remotemanagement.view.error.UiResourceError
 import com.globallogic.rdkb.remotemanagement.view.navigation.FloatingActionButtonState
 import com.globallogic.rdkb.remotemanagement.view.navigation.LocalNavController
 import com.globallogic.rdkb.remotemanagement.view.navigation.Screen
+import kotlinx.coroutines.flow.collectLatest
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
@@ -108,13 +109,21 @@ class TopologyViewModel(
     override suspend fun onSubscribeState() = loadTopologyData()
 
     fun loadTopologyData() = launchOnViewModelScope {
-        updateState { ResourceState.Loading }
-        updateState { state ->
-            val routerDevice = getLocalRouterDevice()
-                .dataOrElse { error -> return@updateState Resource.Success(TopologyUiState.NoData) }
-            val connectedDevices = getRouterDeviceConnectedDevices(routerDevice)
-                .dataOrElse { error -> return@updateState Resource.Success(TopologyUiState.NoData) }
-            Resource.Success(TopologyUiState.Data(routerDevice = routerDevice, connectedDevices = connectedDevices))
+        val routerDevice = getLocalRouterDevice()
+            .dataOrElse { error -> return@launchOnViewModelScope }
+        getRouterDeviceConnectedDevices(routerDevice).collectLatest { connectedDevices ->
+            updateState { state ->
+                when(connectedDevices) {
+                    is ResourceState.Cancelled -> connectedDevices
+                    is ResourceState.Loading -> connectedDevices
+                    is ResourceState.None -> connectedDevices
+                    is Resource -> Resource.Success(TopologyUiState.Data(
+                        routerDevice = routerDevice,
+                        connectedDevices = connectedDevices
+                            .dataOrElse { error -> return@updateState Resource.Success(TopologyUiState.NoData) }
+                    ))
+                }
+            }
         }
     }
 }

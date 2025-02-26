@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "84e421426073653ae2b901df7fe5c5a1",
+    "identityHash": "686f3b6e6393997596406e3c02af1e11",
     "entities": [
       {
         "tableName": "user",
@@ -163,7 +163,7 @@
       },
       {
         "tableName": "connected_device",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`macAddress` TEXT NOT NULL, `routerDeviceMacAddress` TEXT NOT NULL, `isActive` INTEGER NOT NULL, `hostName` TEXT NOT NULL, `ipAddress` TEXT NOT NULL, `vendorClassId` TEXT NOT NULL, PRIMARY KEY(`macAddress`), FOREIGN KEY(`routerDeviceMacAddress`) REFERENCES `router_device`(`macAddress`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`macAddress` TEXT NOT NULL, `routerDeviceMacAddress` TEXT NOT NULL, `isActive` INTEGER NOT NULL, `hostName` TEXT NOT NULL, `ipAddress` TEXT NOT NULL, `vendorClassId` TEXT NOT NULL, `bytesSent` INTEGER NOT NULL, `bytesReceived` INTEGER NOT NULL, `packetsSent` INTEGER NOT NULL, `packetsReceived` INTEGER NOT NULL, `errorsSent` INTEGER NOT NULL, PRIMARY KEY(`macAddress`), FOREIGN KEY(`routerDeviceMacAddress`) REFERENCES `router_device`(`macAddress`) ON UPDATE NO ACTION ON DELETE CASCADE )",
         "fields": [
           {
             "fieldPath": "macAddress",
@@ -200,6 +200,36 @@
             "columnName": "vendorClassId",
             "affinity": "TEXT",
             "notNull": true
+          },
+          {
+            "fieldPath": "bytesSent",
+            "columnName": "bytesSent",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "bytesReceived",
+            "columnName": "bytesReceived",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "packetsSent",
+            "columnName": "packetsSent",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "packetsReceived",
+            "columnName": "packetsReceived",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "errorsSent",
+            "columnName": "errorsSent",
+            "affinity": "INTEGER",
+            "notNull": true
           }
         ],
         "primaryKey": {
@@ -225,7 +255,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '84e421426073653ae2b901df7fe5c5a1')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '686f3b6e6393997596406e3c02af1e11')"
     ]
   }
 }

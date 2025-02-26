@@ -7,6 +7,7 @@ sealed interface IoDeviceError : ResourceError {
     data object CantConnectToRouterDevice : IoDeviceError
 
     data object LoadConnectedDevicesForRouterDevice : IoDeviceError
+    data object LoadConnectedDeviceStats : IoDeviceError
     data object FactoryResetDevice : IoDeviceError
     data object RestartDevice : IoDeviceError
     data object SetupDevice : IoDeviceError

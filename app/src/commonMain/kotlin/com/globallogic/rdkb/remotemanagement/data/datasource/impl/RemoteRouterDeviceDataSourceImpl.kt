@@ -13,6 +13,7 @@ import com.globallogic.rdkb.remotemanagement.domain.entity.DeviceAccessPointSett
 import com.globallogic.rdkb.remotemanagement.domain.entity.AccessPoint
 import com.globallogic.rdkb.remotemanagement.domain.entity.AccessPointGroup
 import com.globallogic.rdkb.remotemanagement.domain.entity.AccessPointSettings
+import com.globallogic.rdkb.remotemanagement.domain.entity.ConnectedDeviceStats
 import com.globallogic.rdkb.remotemanagement.domain.utils.Resource
 import com.globallogic.rdkb.remotemanagement.domain.utils.Resource.Failure
 import com.globallogic.rdkb.remotemanagement.domain.utils.Resource.Success
@@ -105,11 +106,20 @@ class RemoteRouterDeviceDataSourceImpl(
     }
 
     private suspend fun loadConnectedDevice(connectedDeviceAccessor: RdkCentralAccessorService.ConnectedDeviceAccessor): ConnectedDevice? = coroutineScope {
+        val connectedDeviceStatsAccessor = connectedDeviceAccessor.deviceStats()
+            .dataOrElse { error -> null }
+
         val isActive = async { connectedDeviceAccessor.getConnectedDeviceActive() }
         val hostName = async { connectedDeviceAccessor.getConnectedDeviceHostName() }
         val mac = async { connectedDeviceAccessor.getConnectedDeviceMacAddress() }
         val ip = async { connectedDeviceAccessor.getConnectedDeviceIpAddress() }
         val vendorClassId = async { connectedDeviceAccessor.getConnectedDeviceVendorClassId() }
+
+        val bytesSent = async { connectedDeviceStatsAccessor?.getBytesSent() }
+        val bytesReceived = async { connectedDeviceStatsAccessor?.getBytesReceived() }
+        val packetsSent = async { connectedDeviceStatsAccessor?.getPacketsSent() }
+        val packetsReceived = async { connectedDeviceStatsAccessor?.getPacketsReceived() }
+        val errorsSent = async { connectedDeviceStatsAccessor?.getErrorsSent() }
 
         return@coroutineScope ConnectedDevice(
             macAddress = mac.await().dataOrElse { error -> return@coroutineScope null },
@@ -117,6 +127,13 @@ class RemoteRouterDeviceDataSourceImpl(
             ipAddress = ip.await().dataOrElse { error -> return@coroutineScope null },
             isActive = isActive.await().dataOrElse { error -> return@coroutineScope null },
             vendorClassId = vendorClassId.await().dataOrElse { error -> return@coroutineScope null },
+            stats = ConnectedDeviceStats(
+                bytesSent = bytesSent.await()?.data ?: 0L,
+                bytesReceived = bytesReceived.await()?.data ?: 0L,
+                packetsSent = packetsSent.await()?.data ?: 0L,
+                packetsReceived = packetsReceived.await()?.data ?: 0L,
+                errorsSent = errorsSent.await()?.data ?: 0L,
+            )
         )
     }
 
@@ -176,13 +193,15 @@ class RemoteRouterDeviceDataSourceImpl(
         val ssid = async { accessPointAccessor.getWifiSsid() }
         val availableSecurityModes = async { accessPointAccessor.getWifiAvailableSecurityModes() }
         val securityMode = async { accessPointAccessor.getWifiSecurityMode() }
+        val clientsCount = async { accessPointAccessor.getWifiClientsCount() }
 
         return@coroutineScope AccessPoint(
             enabled = enabled.await().dataOrElse { error -> return@coroutineScope null },
             band = accessPointAccessor.band.displayedName,
             ssid = ssid.await().dataOrElse { error -> return@coroutineScope null },
             availableSecurityModes = availableSecurityModes.await().dataOrElse { error -> return@coroutineScope null },
-            securityMode = securityMode.await().dataOrElse { error -> return@coroutineScope null }
+            securityMode = securityMode.await().dataOrElse { error -> return@coroutineScope null },
+            clientsCount = clientsCount.await().dataOrElse { error -> return@coroutineScope null },
         )
     }
 

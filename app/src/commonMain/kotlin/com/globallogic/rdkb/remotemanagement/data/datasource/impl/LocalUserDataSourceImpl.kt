@@ -20,7 +20,7 @@ class LocalUserDataSourceImpl(
         if (userFromDb != null) return Failure(IoUserError.UserAlreadyExist)
 
         val newUser = UserDto(email = email, name = name, password = password)
-        runCatchingSafe { userDao.insertUser(newUser) }
+        runCatchingSafe { userDao.upsertUser(newUser) }
             .getOrElse { error -> return Failure(IoUserError.DatabaseError(error)) }
         return Success(UserMapper.toDomain(newUser))
     }
@@ -31,7 +31,7 @@ class LocalUserDataSourceImpl(
             ?: return Failure(IoUserError.UserNotFound)
 
         val updatedUser = user.copy(email = newEmail, name = newName, password = newPassword)
-        runCatchingSafe { userDao.updateUser(updatedUser) }
+        runCatchingSafe { userDao.upsertUser(updatedUser) }
             .getOrElse { error -> return Failure(IoUserError.DatabaseError(error)) }
 
         return Success(UserMapper.toDomain(updatedUser))

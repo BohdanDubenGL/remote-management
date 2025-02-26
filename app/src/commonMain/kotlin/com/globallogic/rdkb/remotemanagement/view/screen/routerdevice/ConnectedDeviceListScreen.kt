@@ -12,6 +12,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Devices
+import androidx.compose.material.icons.filled.SyncAlt
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -35,6 +36,7 @@ import com.globallogic.rdkb.remotemanagement.view.component.AppTitleText
 import com.globallogic.rdkb.remotemanagement.view.component.AppTitleTextWithIcon
 import com.globallogic.rdkb.remotemanagement.view.error.UiResourceError
 import com.globallogic.rdkb.remotemanagement.view.navigation.LocalNavController
+import kotlinx.coroutines.flow.collectLatest
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
@@ -77,9 +79,21 @@ private fun ConnectedDeviceListContent(
                     )
                     AppTextProperty(name = "Online:", value = connectedDevice.isActive)
                     AppTextProperty(name = "Mac address:", value = connectedDevice.macAddress)
-                    AppTextProperty(name = "Host name:", value = connectedDevice.hostName)
                     AppTextProperty(name = "Ip address:", value = connectedDevice.ipAddress)
                     AppTextProperty(name = "Vendor class:", value = connectedDevice.vendorClassId)
+
+                    if (connectedDevice.stats.hasData()) {
+                        AppTitleTextWithIcon(
+                            text = "Network stats",
+                            imageVector = Icons.Default.SyncAlt,
+                            modifier = Modifier.padding(top = 8.dp)
+                        )
+                        AppTextProperty(name = "Bytes sent:", value = connectedDevice.stats.bytesSent)
+                        AppTextProperty(name = "Bytes received:", value = connectedDevice.stats.bytesReceived)
+                        AppTextProperty(name = "Packets sent:", value = connectedDevice.stats.packetsSent)
+                        AppTextProperty(name = "Packets received:", value = connectedDevice.stats.packetsReceived)
+                        AppTextProperty(name = "Errors sent:", value = connectedDevice.stats.errorsSent)
+                    }
                 }
             }
         }
@@ -94,13 +108,23 @@ class ConnectedDeviceListViewModel(
     override suspend fun onInitState() = loadConnectedDevices()
 
     private fun loadConnectedDevices() = launchOnViewModelScope {
-        updateState { state -> ResourceState.Loading }
-        updateState { state ->
-            val routerDevice = getSelectedRouterDevice()
-                .dataOrElse { error -> return@updateState state }
-            val connectedDevices = getRouterDeviceConnectedDevices(routerDevice)
-                .dataOrElse { error -> return@updateState state }
-            Resource.Success(ConnectedDeviceListUiState(connectedDevices = connectedDevices))
+        val routerDevice = getSelectedRouterDevice()
+            .dataOrElse { error -> return@launchOnViewModelScope }
+
+        getRouterDeviceConnectedDevices(routerDevice).collectLatest { connectedDevices ->
+            updateState { state ->
+                when (connectedDevices) {
+                    is ResourceState.Cancelled -> connectedDevices
+                    is ResourceState.Loading -> connectedDevices
+                    is ResourceState.None -> connectedDevices
+                    is Resource -> {
+                        Resource.Success(ConnectedDeviceListUiState(
+                            connectedDevices = connectedDevices.dataOrElse { error -> return@updateState state }
+                        ))
+                    }
+                }
+
+            }
         }
     }
 }

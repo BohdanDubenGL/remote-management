@@ -7,6 +7,7 @@ import com.globallogic.rdkb.remotemanagement.data.db.dto.RouterDeviceDto
 import com.globallogic.rdkb.remotemanagement.data.db.dto.UserRouterDeviceDto
 import com.globallogic.rdkb.remotemanagement.data.error.IoDeviceError
 import com.globallogic.rdkb.remotemanagement.domain.entity.ConnectedDevice
+import com.globallogic.rdkb.remotemanagement.domain.entity.ConnectedDeviceStats
 import com.globallogic.rdkb.remotemanagement.domain.entity.RouterDevice
 import com.globallogic.rdkb.remotemanagement.domain.utils.Resource
 import com.globallogic.rdkb.remotemanagement.domain.utils.Resource.Failure
@@ -36,7 +37,7 @@ class LocalRouterDeviceDataSourceImpl(
     override suspend fun saveConnectedDevices(device: RouterDevice, connectedDevices: List<ConnectedDevice>): Resource<Unit, IoDeviceError.SaveConnectedDevices> {
         val connectedDevicesDto =
             connectedDevices.map { ConnectedDeviceMapper.toConnectedDevice(device, it) }
-        runCatchingSafe { deviceDao.insertConnectedDevices(*connectedDevicesDto.toTypedArray()) }
+        runCatchingSafe { deviceDao.upsertConnectedDevices(*connectedDevicesDto.toTypedArray()) }
             .getOrElse { error -> return Failure(IoDeviceError.DatabaseError(error)) }
 
         return Success(Unit)
@@ -52,9 +53,9 @@ class LocalRouterDeviceDataSourceImpl(
     override suspend fun saveRouterDevice(device: RouterDevice, userEmail: String): Resource<Unit, IoDeviceError.SaveRouterDevice> {
         val deviceDto = RouterDeviceMapper.toRouterDeviceInfo(device)
 
-        runCatchingSafe { deviceDao.insertRouterDevice(deviceDto) }
+        runCatchingSafe { deviceDao.upsertRouterDevice(deviceDto) }
             .getOrElse { error -> return Failure(IoDeviceError.DatabaseError(error)) }
-        runCatchingSafe { deviceDao.insertUserRouterDevice(UserRouterDeviceDto(userEmail, device.macAddress)) }
+        runCatchingSafe { deviceDao.upsertUserRouterDevice(UserRouterDeviceDto(userEmail, device.macAddress)) }
             .getOrElse { error -> return Failure(IoDeviceError.DatabaseError(error)) }
 
         return Success(Unit)
@@ -62,12 +63,7 @@ class LocalRouterDeviceDataSourceImpl(
 
     override suspend fun removeRouterDevice(device: RouterDevice, userEmail: String): Resource<Unit, IoDeviceError.RemoveRouterDevice> {
         runCatchingSafe {
-            deviceDao.deleteUserRouterDevice(
-                UserRouterDeviceDto(
-                    userEmail,
-                    device.macAddress
-                )
-            )
+            deviceDao.deleteUserRouterDevice(UserRouterDeviceDto(userEmail, device.macAddress))
         }
             .getOrElse { error -> return Failure(IoDeviceError.DatabaseError(error)) }
         runCatchingSafe { deviceDao.deleteRouterDeviceByMacAddress(device.macAddress) }
@@ -122,6 +118,13 @@ private object ConnectedDeviceMapper {
         hostName = device.hostName,
         ipAddress = device.ipAddress,
         vendorClassId = device.vendorClassId,
+        stats = ConnectedDeviceStats(
+            bytesSent = device.bytesSent,
+            bytesReceived = device.bytesReceived,
+            packetsSent = device.packetsSent,
+            packetsReceived = device.packetsReceived,
+            errorsSent = device.errorsSent,
+        )
     )
 
     fun toConnectedDevice(routerDevice: RouterDevice, device: ConnectedDevice): ConnectedDeviceDto = ConnectedDeviceDto(
@@ -131,5 +134,10 @@ private object ConnectedDeviceMapper {
         hostName = device.hostName,
         ipAddress = device.ipAddress,
         vendorClassId = device.vendorClassId,
+        bytesSent = device.stats.bytesSent,
+        bytesReceived = device.stats.bytesReceived,
+        packetsSent = device.stats.packetsSent,
+        packetsReceived = device.stats.packetsReceived,
+        errorsSent = device.stats.errorsSent,
     )
 }

@@ -4,19 +4,22 @@ import com.globallogic.rdkb.remotemanagement.data.datasource.LocalRouterDeviceDa
 import com.globallogic.rdkb.remotemanagement.data.datasource.RemoteRouterDeviceDataSource
 import com.globallogic.rdkb.remotemanagement.data.preferences.AppPreferences
 import com.globallogic.rdkb.remotemanagement.domain.entity.AccessPointGroup
-import com.globallogic.rdkb.remotemanagement.domain.entity.ConnectedDevice
-import com.globallogic.rdkb.remotemanagement.domain.entity.RouterDevice
-import com.globallogic.rdkb.remotemanagement.domain.entity.DeviceAccessPointSettings
 import com.globallogic.rdkb.remotemanagement.domain.entity.AccessPointSettings
+import com.globallogic.rdkb.remotemanagement.domain.entity.ConnectedDevice
+import com.globallogic.rdkb.remotemanagement.domain.entity.DeviceAccessPointSettings
+import com.globallogic.rdkb.remotemanagement.domain.entity.RouterDevice
 import com.globallogic.rdkb.remotemanagement.domain.error.DeviceError
 import com.globallogic.rdkb.remotemanagement.domain.repository.RouterDeviceRepository
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.RouterDeviceAction
 import com.globallogic.rdkb.remotemanagement.domain.utils.Resource
 import com.globallogic.rdkb.remotemanagement.domain.utils.Resource.Failure
 import com.globallogic.rdkb.remotemanagement.domain.utils.Resource.Success
+import com.globallogic.rdkb.remotemanagement.domain.utils.ResourceState
 import com.globallogic.rdkb.remotemanagement.domain.utils.dataOrElse
 import com.globallogic.rdkb.remotemanagement.domain.utils.map
 import com.globallogic.rdkb.remotemanagement.domain.utils.mapError
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.channelFlow
 
 class RouterDeviceRepositoryImpl(
     private val appPreferences: AppPreferences,
@@ -24,32 +27,51 @@ class RouterDeviceRepositoryImpl(
     private val localRouterDeviceDataSource: LocalRouterDeviceDataSource,
 ) : RouterDeviceRepository {
 
-    override suspend fun getDeviceList(): Resource<List<RouterDevice>, DeviceError.NoDevicesFound> {
-        val email = appPreferences.currentUserEmailPref.get()
-            ?: return Failure(DeviceError.NoDevicesFound)
+    override suspend fun getDeviceList(forceUpdate: Boolean): Flow<ResourceState<List<RouterDevice>, DeviceError.NoDevicesFound>> = channelFlow {
+        send(ResourceState.Loading)
 
-        val savedDevices = localRouterDeviceDataSource.loadRouterDevicesForUser(email)
-            .dataOrElse { error -> emptyList() }
-        savedDevices.forEach { savedDevice ->
-            remoteRouterDeviceDataSource.findRouterDeviceByMacAddress(savedDevice.macAddress)
-                .map { updatedDevice -> localRouterDeviceDataSource.saveRouterDevice(updatedDevice, email) }
+        val email = appPreferences.currentUserEmailPref.get()
+        if (email == null) {
+            send(Failure(DeviceError.NoDevicesFound))
+            return@channelFlow
         }
 
-        return localRouterDeviceDataSource.loadRouterDevicesForUser(email)
+        val savedDevices =  localRouterDeviceDataSource.loadRouterDevicesForUser(email)
             .mapError { error -> DeviceError.NoDevicesFound }
+        send(savedDevices)
+
+        if (forceUpdate) {
+            savedDevices.dataOrElse { error -> emptyList() }
+                .forEach { savedDevice ->
+                    remoteRouterDeviceDataSource.findRouterDeviceByMacAddress(savedDevice.macAddress)
+                        .map { updatedDevice -> localRouterDeviceDataSource.saveRouterDevice(updatedDevice, email) }
+                }
+
+            val updatedDevices = localRouterDeviceDataSource.loadRouterDevicesForUser(email)
+                .mapError { error -> DeviceError.NoDevicesFound }
+            send(updatedDevices)
+        }
     }
 
-    override suspend fun getRouterDeviceConnectedDevices(device: RouterDevice): Resource<List<ConnectedDevice>, DeviceError.NoConnectedDevicesFound> {
-        val connectedDevices = remoteRouterDeviceDataSource.loadConnectedDevicesForRouterDevice(device)
-            .dataOrElse { error -> null }
+    override suspend fun getRouterDeviceConnectedDevices(device: RouterDevice, forceUpdate: Boolean): Flow<ResourceState<List<ConnectedDevice>, DeviceError.NoConnectedDevicesFound>> = channelFlow {
+        send(ResourceState.Loading)
 
-        if (connectedDevices != null) {
-            localRouterDeviceDataSource.saveConnectedDevices(device, connectedDevices)
-                .dataOrElse { error -> return Failure(DeviceError.NoConnectedDevicesFound) }
-        }
-
-        return localRouterDeviceDataSource.loadConnectedDevices(device)
+        val savedConnectedDevices = localRouterDeviceDataSource.loadConnectedDevices(device)
             .mapError { error -> DeviceError.NoConnectedDevicesFound }
+        send(savedConnectedDevices)
+
+        if (forceUpdate) {
+            val connectedDevices = remoteRouterDeviceDataSource.loadConnectedDevicesForRouterDevice(device)
+                .dataOrElse { error -> null }
+            if (connectedDevices != null) {
+                localRouterDeviceDataSource.saveConnectedDevices(device, connectedDevices)
+                    .dataOrElse { error -> null }
+
+                val updatedConnectedDevices = localRouterDeviceDataSource.loadConnectedDevices(device)
+                    .mapError { error -> DeviceError.NoConnectedDevicesFound }
+                send(updatedConnectedDevices)
+            }
+        }
     }
 
     override suspend fun loadAccessPointGroups(device: RouterDevice): Resource<List<AccessPointGroup>, DeviceError.WifiSettings> {
