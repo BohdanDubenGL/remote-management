@@ -13,7 +13,7 @@ fun AppLoading(
 ) {
     AppLayoutVerticalSections(
         topSection = {
-            LoadingSpinner(
+            AppLoadingSpinner(
                 modifier = Modifier.size(256.dp)
             )
         },

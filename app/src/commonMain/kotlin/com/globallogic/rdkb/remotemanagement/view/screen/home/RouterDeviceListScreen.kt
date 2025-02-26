@@ -37,6 +37,7 @@ import com.globallogic.rdkb.remotemanagement.view.component.AppDrawResourceState
 import com.globallogic.rdkb.remotemanagement.view.component.AppIcon
 import com.globallogic.rdkb.remotemanagement.view.component.AppTextProperty
 import com.globallogic.rdkb.remotemanagement.view.component.AppTitleText
+import com.globallogic.rdkb.remotemanagement.view.component.AppTitleTextWithIcon
 import com.globallogic.rdkb.remotemanagement.view.error.UiResourceError
 import com.globallogic.rdkb.remotemanagement.view.navigation.LocalNavController
 import com.globallogic.rdkb.remotemanagement.view.navigation.Screen
@@ -103,27 +104,12 @@ private fun RouterDeviceListContent(
                             modifier = Modifier.padding(16.dp, 8.dp).fillMaxWidth(),
                             verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.Center,
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                AppIcon(
-                                    imageVector = Icons.Default.Router,
-                                    contentColor = MaterialTheme.colorScheme.tertiary,
-                                    modifier = Modifier.size(40.dp),
-                                    iconPadding = 8.dp,
-                                )
-                                Spacer(modifier = Modifier.weight(1F))
-                                AppTitleText(
-                                    text = routerDevice.modelName,
-                                    color = MaterialTheme.colorScheme.tertiary
-                                )
-                            }
-
-                            AppTextProperty(name = "Name:", value = routerDevice.modelName)
-                            AppTextProperty(name = "IP address:", value = routerDevice.ipAddressV4)
-                            AppTextProperty(name = "MAC address:", value = routerDevice.macAddress)
+                            AppTitleTextWithIcon(
+                                text = routerDevice.modelName,
+                                imageVector = Icons.Default.Router,
+                            )
+                            AppTextProperty(name = "ip:", value = routerDevice.ipAddressV4)
+                            AppTextProperty(name = "mac:", value = routerDevice.macAddress)
                         }
                     }
                 }

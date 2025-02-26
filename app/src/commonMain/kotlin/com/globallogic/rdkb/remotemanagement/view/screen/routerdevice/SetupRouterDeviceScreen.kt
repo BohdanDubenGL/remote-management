@@ -48,6 +48,7 @@ import com.globallogic.rdkb.remotemanagement.view.component.AppPasswordTextField
 import com.globallogic.rdkb.remotemanagement.view.component.AppSwitch
 import com.globallogic.rdkb.remotemanagement.view.component.AppTextField
 import com.globallogic.rdkb.remotemanagement.view.component.AppTitleText
+import com.globallogic.rdkb.remotemanagement.view.component.AppTitleTextWithIcon
 import com.globallogic.rdkb.remotemanagement.view.error.UiResourceError
 import com.globallogic.rdkb.remotemanagement.view.navigation.LocalNavController
 import com.globallogic.rdkb.remotemanagement.view.navigation.Screen
@@ -129,14 +130,10 @@ private fun SetupRouterDeviceContent(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.Center,
                         ) {
-                            AppIcon(
+                            AppTitleTextWithIcon(
+                                text = bandSettings.frequency,
                                 imageVector = Icons.Default.Wifi,
-                                contentColor = MaterialTheme.colorScheme.tertiary,
-                                modifier = Modifier.size(40.dp),
-                                iconPadding = 8.dp,
                             )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            AppTitleText(text = bandSettings.frequency, fontSize = 22.sp)
                             Spacer(modifier = Modifier.weight(1F))
                             AppSwitch(
                                 checked = bandSettings.enabled,
@@ -323,7 +320,7 @@ class SetupRouterDeviceViewModel(
     fun saveData() = launchUpdateState { state ->
         when(state) {
             is Success -> {
-                setupDeviceAccessPoint(state.data.routerDevice, DeviceAccessPointSettings(state.data.bandsSettings))
+                setupDeviceAccessPoint(state.data.routerDevice, state.data.accessPointGroup, DeviceAccessPointSettings(state.data.bandsSettings))
                     .map { state.data.copy(dataSaved = true) }
                     .mapErrorToData { error -> state.data }
             }

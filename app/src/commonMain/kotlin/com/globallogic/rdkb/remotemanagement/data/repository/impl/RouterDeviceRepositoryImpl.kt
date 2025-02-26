@@ -106,8 +106,8 @@ class RouterDeviceRepositoryImpl(
         return Success(Unit)
     }
 
-    override suspend fun setupDeviceAccessPoint(device: RouterDevice, settings: DeviceAccessPointSettings): Resource<Unit, DeviceError.SetupDevice> {
-        return remoteRouterDeviceDataSource.setupAccessPoint(device, settings)
+    override suspend fun setupDeviceAccessPoint(device: RouterDevice, accessPointGroup: AccessPointGroup, settings: DeviceAccessPointSettings): Resource<Unit, DeviceError.SetupDevice> {
+        return remoteRouterDeviceDataSource.setupAccessPoint(device, accessPointGroup, settings)
             .mapError { error -> DeviceError.SetupDevice }
     }
 }

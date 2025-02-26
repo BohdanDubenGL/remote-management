@@ -1,40 +1,68 @@
 package com.globallogic.rdkb.remotemanagement.data.network.service
 
+import com.globallogic.rdkb.remotemanagement.data.network.service.model.Band
 import com.globallogic.rdkb.remotemanagement.domain.utils.Resource
 import com.globallogic.rdkb.remotemanagement.domain.utils.ThrowableResourceError
 
 interface RdkCentralAccessorService {
     suspend fun getAvailableDevices(): Resource<List<String>, ThrowableResourceError>
 
-    suspend fun getModelName(macAddress: String): Resource<String, ThrowableResourceError>
-    suspend fun getManufacturer(macAddress: String): Resource<String, ThrowableResourceError>
-    suspend fun getSoftwareVersion(macAddress: String): Resource<String, ThrowableResourceError>
-    suspend fun getIpAddressV4(macAddress: String): Resource<String, ThrowableResourceError>
-    suspend fun getIpAddressV6(macAddress: String): Resource<String, ThrowableResourceError>
-    suspend fun getMacAddress(macAddress: String): Resource<String, ThrowableResourceError>
-    suspend fun getSerialNumber(macAddress: String): Resource<String, ThrowableResourceError>
-    suspend fun getOperatingFrequencyBands(macAddress: String): Resource<Set<String>, ThrowableResourceError>
+    fun device(macAddress: String): DeviceAccessor
 
-    suspend fun getTotalMemory(macAddress: String): Resource<Long, ThrowableResourceError>
-    suspend fun getFreeMemory(macAddress: String): Resource<Long, ThrowableResourceError>
+    interface DeviceAccessor {
+        suspend fun rebootDevice(): Resource<Unit, ThrowableResourceError>
+        suspend fun factoryResetDevice(): Resource<Unit, ThrowableResourceError>
 
-    suspend fun getConnectedDevicesCount(macAddress: String): Resource<Int, ThrowableResourceError>
-    suspend fun getConnectedDeviceActive(macAddress: String, index: Int): Resource<Boolean, ThrowableResourceError>
-    suspend fun getConnectedDeviceHostName(macAddress: String, index: Int): Resource<String, ThrowableResourceError>
-    suspend fun getConnectedDeviceMacAddress(macAddress: String, index: Int): Resource<String, ThrowableResourceError>
-    suspend fun getConnectedDeviceIpAddress(macAddress: String, index: Int): Resource<String, ThrowableResourceError>
-    suspend fun getConnectedDeviceVendorClassId(macAddress: String, index: Int): Resource<String, ThrowableResourceError>
+        suspend fun getModelName(): Resource<String, ThrowableResourceError>
+        suspend fun getManufacturer(): Resource<String, ThrowableResourceError>
+        suspend fun getSoftwareVersion(): Resource<String, ThrowableResourceError>
+        suspend fun getIpAddressV4(): Resource<String, ThrowableResourceError>
+        suspend fun getIpAddressV6(): Resource<String, ThrowableResourceError>
+        suspend fun getMacAddress(): Resource<String, ThrowableResourceError>
+        suspend fun getSerialNumber(): Resource<String, ThrowableResourceError>
+        suspend fun getOperatingFrequencyBands(): Resource<Set<String>, ThrowableResourceError>
 
-    suspend fun getWifiName(macAddress: String, accessPoint: Int): Resource<String, ThrowableResourceError>
-    suspend fun getWifiEnabled(macAddress: String, accessPoint: Int): Resource<Boolean, ThrowableResourceError>
-    suspend fun setWifiEnabled(macAddress: String, accessPoint: Int, enabled: Boolean): Resource<Unit, ThrowableResourceError>
-    suspend fun getWifiSsid(macAddress: String, accessPoint: Int): Resource<String, ThrowableResourceError>
-    suspend fun setWifiSsid(macAddress: String, accessPoint: Int, ssid: String): Resource<Unit, ThrowableResourceError>
-    suspend fun setWifiPassword(macAddress: String, accessPoint: Int, password: String): Resource<Unit, ThrowableResourceError>
-    suspend fun getWifiSecurityMode(macAddress: String, accessPoint: Int): Resource<String, ThrowableResourceError>
-    suspend fun setWifiSecurityMode(macAddress: String, accessPoint: Int, securityMode: String): Resource<Unit, ThrowableResourceError>
-    suspend fun getWifiAvailableSecurityModes(macAddress: String, accessPoint: Int): Resource<List<String>, ThrowableResourceError>
+        suspend fun getTotalMemory(): Resource<Long, ThrowableResourceError>
+        suspend fun getFreeMemory(): Resource<Long, ThrowableResourceError>
 
-    suspend fun rebootDevice(macAddress: String): Resource<Unit, ThrowableResourceError>
-    suspend fun factoryResetDevice(macAddress: String): Resource<Unit, ThrowableResourceError>
+        suspend fun getConnectedDevicesCount(): Resource<Int, ThrowableResourceError>
+        suspend fun connectedDevices(): Resource<List<ConnectedDeviceAccessor>, ThrowableResourceError>
+
+        fun accessPoints(): List<AccessPointAccessor>
+        fun accessPointGroups(): List<AccessPointGroupAccessor>
+
+        fun connectedDevice(deviceId: Int): ConnectedDeviceAccessor
+        fun accessPoint(accessPointGroupId: Int, band: Band): AccessPointAccessor
+        fun accessPointGroup(accessPointGroupId: Int): AccessPointGroupAccessor
+    }
+
+    interface ConnectedDeviceAccessor {
+        suspend fun getConnectedDeviceActive(): Resource<Boolean, ThrowableResourceError>
+        suspend fun getConnectedDeviceHostName(): Resource<String, ThrowableResourceError>
+        suspend fun getConnectedDeviceMacAddress(): Resource<String, ThrowableResourceError>
+        suspend fun getConnectedDeviceIpAddress(): Resource<String, ThrowableResourceError>
+        suspend fun getConnectedDeviceVendorClassId(): Resource<String, ThrowableResourceError>
+    }
+
+    interface AccessPointGroupAccessor {
+        val accessPointGroupId: Int
+
+        fun accessPoint(band: Band): AccessPointAccessor
+        fun accessPoints(): List<AccessPointAccessor>
+    }
+
+    interface AccessPointAccessor {
+        val band: Band
+
+        suspend fun getWifiName(): Resource<String, ThrowableResourceError>
+        suspend fun getWifiEnabled(): Resource<Boolean, ThrowableResourceError>
+        suspend fun getWifiSsid(): Resource<String, ThrowableResourceError>
+        suspend fun getWifiSecurityMode(): Resource<String, ThrowableResourceError>
+        suspend fun getWifiAvailableSecurityModes(): Resource<List<String>, ThrowableResourceError>
+
+        suspend fun setWifiEnabled(enabled: Boolean): Resource<Unit, ThrowableResourceError>
+        suspend fun setWifiSsid(ssid: String): Resource<Unit, ThrowableResourceError>
+        suspend fun setWifiPassword(password: String): Resource<Unit, ThrowableResourceError>
+        suspend fun setWifiSecurityMode(securityMode: String): Resource<Unit, ThrowableResourceError>
+    }
 }
