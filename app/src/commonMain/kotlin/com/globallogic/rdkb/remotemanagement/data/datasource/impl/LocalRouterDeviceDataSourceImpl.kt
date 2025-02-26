@@ -78,7 +78,7 @@ class LocalRouterDeviceDataSourceImpl(
 
     override suspend fun findLocalRouterDevice(userEmail: String): Resource<RouterDevice, IoDeviceError.FindLocalRouterDevice> {
         val device = runCatchingSafe {
-            deviceDao.findRouterDevicesForUser(userEmail).firstOrNull { it.lanConnected }
+            deviceDao.findRouterDevicesForUser(userEmail).firstOrNull()
         }
             .getOrElse { error -> return Failure(IoDeviceError.DatabaseError(error)) }
             ?: return Failure(IoDeviceError.NoDeviceFound)
@@ -89,7 +89,6 @@ class LocalRouterDeviceDataSourceImpl(
 
 private object RouterDeviceMapper {
     fun toRouterDeviceInfo(device: RouterDeviceDto): RouterDevice = RouterDevice(
-        lanConnected = device.lanConnected,
         modelName = device.modelName,
         manufacturer = device.manufacturer,
         ipAddressV4 = device.ipAddressV4,
@@ -102,7 +101,6 @@ private object RouterDeviceMapper {
         availableBands = device.availableBands.split(",").toSet()
     )
     fun toRouterDeviceInfo(device: RouterDevice): RouterDeviceDto = RouterDeviceDto(
-        lanConnected = device.lanConnected,
         modelName = device.modelName,
         manufacturer = device.manufacturer,
         ipAddressV4 = device.ipAddressV4,

@@ -18,6 +18,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -31,6 +33,8 @@ fun AppTextField(
     isError: Boolean = false,
     errorMessage: String = "",
     enabled: Boolean = true,
+    readOnly: Boolean = false,
+    trailingIcon: @Composable () -> Unit = { },
     visualTransformation: VisualTransformation = VisualTransformation.None,
     onValueChange: (String) -> Unit,
 ) {
@@ -52,7 +56,7 @@ fun AppTextField(
         TextField(
             value = value,
             onValueChange = onValueChange,
-            textStyle = TextStyle(color = MaterialTheme.colorScheme.primary, fontSize = 18.sp),
+            textStyle = TextStyle(color = MaterialTheme.colorScheme.primary, fontSize = 16.sp),
             placeholder = {
                 Text(
                     text = placeholder,
@@ -64,7 +68,8 @@ fun AppTextField(
                 Text(
                     text = label,
                     color = MaterialTheme.colorScheme.secondary,
-                    fontSize = 15.sp,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(bottom = 6.dp)
                 )
             },
@@ -82,11 +87,13 @@ fun AppTextField(
                 errorTextColor = MaterialTheme.colorScheme.error,
             ),
             visualTransformation = visualTransformation,
+            trailingIcon = trailingIcon,
             enabled = enabled,
+            readOnly = readOnly,
             modifier = Modifier
                 .fillMaxWidth()
                 .height(64.dp)
-                .padding(horizontal = 16.dp)
+                .padding(horizontal = 8.dp)
         )
         AnimatedVisibility(
             visible = isError || errorMessage.isNotBlank(),

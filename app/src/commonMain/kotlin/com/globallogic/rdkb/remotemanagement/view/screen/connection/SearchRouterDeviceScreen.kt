@@ -143,7 +143,8 @@ private fun SearchRouterDeviceContent(
                             AppIcon(
                                 imageVector = Icons.Default.Router,
                                 contentColor = MaterialTheme.colorScheme.tertiary,
-                                modifier = Modifier.size(48.dp)
+                                modifier = Modifier.size(40.dp),
+                                iconPadding = 8.dp,
                             )
                             Spacer(modifier = Modifier.weight(1F))
                             AppTitleText(

@@ -2,16 +2,17 @@ package com.globallogic.rdkb.remotemanagement.data.datasource.impl
 
 import com.globallogic.rdkb.remotemanagement.data.datasource.RemoteRouterDeviceDataSource
 import com.globallogic.rdkb.remotemanagement.data.error.IoDeviceError
-import com.globallogic.rdkb.remotemanagement.data.network.service.RdkCentralService
+import com.globallogic.rdkb.remotemanagement.data.network.service.RdkCentralAccessorService
 import com.globallogic.rdkb.remotemanagement.data.network.service.model.Band
 import com.globallogic.rdkb.remotemanagement.data.wifi.WifiScanner
 import com.globallogic.rdkb.remotemanagement.data.wifi.model.WifiInfo
 import com.globallogic.rdkb.remotemanagement.domain.entity.ConnectedDevice
 import com.globallogic.rdkb.remotemanagement.domain.entity.FoundRouterDevice
 import com.globallogic.rdkb.remotemanagement.domain.entity.RouterDevice
-import com.globallogic.rdkb.remotemanagement.domain.entity.RouterDeviceSettings
-import com.globallogic.rdkb.remotemanagement.domain.entity.Wifi
-import com.globallogic.rdkb.remotemanagement.domain.entity.WifiSettings
+import com.globallogic.rdkb.remotemanagement.domain.entity.DeviceAccessPointSettings
+import com.globallogic.rdkb.remotemanagement.domain.entity.AccessPoint
+import com.globallogic.rdkb.remotemanagement.domain.entity.AccessPointGroup
+import com.globallogic.rdkb.remotemanagement.domain.entity.AccessPointSettings
 import com.globallogic.rdkb.remotemanagement.domain.utils.Resource
 import com.globallogic.rdkb.remotemanagement.domain.utils.Resource.Failure
 import com.globallogic.rdkb.remotemanagement.domain.utils.Resource.Success
@@ -24,13 +25,13 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.supervisorScope
 
 class RemoteRouterDeviceDataSourceImpl(
-    private val rdkCentralService: RdkCentralService,
+    private val rdkCentralAccessorService: RdkCentralAccessorService,
     private val wifiScanner: WifiScanner,
 ) : RemoteRouterDeviceDataSource {
 
     override suspend fun findAvailableRouterDevices(): Resource<List<FoundRouterDevice>, IoDeviceError.NoAvailableRouterDevices> = supervisorScope {
         val currentWifi = wifiScanner.getCurrentWifi()
-        rdkCentralService.getAvailableDevices()
+        rdkCentralAccessorService.getAvailableDevices()
             .map { devices ->
                 devices
                     .filter { macAddress -> isMacAddressSimilarToCurrentWifi(macAddress, currentWifi) }
@@ -42,9 +43,9 @@ class RemoteRouterDeviceDataSourceImpl(
     }
 
     private suspend fun loadFoundRouterDevice(macAddress: String): FoundRouterDevice? = coroutineScope {
-        val name = async { rdkCentralService.getModelName(macAddress) }
-        val ip = async { rdkCentralService.getIpAddressV4(macAddress) }
-        val mac = async { rdkCentralService.getMacAddress(macAddress) }
+        val name = async { rdkCentralAccessorService.getModelName(macAddress) }
+        val ip = async { rdkCentralAccessorService.getIpAddressV4(macAddress) }
+        val mac = async { rdkCentralAccessorService.getMacAddress(macAddress) }
 
         FoundRouterDevice(
             name = name.await().dataOrElse { error -> return@coroutineScope null },
@@ -62,19 +63,18 @@ class RemoteRouterDeviceDataSourceImpl(
     override suspend fun findRouterDeviceByMacAddress(macAddress: String): Resource<RouterDevice, IoDeviceError.CantConnectToRouterDevice> = coroutineScope {
         val formattedMacAddress = macAddress.replace(":", "")
 
-        val name = async { rdkCentralService.getModelName(formattedMacAddress) }
-        val manufacturer = async { rdkCentralService.getManufacturer(formattedMacAddress) }
-        val ipv4 = async { rdkCentralService.getIpAddressV4(formattedMacAddress) }
-        val ipv6 = async { rdkCentralService.getIpAddressV6(formattedMacAddress) }
-        val mac = async { rdkCentralService.getMacAddress(formattedMacAddress) }
-        val softwareVersion = async { rdkCentralService.getSoftwareVersion(formattedMacAddress) }
-        val serialNumber = async { rdkCentralService.getSerialNumber(formattedMacAddress) }
-        val bands = async { rdkCentralService.getOperatingFrequencyBands(formattedMacAddress) }
-        val totalMemory = async { rdkCentralService.getTotalMemory(formattedMacAddress) }
-        val freeMemory = async { rdkCentralService.getFreeMemory(formattedMacAddress) }
+        val name = async { rdkCentralAccessorService.getModelName(formattedMacAddress) }
+        val manufacturer = async { rdkCentralAccessorService.getManufacturer(formattedMacAddress) }
+        val ipv4 = async { rdkCentralAccessorService.getIpAddressV4(formattedMacAddress) }
+        val ipv6 = async { rdkCentralAccessorService.getIpAddressV6(formattedMacAddress) }
+        val mac = async { rdkCentralAccessorService.getMacAddress(formattedMacAddress) }
+        val softwareVersion = async { rdkCentralAccessorService.getSoftwareVersion(formattedMacAddress) }
+        val serialNumber = async { rdkCentralAccessorService.getSerialNumber(formattedMacAddress) }
+        val bands = async { rdkCentralAccessorService.getOperatingFrequencyBands(formattedMacAddress) }
+        val totalMemory = async { rdkCentralAccessorService.getTotalMemory(formattedMacAddress) }
+        val freeMemory = async { rdkCentralAccessorService.getFreeMemory(formattedMacAddress) }
 
         val device = RouterDevice(
-            lanConnected = true,
             modelName = name.await().dataOrElse { error -> return@coroutineScope Failure(IoDeviceError.CantConnectToRouterDevice) },
             manufacturer = manufacturer.await().dataOrElse { error -> return@coroutineScope Failure(IoDeviceError.CantConnectToRouterDevice) },
             ipAddressV4 = ipv4.await().dataOrElse { error -> return@coroutineScope Failure(IoDeviceError.CantConnectToRouterDevice) },
@@ -90,10 +90,10 @@ class RemoteRouterDeviceDataSourceImpl(
     }
 
     override suspend fun loadConnectedDevicesForRouterDevice(device: RouterDevice): Resource<List<ConnectedDevice>, IoDeviceError.LoadConnectedDevicesForRouterDevice> = coroutineScope {
-        val deviceCount = rdkCentralService.getConnectedDevicesCount(device.macAddress)
+        val deviceCount = rdkCentralAccessorService.getConnectedDevicesCount(device.macAddress)
             .dataOrElse { error -> return@coroutineScope Failure(IoDeviceError.LoadConnectedDevicesForRouterDevice) }
         val connectedDevices = List(deviceCount) { index ->
-            async { loadConnectedDevice(device.macAddress, index) }
+            async { loadConnectedDevice(device.macAddress, index.inc()) }
         }
             .awaitAll()
             .filterNotNull()
@@ -101,11 +101,11 @@ class RemoteRouterDeviceDataSourceImpl(
     }
 
     private suspend fun loadConnectedDevice(macAddress: String, index: Int): ConnectedDevice? = coroutineScope {
-        val isActive = async { rdkCentralService.getConnectedDeviceActive(macAddress, index) }
-        val hostName = async { rdkCentralService.getConnectedDeviceHostName(macAddress, index) }
-        val mac = async { rdkCentralService.getConnectedDeviceMacAddress(macAddress, index) }
-        val ip = async { rdkCentralService.getConnectedDeviceIpAddress(macAddress, index) }
-        val vendorClassId = async { rdkCentralService.getConnectedDeviceVendorClassId(macAddress, index) }
+        val isActive = async { rdkCentralAccessorService.getConnectedDeviceActive(macAddress, index) }
+        val hostName = async { rdkCentralAccessorService.getConnectedDeviceHostName(macAddress, index) }
+        val mac = async { rdkCentralAccessorService.getConnectedDeviceMacAddress(macAddress, index) }
+        val ip = async { rdkCentralAccessorService.getConnectedDeviceIpAddress(macAddress, index) }
+        val vendorClassId = async { rdkCentralAccessorService.getConnectedDeviceVendorClassId(macAddress, index) }
 
         ConnectedDevice(
             macAddress = mac.await().dataOrElse { error -> return@coroutineScope null },
@@ -116,50 +116,103 @@ class RemoteRouterDeviceDataSourceImpl(
         )
     }
 
-    override suspend fun loadWifiSettings(device: RouterDevice): Resource<WifiSettings, IoDeviceError.WifiSettings> = coroutineScope {
+    override suspend fun loadAccessPointGroups(device: RouterDevice): Resource<List<AccessPointGroup>, IoDeviceError.WifiSettings> = coroutineScope {
+        val bands = device.availableBands
+            .mapNotNull { band -> Band.entries.firstOrNull { it.displayedName == band } }
+        val accessPointGroups = (1..8)
+            .map { accessPointGroupId -> async {
+                val names = bands.map { band -> async {
+                    val accessPointId = band.radio + accessPointGroupId
+                    rdkCentralAccessorService.getWifiName(device.macAddress, accessPointId)
+                        .dataOrElse { error -> null }
+                } }
+                    .awaitAll()
+                    .filterNotNull()
+                val prefixName = names.findCommonPrefix()
+                    .replace("_", " ")
+                    .takeIf { it.length > 3 }
+                val name = when {
+                    accessPointGroupId == 1 -> "Main${prefixName?.let { " ($it)" }}"
+                    prefixName != null -> prefixName
+                    else -> names.joinToString("/")
+                }
+
+                AccessPointGroup(id = accessPointGroupId, name = name)
+            } }
+            .awaitAll()
+        return@coroutineScope Success(accessPointGroups)
+    }
+
+    override suspend fun loadAccessPointSettings(device: RouterDevice, accessPointGroup: AccessPointGroup): Resource<AccessPointSettings, IoDeviceError.WifiSettings> = coroutineScope {
         val bands = device.availableBands
             .mapNotNull { band -> Band.entries.firstOrNull { it.displayedName == band } }
 
-        val wifi = bands
-            .map { band -> async {
-                rdkCentralService.getBandSsid(device.macAddress, band.id + wifiIdDelta)
-                    .map { ssid -> Wifi(band.displayedName, ssid) }
-            } }
+        val accessPoints = bands
+            .map { band -> async { loadAccessPoint(device.macAddress, accessPointGroup, band) } }
             .awaitAll()
-            .map { it.dataOrElse { return@coroutineScope Failure(IoDeviceError.WifiSettings) } }
+            .filterNotNull()
 
-        Success(WifiSettings(wifi))
+        Success(AccessPointSettings(
+            accessPointGroup = accessPointGroup,
+            accessPoints = accessPoints,
+        ))
     }
 
-    override suspend fun setupDevice(device: RouterDevice, settings: RouterDeviceSettings): Resource<Unit, IoDeviceError.SetupDevice> {
+    private suspend fun loadAccessPoint(macAddress: String, accessPointGroup: AccessPointGroup, band: Band): AccessPoint? = coroutineScope {
+        val accessPoint = band.radio + accessPointGroup.id
+
+        val enabled = async { rdkCentralAccessorService.getWifiEnabled(macAddress, accessPoint) }
+        val ssid = async { rdkCentralAccessorService.getWifiSsid(macAddress, accessPoint) }
+        val availableSecurityModes = async { rdkCentralAccessorService.getWifiAvailableSecurityModes(macAddress, accessPoint) }
+        val securityMode = async { rdkCentralAccessorService.getWifiSecurityMode(macAddress, accessPoint) }
+
+        AccessPoint(
+            enabled = enabled.await().dataOrElse { error -> return@coroutineScope null },
+            band = band.displayedName,
+            ssid = ssid.await().dataOrElse { error -> return@coroutineScope null },
+            availableSecurityModes = availableSecurityModes.await().dataOrElse { error -> return@coroutineScope null },
+            securityMode = securityMode.await().dataOrElse { error -> return@coroutineScope null }
+        )
+    }
+
+    override suspend fun setupAccessPoint(device: RouterDevice, settings: DeviceAccessPointSettings): Resource<Unit, IoDeviceError.SetupDevice> {
         if (settings.bands.isEmpty()) return Success(Unit)
 
         settings.bands.forEach { band ->
             val bandType = Band.entries.firstOrNull { it.displayedName == band.frequency }
                 ?: return Failure(IoDeviceError.SetupDevice)
+            val accessPoint = bandType.radio + wifiIdDelta // todo:
+
             if (band.ssid.isNotBlank()) {
-                rdkCentralService.setBandSsid(device.macAddress, bandType.id + wifiIdDelta, band.ssid)
+                rdkCentralAccessorService.setWifiSsid(device.macAddress, accessPoint, band.ssid)
                     .dataOrElse { error -> return Failure(IoDeviceError.SetupDevice) }
             }
             if (band.password.isNotBlank()) {
-                rdkCentralService.setBandPassword(device.macAddress, bandType.id + wifiIdDelta, band.password)
+                rdkCentralAccessorService.setWifiPassword(device.macAddress, accessPoint, band.password)
                     .dataOrElse { error -> return Failure(IoDeviceError.SetupDevice) }
             }
+            rdkCentralAccessorService.setWifiEnabled(device.macAddress, accessPoint, band.enabled)
+            rdkCentralAccessorService.setWifiSecurityMode(device.macAddress, accessPoint, band.securityMode)
         }
         return Success(Unit)
     }
 
     override suspend fun factoryResetDevice(device: RouterDevice): Resource<Unit, IoDeviceError.FactoryResetDevice> {
-        return rdkCentralService.factoryResetDevice(device.macAddress)
+        return rdkCentralAccessorService.factoryResetDevice(device.macAddress)
             .mapError { error -> IoDeviceError.FactoryResetDevice }
     }
 
     override suspend fun rebootDevice(device: RouterDevice): Resource<Unit, IoDeviceError.RestartDevice> {
-        return rdkCentralService.rebootDevice(device.macAddress)
+        return rdkCentralAccessorService.rebootDevice(device.macAddress)
             .mapError { error -> IoDeviceError.RestartDevice }
     }
 
     companion object {
         private const val wifiIdDelta: Int = 1
+
+        private fun List<String>.findCommonPrefix(): String {
+            if (isEmpty()) return ""
+            return reduce { acc, s -> acc.commonPrefixWith(s) }
+        }
     }
 }

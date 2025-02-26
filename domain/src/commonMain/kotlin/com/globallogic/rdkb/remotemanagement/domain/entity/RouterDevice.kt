@@ -1,7 +1,6 @@
 package com.globallogic.rdkb.remotemanagement.domain.entity
 
 data class RouterDevice(
-    val lanConnected: Boolean,
     val modelName: String,
     val manufacturer: String,
     val ipAddressV4: String,

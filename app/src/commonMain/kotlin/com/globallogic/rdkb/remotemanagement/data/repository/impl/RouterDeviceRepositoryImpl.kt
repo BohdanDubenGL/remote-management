@@ -3,10 +3,11 @@ package com.globallogic.rdkb.remotemanagement.data.repository.impl
 import com.globallogic.rdkb.remotemanagement.data.datasource.LocalRouterDeviceDataSource
 import com.globallogic.rdkb.remotemanagement.data.datasource.RemoteRouterDeviceDataSource
 import com.globallogic.rdkb.remotemanagement.data.preferences.AppPreferences
+import com.globallogic.rdkb.remotemanagement.domain.entity.AccessPointGroup
 import com.globallogic.rdkb.remotemanagement.domain.entity.ConnectedDevice
 import com.globallogic.rdkb.remotemanagement.domain.entity.RouterDevice
-import com.globallogic.rdkb.remotemanagement.domain.entity.RouterDeviceSettings
-import com.globallogic.rdkb.remotemanagement.domain.entity.WifiSettings
+import com.globallogic.rdkb.remotemanagement.domain.entity.DeviceAccessPointSettings
+import com.globallogic.rdkb.remotemanagement.domain.entity.AccessPointSettings
 import com.globallogic.rdkb.remotemanagement.domain.error.DeviceError
 import com.globallogic.rdkb.remotemanagement.domain.repository.RouterDeviceRepository
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.RouterDeviceAction
@@ -51,8 +52,13 @@ class RouterDeviceRepositoryImpl(
             .mapError { error -> DeviceError.NoConnectedDevicesFound }
     }
 
-    override suspend fun getRouterDeviceWifiSettings(device: RouterDevice): Resource<WifiSettings, DeviceError.WifiSettings> {
-        return remoteRouterDeviceDataSource.loadWifiSettings(device)
+    override suspend fun loadAccessPointGroups(device: RouterDevice): Resource<List<AccessPointGroup>, DeviceError.WifiSettings> {
+        return remoteRouterDeviceDataSource.loadAccessPointGroups(device)
+            .mapError { error -> DeviceError.WifiSettings }
+    }
+
+    override suspend fun getDeviceAccessPointSettings(device: RouterDevice, accessPointGroup: AccessPointGroup): Resource<AccessPointSettings, DeviceError.WifiSettings> {
+        return remoteRouterDeviceDataSource.loadAccessPointSettings(device, accessPointGroup)
             .mapError { error -> DeviceError.WifiSettings }
     }
 
@@ -100,8 +106,8 @@ class RouterDeviceRepositoryImpl(
         return Success(Unit)
     }
 
-    override suspend fun setupRouterDevice(device: RouterDevice, settings: RouterDeviceSettings): Resource<Unit, DeviceError.SetupDevice> {
-        return remoteRouterDeviceDataSource.setupDevice(device, settings)
+    override suspend fun setupDeviceAccessPoint(device: RouterDevice, settings: DeviceAccessPointSettings): Resource<Unit, DeviceError.SetupDevice> {
+        return remoteRouterDeviceDataSource.setupAccessPoint(device, settings)
             .mapError { error -> DeviceError.SetupDevice }
     }
 }

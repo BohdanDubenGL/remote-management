@@ -20,11 +20,11 @@ import androidx.compose.ui.unit.sp
 @Composable
 fun AppButton(
     modifier: Modifier = Modifier,
-    text: String,
+    text: String = "",
     color: Color = MaterialTheme.colorScheme.primaryContainer,
     contentColor: Color = MaterialTheme.colorScheme.primary,
     enabled: Boolean = true,
-    onClick: () -> Unit,
+    onClick: () -> Unit = { },
 ) {
     Button(
         onClick = onClick,

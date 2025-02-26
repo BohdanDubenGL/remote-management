@@ -3,7 +3,7 @@ package com.globallogic.rdkb.remotemanagement.data.network.service
 import com.globallogic.rdkb.remotemanagement.domain.utils.Resource
 import com.globallogic.rdkb.remotemanagement.domain.utils.ThrowableResourceError
 
-interface RdkCentralService {
+interface RdkCentralAccessorService {
     suspend fun getAvailableDevices(): Resource<List<String>, ThrowableResourceError>
 
     suspend fun getModelName(macAddress: String): Resource<String, ThrowableResourceError>
@@ -25,23 +25,16 @@ interface RdkCentralService {
     suspend fun getConnectedDeviceIpAddress(macAddress: String, index: Int): Resource<String, ThrowableResourceError>
     suspend fun getConnectedDeviceVendorClassId(macAddress: String, index: Int): Resource<String, ThrowableResourceError>
 
-    suspend fun getBandSsid(macAddress: String, band: Int): Resource<String, ThrowableResourceError>
-    suspend fun setBandSsid(macAddress: String, band: Int, ssid: String): Resource<Unit, ThrowableResourceError>
-    suspend fun setBandPassword(macAddress: String, band: Int, password: String): Resource<Unit, ThrowableResourceError>
+    suspend fun getWifiName(macAddress: String, accessPoint: Int): Resource<String, ThrowableResourceError>
+    suspend fun getWifiEnabled(macAddress: String, accessPoint: Int): Resource<Boolean, ThrowableResourceError>
+    suspend fun setWifiEnabled(macAddress: String, accessPoint: Int, enabled: Boolean): Resource<Unit, ThrowableResourceError>
+    suspend fun getWifiSsid(macAddress: String, accessPoint: Int): Resource<String, ThrowableResourceError>
+    suspend fun setWifiSsid(macAddress: String, accessPoint: Int, ssid: String): Resource<Unit, ThrowableResourceError>
+    suspend fun setWifiPassword(macAddress: String, accessPoint: Int, password: String): Resource<Unit, ThrowableResourceError>
+    suspend fun getWifiSecurityMode(macAddress: String, accessPoint: Int): Resource<String, ThrowableResourceError>
+    suspend fun setWifiSecurityMode(macAddress: String, accessPoint: Int, securityMode: String): Resource<Unit, ThrowableResourceError>
+    suspend fun getWifiAvailableSecurityModes(macAddress: String, accessPoint: Int): Resource<List<String>, ThrowableResourceError>
 
     suspend fun rebootDevice(macAddress: String): Resource<Unit, ThrowableResourceError>
     suspend fun factoryResetDevice(macAddress: String): Resource<Unit, ThrowableResourceError>
 }
-
-class CantLoadDevicesException() : Exception("Can't load devices from server")
-
-class CantLoadDevicePropertyException(
-    val macAddress: String,
-    val property: RouterDeviceProperty.Property,
-) : Exception("Can't load '${property.name}' for device with mac address '$macAddress'")
-
-class CantChangeDevicePropertyException(
-    val macAddress: String,
-    val property: RouterDeviceProperty.Property,
-    val value: String,
-) : Exception("Can't change '${property.name}' for device with mac address '$macAddress' to value '$value'")

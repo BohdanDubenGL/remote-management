@@ -33,7 +33,7 @@ fun AppCard(
         Box(
             modifier = Modifier
                 .background(color)
-                .padding(16.dp),
+                .padding(horizontal = 16.dp, vertical = 8.dp),
             content = { content() }
         )
     }

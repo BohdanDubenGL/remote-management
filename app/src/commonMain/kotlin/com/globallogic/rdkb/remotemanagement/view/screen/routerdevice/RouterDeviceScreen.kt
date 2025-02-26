@@ -79,7 +79,8 @@ private fun RouterDeviceContent(
                     AppIcon(
                         imageVector = Icons.Default.Router,
                         contentColor = MaterialTheme.colorScheme.tertiary,
-                        modifier = Modifier.size(48.dp)
+                        modifier = Modifier.size(40.dp),
+                        iconPadding = 8.dp,
                     )
                     Spacer(modifier = Modifier.weight(1F))
                     AppTitleText(text = uiState.routerDevice.modelName, color = MaterialTheme.colorScheme.tertiary)
@@ -90,7 +91,6 @@ private fun RouterDeviceContent(
                 AppTextProperty(name = "IP v4:", value = uiState.routerDevice.ipAddressV4)
                 AppTextProperty(name = "IP v6:", value = uiState.routerDevice.ipAddressV6)
                 AppTextProperty(name = "Mac address:", value = uiState.routerDevice.macAddress)
-                AppTextProperty(name = "Lan connected:", value = uiState.routerDevice.lanConnected)
                 AppTextProperty(name = "Model name:", value = uiState.routerDevice.modelName)
                 AppTextProperty(name = "Firmware version:", value = uiState.routerDevice.firmwareVersion, vertical = true)
                 AppTextProperty(name = "Total memory:", value = uiState.routerDevice.totalMemory)

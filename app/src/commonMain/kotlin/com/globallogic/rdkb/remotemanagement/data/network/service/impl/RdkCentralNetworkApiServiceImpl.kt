@@ -2,15 +2,14 @@ package com.globallogic.rdkb.remotemanagement.data.network.service.impl
 
 import com.globallogic.rdkb.remotemanagement.data.network.safeGet
 import com.globallogic.rdkb.remotemanagement.data.network.safePatch
-import com.globallogic.rdkb.remotemanagement.data.network.service.RdkCentralApiService
-import com.globallogic.rdkb.remotemanagement.data.network.service.RouterDeviceProperty
-import com.globallogic.rdkb.remotemanagement.data.network.service.model.GetDevicesResponse
-import com.globallogic.rdkb.remotemanagement.data.network.service.model.GetNamespaceResponse
-import com.globallogic.rdkb.remotemanagement.data.network.service.model.GetPropertyResponse
-import com.globallogic.rdkb.remotemanagement.data.network.service.model.SetPropertyResponse
+import com.globallogic.rdkb.remotemanagement.data.network.service.RdkCentralNetworkApiService
+import com.globallogic.rdkb.remotemanagement.data.network.service.model.response.GetDevicesResponse
+import com.globallogic.rdkb.remotemanagement.data.network.service.model.response.GetNamespaceResponse
+import com.globallogic.rdkb.remotemanagement.data.network.service.model.response.GetParametersResponse
+import com.globallogic.rdkb.remotemanagement.data.network.service.model.request.ParametersRequest
+import com.globallogic.rdkb.remotemanagement.data.network.service.model.response.SetParametersResponse
 import com.globallogic.rdkb.remotemanagement.domain.utils.Resource
 import com.globallogic.rdkb.remotemanagement.domain.utils.ThrowableResourceError
-import com.globallogic.rdkb.remotemanagement.domain.utils.map
 import io.ktor.client.HttpClient
 import io.ktor.client.request.parameter
 import io.ktor.client.request.port
@@ -21,9 +20,8 @@ import io.ktor.http.contentType
 
 class RdkCentralNetworkApiServiceImpl(
     private val httpClient: HttpClient
-) : RdkCentralApiService {
-
-    override suspend fun getAvailableDevices(): Resource <GetDevicesResponse, ThrowableResourceError> {
+) : RdkCentralNetworkApiService {
+    override suspend fun getAvailableDevices(): Resource<GetDevicesResponse, ThrowableResourceError> {
         return httpClient.safeGet<GetDevicesResponse> {
             url("/api/v2/devices")
             port = 8080
@@ -32,47 +30,39 @@ class RdkCentralNetworkApiServiceImpl(
     }
 
     override suspend fun getDeviceProperties(
-        deviceMacAddress: String,
-        vararg properties: RouterDeviceProperty.Property,
-    ): Resource<GetPropertyResponse, ThrowableResourceError> {
-        return httpClient.safeGet<GetPropertyResponse> {
-            url("/api/v2/device/mac:$deviceMacAddress/config")
+        macAddress: String,
+        vararg parameters: String
+    ): Resource<GetParametersResponse, ThrowableResourceError> {
+        return httpClient.safeGet<GetParametersResponse> {
+            url("/api/v2/device/mac:${macAddress.formatMac()}/config")
             contentType(ContentType.Application.Json)
-            parameter("names", properties.joinToString(separator = ",") { it.name })
+            parameter("names", parameters.joinToString(separator = ","))
         }
     }
 
-    override suspend fun getDeviceNamespace(
-        deviceMacAddress: String,
-        vararg properties: RouterDeviceProperty.Namespace,
+    override suspend fun getDeviceNamespaces(
+        macAddress: String,
+        vararg namespaces: String
     ): Resource<GetNamespaceResponse, ThrowableResourceError> {
         return httpClient.safeGet<GetNamespaceResponse> {
-            url("/api/v2/device/mac:$deviceMacAddress/config")
+            url("/api/v2/device/mac:${macAddress.formatMac()}/config")
             contentType(ContentType.Application.Json)
-            parameter("names", properties.joinToString(separator = ",") { it.name })
+            parameter("names", namespaces.joinToString(separator = ","))
         }
     }
 
-    // curl -X PATCH http://webpa.rdkcentral.com:9003/api/v2/device/mac:4e07b781a3b8/config -d '{"parameters": [ {"dataType": 0, "name": "Device.WiFi.SSID.10001.SSID", "value": "Filogic_5G2"}]}' -H 'Authorization:Basic d3B1c2VyOndlYnBhQDEyMzQ1Njc4OTAK'
-    // {"parameters":[{"name":"Device.WiFi.SSID.10001.SSID","message":"Success"}],"statusCode":200}
-    override suspend fun setDeviceProperty(
-        deviceMacAddress: String,
-        deviceProperty: RouterDeviceProperty.Property,
-        value: String,
-    ): Resource<SetPropertyResponse, ThrowableResourceError> {
+    override suspend fun setDeviceProperties(
+        macAddress: String,
+        parameters: ParametersRequest
+    ): Resource<SetParametersResponse, ThrowableResourceError> {
         return httpClient.safePatch {
-            url("/api/v2/device/mac:$deviceMacAddress/config")
-            setBody("{\"parameters\": [ {\"dataType\": 0, \"name\": \"${deviceProperty.name}\", \"value\": \"$value\"}]}")
+            url("/api/v2/device/mac:${macAddress.formatMac()}/config")
+            contentType(ContentType.Application.Json)
+            setBody(parameters)
         }
     }
 
-    override suspend fun doDeviceAction(
-        deviceMacAddress: String,
-        deviceAction: RouterDeviceProperty.Action
-    ): Resource<Unit, ThrowableResourceError> {
-        return httpClient.safePatch<SetPropertyResponse> {
-            url("/api/v2/device/mac:$deviceMacAddress/config")
-            setBody("{\"parameters\": [ {\"dataType\": 0, \"name\": \"${deviceAction.name}\", \"value\": \"${deviceAction.value}\"}]}")
-        }.map { Unit }
+    companion object {
+        private fun String.formatMac(): String = replace(":", "").lowercase()
     }
 }

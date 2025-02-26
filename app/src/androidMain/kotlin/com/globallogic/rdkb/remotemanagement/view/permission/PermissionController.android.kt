@@ -10,6 +10,9 @@ import com.globallogic.rdkb.remotemanagement.data.permission.PermissionControlle
 
 @Composable
 actual fun rememberPermissionController(): PermissionController {
+    val localPermissionController = runCatching { LocalPermissionController.current }.getOrNull()
+    if (localPermissionController != null) return localPermissionController
+
     val context = LocalContext.current
     return remember(context) { PermissionController(context.findHostComponentActivity()) }
 }

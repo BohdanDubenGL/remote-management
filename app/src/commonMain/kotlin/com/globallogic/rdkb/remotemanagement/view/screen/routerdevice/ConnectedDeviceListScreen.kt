@@ -78,7 +78,8 @@ private fun ConnectedDeviceListContent(
                         AppIcon(
                             imageVector = Icons.Default.Devices,
                             contentColor = MaterialTheme.colorScheme.tertiary,
-                            modifier = Modifier.size(48.dp)
+                            modifier = Modifier.size(40.dp),
+                            iconPadding = 8.dp,
                         )
                         Spacer(modifier = Modifier.weight(1F))
                         AppTitleText(text = connectedDevice.hostName, color = MaterialTheme.colorScheme.tertiary)
