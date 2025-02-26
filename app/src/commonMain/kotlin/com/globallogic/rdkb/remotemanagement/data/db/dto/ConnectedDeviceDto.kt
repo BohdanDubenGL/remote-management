@@ -18,9 +18,8 @@ import androidx.room.PrimaryKey
 class ConnectedDeviceDto(
     @PrimaryKey val macAddress: String,
     val routerDeviceMacAddress: String,
+    val isActive: Boolean,
     val hostName: String,
-    val ssid: String,
-    val channel: Int,
-    val rssi: Int,
-    val bandWidth: String,
+    val ipAddress: String,
+    val vendorClassId: String,
 )

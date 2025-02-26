@@ -59,7 +59,7 @@ private fun RouterDeviceContent(
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Top,
-        modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp, vertical = 16.dp)
+        modifier = Modifier.fillMaxSize()
     ) {
         AppCard(
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
@@ -79,23 +79,22 @@ private fun RouterDeviceContent(
                     AppIcon(
                         imageVector = Icons.Default.Router,
                         contentColor = MaterialTheme.colorScheme.tertiary,
-                        modifier = Modifier.size(48.dp)
+                        modifier = Modifier.size(40.dp),
+                        iconPadding = 8.dp,
                     )
                     Spacer(modifier = Modifier.weight(1F))
                     AppTitleText(text = uiState.routerDevice.modelName, color = MaterialTheme.colorScheme.tertiary)
                 }
 
                 AppTextProperty(name = "Name:", value = uiState.routerDevice.modelName)
-                AppTextProperty(name = "IP:", value = uiState.routerDevice.ipAddress)
+                AppTextProperty(name = "Manufacturer:", value = uiState.routerDevice.manufacturer)
+                AppTextProperty(name = "IP v4:", value = uiState.routerDevice.ipAddressV4)
+                AppTextProperty(name = "IP v6:", value = uiState.routerDevice.ipAddressV6)
                 AppTextProperty(name = "Mac address:", value = uiState.routerDevice.macAddress)
-                AppTextProperty(name = "Lan connected:", value = uiState.routerDevice.lanConnected.toString())
-                AppTextProperty(name = "Connected extender:", value = uiState.routerDevice.connectedExtender.toString())
                 AppTextProperty(name = "Model name:", value = uiState.routerDevice.modelName)
-                AppTextProperty(name = "Firmware version:", value = uiState.routerDevice.firmwareVersion)
-                AppTextProperty(name = "Processor load (%):", value = uiState.routerDevice.processorLoadPercent.toString())
-                AppTextProperty(name = "Memory usage (%):", value = uiState.routerDevice.memoryUsagePercent.toString())
-                AppTextProperty(name = "Total download (kB):", value = uiState.routerDevice.totalDownloadTraffic.toString())
-                AppTextProperty(name = "Total upload (kB):", value = uiState.routerDevice.totalUploadTraffic.toString())
+                AppTextProperty(name = "Firmware version:", value = uiState.routerDevice.firmwareVersion, vertical = true)
+                AppTextProperty(name = "Total memory:", value = uiState.routerDevice.totalMemory)
+                AppTextProperty(name = "Free memory:", value = "${uiState.routerDevice.freeMemory} (${uiState.routerDevice.freeMemoryPercent}%)")
                 AppTextProperty(name = "Available bands:", value = uiState.routerDevice.availableBands.joinToString(separator = ","))
             }
         }

@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -23,6 +22,7 @@ fun AppIcon(
     contentDescription: String = "",
     color: Color = MaterialTheme.colorScheme.primaryContainer,
     contentColor: Color = MaterialTheme.colorScheme.primary,
+    iconPadding: Dp = 16.dp,
 ) {
     Box(
         content = {
@@ -30,7 +30,7 @@ fun AppIcon(
                 imageVector = imageVector,
                 contentDescription = contentDescription,
                 tint = contentColor,
-                modifier = Modifier.fillMaxSize().padding(16.dp),
+                modifier = Modifier.fillMaxSize().padding(iconPadding),
             )
         },
         modifier = modifier

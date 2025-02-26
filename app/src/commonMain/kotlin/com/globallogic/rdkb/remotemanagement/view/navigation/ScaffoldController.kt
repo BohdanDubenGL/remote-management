@@ -74,5 +74,11 @@ data class BottomBarRoute<T : Any>(
     val inactiveIcon: ImageVector,
     val graph: Graph
 ) {
-    constructor(route: T, graph: Graph) : this(getRouteBottomBarTitle(route::class.qualifiedName), route, Icons.Filled.Settings, Icons.Outlined.Settings, graph)
+    constructor(route: T, graph: Graph, activeIcon: ImageVector, inactiveIcon: ImageVector) : this(
+        name = getRouteBottomBarTitle(route::class.qualifiedName),
+        route = route,
+        activeIcon = activeIcon,
+        inactiveIcon = inactiveIcon,
+        graph = graph
+    )
 }

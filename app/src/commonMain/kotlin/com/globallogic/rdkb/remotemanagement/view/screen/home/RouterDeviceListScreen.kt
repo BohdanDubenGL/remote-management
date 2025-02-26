@@ -111,7 +111,8 @@ private fun RouterDeviceListContent(
                                 AppIcon(
                                     imageVector = Icons.Default.Router,
                                     contentColor = MaterialTheme.colorScheme.tertiary,
-                                    modifier = Modifier.size(48.dp)
+                                    modifier = Modifier.size(40.dp),
+                                    iconPadding = 8.dp,
                                 )
                                 Spacer(modifier = Modifier.weight(1F))
                                 AppTitleText(
@@ -121,7 +122,7 @@ private fun RouterDeviceListContent(
                             }
 
                             AppTextProperty(name = "Name:", value = routerDevice.modelName)
-                            AppTextProperty(name = "IP address:", value = routerDevice.ipAddress)
+                            AppTextProperty(name = "IP address:", value = routerDevice.ipAddressV4)
                             AppTextProperty(name = "MAC address:", value = routerDevice.macAddress)
                         }
                     }

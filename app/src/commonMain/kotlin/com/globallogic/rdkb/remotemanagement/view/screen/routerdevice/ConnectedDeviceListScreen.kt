@@ -60,9 +60,7 @@ private fun ConnectedDeviceListContent(
     LazyColumn(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(6.dp, Alignment.Top),
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = 24.dp),
+        modifier = Modifier.fillMaxSize(),
     ) {
         items(uiState.connectedDevices, ConnectedDevice::macAddress) { connectedDevice ->
             AppCard(
@@ -80,18 +78,18 @@ private fun ConnectedDeviceListContent(
                         AppIcon(
                             imageVector = Icons.Default.Devices,
                             contentColor = MaterialTheme.colorScheme.tertiary,
-                            modifier = Modifier.size(48.dp)
+                            modifier = Modifier.size(40.dp),
+                            iconPadding = 8.dp,
                         )
                         Spacer(modifier = Modifier.weight(1F))
                         AppTitleText(text = connectedDevice.hostName, color = MaterialTheme.colorScheme.tertiary)
                     }
 
-                    AppTextProperty(name = "macAddress:", value = connectedDevice.macAddress)
-                    AppTextProperty(name = "hostName:", value = connectedDevice.hostName)
-                    AppTextProperty(name = "ssid:", value = connectedDevice.ssid)
-                    AppTextProperty(name = "channel:", value = connectedDevice.channel.toString())
-                    AppTextProperty(name = "rssi:", value = connectedDevice.rssi.toString())
-                    AppTextProperty(name = "bandWidth:", value = connectedDevice.bandWidth)
+                    AppTextProperty(name = "Online:", value = connectedDevice.isActive)
+                    AppTextProperty(name = "Mac address:", value = connectedDevice.macAddress)
+                    AppTextProperty(name = "Host name:", value = connectedDevice.hostName)
+                    AppTextProperty(name = "Ip address:", value = connectedDevice.ipAddress)
+                    AppTextProperty(name = "Vendor class:", value = connectedDevice.vendorClassId)
                 }
             }
         }

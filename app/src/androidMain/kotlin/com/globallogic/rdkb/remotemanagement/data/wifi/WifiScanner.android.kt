@@ -20,7 +20,8 @@ actual class WifiScanner(
     actual suspend fun getCurrentWifi(): WifiInfo? {
         val wifiManager = wifiManager ?: return null
         val connectionInfo = wifiManager.connectionInfo
-        return WifiInfo(connectionInfo.ssid, connectionInfo.bssid)
+//        return WifiInfo(connectionInfo.ssid, connectionInfo.bssid)
+        return WifiInfo(ssid = "", bssid = "d8:3a:dd:40:5e:40") // fake
     }
 
     actual suspend fun scanWifi(): List<WifiInfo> {

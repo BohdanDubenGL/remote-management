@@ -1,10 +1,9 @@
 package com.globallogic.rdkb.remotemanagement.domain.entity
 
 data class ConnectedDevice(
+    val isActive: Boolean,
     val macAddress: String,
     val hostName: String,
-    val ssid: String,
-    val channel: Int,
-    val rssi: Int,
-    val bandWidth: String
+    val ipAddress: String,
+    val vendorClassId: String
 )

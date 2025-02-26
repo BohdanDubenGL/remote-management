@@ -33,7 +33,7 @@ cryptography = "0.4.0"
 test-androidx-espresso-core = "3.6.1"
 test-androidx-test-junit = "1.2.1"
 test-junit = "4.13.2"
-test-junit-jupiter = "5.11.4"
+test-junit-jupiter = "5.11.4" # 5.12.0 is not ready for junit-jupiter-api
 test-mockk = "1.13.16"
 test-strikt = "0.35.1"
 
@@ -82,10 +82,8 @@ cryptography-provider-jdk = { module = "dev.whyoleg.cryptography:cryptography-pr
 cryptography-provider-webcrypto = { module = "dev.whyoleg.cryptography:cryptography-provider-webcrypto", version.ref = "cryptography" }
 
 # tests
-test-junit-jupiter-platform = { module = "org.junit.platform:junit-platform-engine", version.ref = "test-junit-jupiter" }
 test-junit-jupiter-api = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "test-junit-jupiter" }
 test-junit-jupiter-engiene = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "test-junit-jupiter" }
-test-junit-jupiter-launcher = { module = "org.junit.platform:junit-platform-launcher", version.ref = "test-junit-jupiter" }
 test-mockk = { module = "io.mockk:mockk", version.ref = "test-mockk" }
 test-strikt = { module = "io.strikt:strikt-core", version.ref = "test-strikt" }
 

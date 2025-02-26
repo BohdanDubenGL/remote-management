@@ -1,4 +1,4 @@
-package com.globallogic.rdkb.remotemanagement.data.network.service.model
+package com.globallogic.rdkb.remotemanagement.data.network.service.model.response
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable

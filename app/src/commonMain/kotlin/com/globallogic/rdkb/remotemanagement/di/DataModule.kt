@@ -11,10 +11,12 @@ import com.globallogic.rdkb.remotemanagement.data.db.AppDatabase
 import com.globallogic.rdkb.remotemanagement.data.db.RouterDeviceDao
 import com.globallogic.rdkb.remotemanagement.data.db.UserDao
 import com.globallogic.rdkb.remotemanagement.data.network.RdkCentralHttpClient
-import com.globallogic.rdkb.remotemanagement.data.network.service.RdkCentralApiService
-import com.globallogic.rdkb.remotemanagement.data.network.service.RdkCentralService
+import com.globallogic.rdkb.remotemanagement.data.network.service.RdkCentralPropertyService
+import com.globallogic.rdkb.remotemanagement.data.network.service.RdkCentralNetworkApiService
+import com.globallogic.rdkb.remotemanagement.data.network.service.RdkCentralAccessorService
 import com.globallogic.rdkb.remotemanagement.data.network.service.impl.RdkCentralNetworkApiServiceImpl
-import com.globallogic.rdkb.remotemanagement.data.network.service.impl.RdkCentralServiceImpl
+import com.globallogic.rdkb.remotemanagement.data.network.service.impl.RdkCentralPropertyServiceImpl
+import com.globallogic.rdkb.remotemanagement.data.network.service.impl.RdkCentralAccessorServiceImpl
 import com.globallogic.rdkb.remotemanagement.data.preferences.AppPreferences
 import com.globallogic.rdkb.remotemanagement.data.preferences.impl.AppPreferencesImpl
 import com.globallogic.rdkb.remotemanagement.data.repository.impl.RouterDeviceConnectionRepositoryImpl
@@ -42,8 +44,9 @@ val dataModule: Module = module {
     single { get<RemoteRouterDeviceDataSourceImpl>().fake() }.bind<RemoteRouterDeviceDataSource>() //fake
 
     singleOf(::RdkCentralHttpClient).bind<HttpClient>()
-    singleOf(::RdkCentralNetworkApiServiceImpl).bind<RdkCentralApiService>()
-    singleOf(::RdkCentralServiceImpl).bind<RdkCentralService>()
+    singleOf(::RdkCentralNetworkApiServiceImpl).bind<RdkCentralNetworkApiService>()
+    singleOf(::RdkCentralPropertyServiceImpl).bind<RdkCentralPropertyService>()
+    singleOf(::RdkCentralAccessorServiceImpl).bind<RdkCentralAccessorService>()
 
     singleOf(::AppPreferencesImpl).bind<AppPreferences>()
 

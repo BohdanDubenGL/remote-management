@@ -1,15 +1,16 @@
 package com.globallogic.rdkb.remotemanagement.di
 
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.DoRouterDeviceActionUseCase
+import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.GetAccessPointGroupsUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.user.LoginUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.user.LogoutUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.user.RegistrationUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.GetLocalRouterDeviceUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.GetRouterDeviceConnectedDevicesUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.GetSelectedRouterDeviceUseCase
-import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.GetWifiSettingsUseCase
+import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.GetAccessPointSettingsUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.SelectRouterDeviceUseCase
-import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.SetupRouterDeviceUseCase
+import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.SetupDeviceAccessPointUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdeviceconnection.AddRouterDeviceManuallyUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdeviceconnection.ConnectToRouterDeviceUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdeviceconnection.GetRouterDeviceListUseCase
@@ -35,8 +36,9 @@ val domainModule: Module = module {
 
     factoryOf(::DoRouterDeviceActionUseCase)
     factoryOf(::GetRouterDeviceConnectedDevicesUseCase)
-    factoryOf(::GetWifiSettingsUseCase)
-    factoryOf(::SetupRouterDeviceUseCase)
+    factoryOf(::GetAccessPointGroupsUseCase)
+    factoryOf(::GetAccessPointSettingsUseCase)
+    factoryOf(::SetupDeviceAccessPointUseCase)
     factoryOf(::SelectRouterDeviceUseCase)
     factoryOf(::GetSelectedRouterDeviceUseCase)
     factoryOf(::GetLocalRouterDeviceUseCase)
@@ -47,6 +49,6 @@ val domainModule: Module = module {
     factoryOf(::SearchRouterDevicesUseCase)
 
     factory { UserNameVerifier() }.bind<UserNameVerifier>()
-    factoryOf(::EmailVerifier).bind<EmailVerifier>()
+    factory { EmailVerifier() }.bind<EmailVerifier>()
     factory { PasswordVerifier() }.bind<PasswordVerifier>()
 }

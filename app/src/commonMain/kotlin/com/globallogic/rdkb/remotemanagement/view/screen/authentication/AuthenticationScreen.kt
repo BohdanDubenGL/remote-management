@@ -201,7 +201,7 @@ class AuthenticationViewModel(
         }
     }
 
-    fun onBackClick() = launchUpdateState { state ->
+    fun onBackClick() = updateState { state ->
         when(state) {
             is AuthenticationUiState.Login -> AuthenticationUiState.EnterEmail(email = state.email)
             is AuthenticationUiState.Register -> AuthenticationUiState.EnterEmail(email = state.email)

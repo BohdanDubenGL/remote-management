@@ -5,9 +5,10 @@ import com.globallogic.rdkb.remotemanagement.data.error.IoDeviceError
 import com.globallogic.rdkb.remotemanagement.domain.entity.ConnectedDevice
 import com.globallogic.rdkb.remotemanagement.domain.entity.FoundRouterDevice
 import com.globallogic.rdkb.remotemanagement.domain.entity.RouterDevice
-import com.globallogic.rdkb.remotemanagement.domain.entity.RouterDeviceSettings
-import com.globallogic.rdkb.remotemanagement.domain.entity.Wifi
-import com.globallogic.rdkb.remotemanagement.domain.entity.WifiSettings
+import com.globallogic.rdkb.remotemanagement.domain.entity.DeviceAccessPointSettings
+import com.globallogic.rdkb.remotemanagement.domain.entity.AccessPoint
+import com.globallogic.rdkb.remotemanagement.domain.entity.AccessPointGroup
+import com.globallogic.rdkb.remotemanagement.domain.entity.AccessPointSettings
 import com.globallogic.rdkb.remotemanagement.domain.utils.Resource
 import com.globallogic.rdkb.remotemanagement.domain.utils.Resource.Success
 import com.globallogic.rdkb.remotemanagement.domain.utils.flatMapData
@@ -23,16 +24,18 @@ private class FakeRemoteRouterDeviceDataSourceImpl(
         name = "Hardcoded Router",
         macAddress = "dc:a6:32:0e:b9:bb",
         modelName = "ar1840",
-        ipAddress = "192.168.1.150",
+        ipAddressV4 = "192.168.1.150",
         firmwareVersion = "v1.0.8",
         connectedDevices = listOf(
             FakeConnectedDevice(
                 macAddress = "9a:1a:22:49:73:00",
                 hostName = "DEV-49:73:1c",
+                ipAddress = "192.168.1.151",
             ),
             FakeConnectedDevice(
                 macAddress = "96:ab:87:f7:5b:9f",
                 hostName = "DEV-f7:5b:9f",
+                ipAddress = "192.168.1.152",
             ),
         ),
     )
@@ -58,10 +61,17 @@ private class FakeRemoteRouterDeviceDataSourceImpl(
         }
     }
 
-    override suspend fun loadWifiSettings(device: RouterDevice): Resource<WifiSettings, IoDeviceError.WifiSettings> {
+    override suspend fun loadAccessPointGroups(device: RouterDevice): Resource<List<AccessPointGroup>, IoDeviceError.WifiSettings> {
         return when (device.macAddress) {
-            hardcodedDevice.macAddress -> Success(WifiSettings(hardcodedDevice.wifiSettings.map { it.toDomain() }))
-            else -> original.loadWifiSettings(device)
+            hardcodedDevice.macAddress -> Success(listOf("Main", "Group 1").mapIndexed { index, name -> AccessPointGroup(index + 1, name) })
+            else -> original.loadAccessPointGroups(device)
+        }
+    }
+
+    override suspend fun loadAccessPointSettings(device: RouterDevice, accessPointGroup: AccessPointGroup): Resource<AccessPointSettings, IoDeviceError.WifiSettings> {
+        return when (device.macAddress) {
+            hardcodedDevice.macAddress -> Success(AccessPointSettings(accessPointGroup, hardcodedDevice.wifiSettings.map { it.toDomain() }))
+            else -> original.loadAccessPointSettings(device, accessPointGroup)
         }
     }
 
@@ -79,53 +89,80 @@ private class FakeRemoteRouterDeviceDataSourceImpl(
         }
     }
 
-    override suspend fun setupDevice(device: RouterDevice, settings: RouterDeviceSettings): Resource<Unit, IoDeviceError.SetupDevice> {
+    override suspend fun setupAccessPoint(device: RouterDevice, settings: DeviceAccessPointSettings): Resource<Unit, IoDeviceError.SetupDevice> {
         return when (device.macAddress) {
             hardcodedDevice.macAddress -> Success(Unit)
-            else -> original.setupDevice(device, settings)
+            else -> original.setupAccessPoint(device, settings)
         }
     }
 
     private data class FakeRouterDevice(
         val name: String = "Controller",
+        val manufacturer: String = "Controller",
         val macAddress: String = "9a:1a:22:49:73:3c",
-        val lanConnected: Boolean = true,
         val connectedExtender: Int = 0,
         val modelName: String = "ar1840",
-        val ipAddress: String = "192.168.1.150",
+        val ipAddressV4: String = "192.168.1.150",
+        val ipAddressV6: String = "192.168.1.151",
         val firmwareVersion: String = "v1.0.8",
         val serialNumber: String = "BS100651024E6CA9",
-        val processorLoadPercent: Int = 10,
-        val memoryUsagePercent: Int = 20,
-        val totalDownloadTraffic: Long = 1900L,
-        val totalUploadTraffic: Long = 11800L,
+        val totalMemory: Long = 1024,
+        val freeMemory: Long = 128,
         val wifiSettings: Set<FakeWifiSettings> = setOf(
-            FakeWifiSettings("2.4GHz", "2.4 wifi"),
-            FakeWifiSettings("5GHz", "5 wifi"),
-            FakeWifiSettings("6GHz", "6 wifi"),
+            FakeWifiSettings(band = "2.4GHz", ssid = "2.4 wifi"),
+            FakeWifiSettings(band = "5GHz", ssid = "5 wifi"),
+            FakeWifiSettings(band = "6GHz", ssid = "6 wifi"),
         ),
         val connectedDevices: List<FakeConnectedDevice> = emptyList(),
     ) {
-        fun toFoundRouterDevice(): FoundRouterDevice = FoundRouterDevice(name, ipAddress, macAddress)
+        fun toFoundRouterDevice(): FoundRouterDevice = FoundRouterDevice(
+            name = name,
+            ip = ipAddressV4,
+            macAddress = macAddress
+        )
         fun toConnectedDevices(): List<ConnectedDevice> = connectedDevices.map { it.toDomain() }
-        fun toRouterDeviceInfo(): RouterDevice = RouterDevice(lanConnected, connectedExtender, modelName, ipAddress, macAddress, firmwareVersion, serialNumber, processorLoadPercent, memoryUsagePercent, totalDownloadTraffic, totalUploadTraffic, wifiSettings.map { it.band }.toSet())
+        fun toRouterDeviceInfo(): RouterDevice = RouterDevice(
+            modelName = modelName,
+            manufacturer = manufacturer,
+            ipAddressV4 = ipAddressV4,
+            ipAddressV6 = ipAddressV6,
+            macAddress = macAddress,
+            firmwareVersion = firmwareVersion,
+            serialNumber = serialNumber,
+            totalMemory = totalMemory,
+            freeMemory = freeMemory,
+            availableBands = wifiSettings.map { it.band }.toSet()
+        )
     }
 
     data class FakeConnectedDevice(
         val macAddress: String,
         val hostName: String,
-        val ssid: String = "Telecom-4e6ca9",
-        val channel: Int = 60,
-        val rssi: Int = -42,
-        val bandWidth: String = "160 MHz",
+        val ipAddress: String,
+        val vendorClassId: String = "android",
     ) {
-        fun toDomain(): ConnectedDevice = ConnectedDevice(macAddress, hostName, ssid, channel, rssi, bandWidth)
+        fun toDomain(): ConnectedDevice = ConnectedDevice(
+            isActive = true,
+            macAddress = macAddress,
+            hostName = hostName,
+            ipAddress = ipAddress,
+            vendorClassId = vendorClassId,
+        )
     }
 
     data class FakeWifiSettings(
+        val enabled: Boolean = true,
         val band: String,
         val ssid: String,
+        val availableSecurityModes: List<String> = listOf("public", "private"),
+        val securityMode: String = availableSecurityModes.first(),
     ) {
-        fun toDomain(): Wifi = Wifi(band, ssid)
+        fun toDomain(): AccessPoint = AccessPoint(
+            enabled = enabled,
+            band = band,
+            ssid = ssid,
+            availableSecurityModes = availableSecurityModes,
+            securityMode = securityMode
+        )
     }
 }
