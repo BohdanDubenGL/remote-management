@@ -32,6 +32,7 @@ import com.globallogic.rdkb.remotemanagement.view.component.AppDrawResourceState
 import com.globallogic.rdkb.remotemanagement.view.component.AppIcon
 import com.globallogic.rdkb.remotemanagement.view.component.AppTextProperty
 import com.globallogic.rdkb.remotemanagement.view.component.AppTitleText
+import com.globallogic.rdkb.remotemanagement.view.component.AppTitleTextWithIcon
 import com.globallogic.rdkb.remotemanagement.view.error.UiResourceError
 import com.globallogic.rdkb.remotemanagement.view.navigation.LocalNavController
 import org.koin.compose.viewmodel.koinViewModel
@@ -70,21 +71,10 @@ private fun ConnectedDeviceListContent(
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp).fillMaxWidth(),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Center,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        AppIcon(
-                            imageVector = Icons.Default.Devices,
-                            contentColor = MaterialTheme.colorScheme.tertiary,
-                            modifier = Modifier.size(40.dp),
-                            iconPadding = 8.dp,
-                        )
-                        Spacer(modifier = Modifier.weight(1F))
-                        AppTitleText(text = connectedDevice.hostName, color = MaterialTheme.colorScheme.tertiary)
-                    }
-
+                    AppTitleTextWithIcon(
+                        text = connectedDevice.hostName,
+                        imageVector = Icons.Default.Devices,
+                    )
                     AppTextProperty(name = "Online:", value = connectedDevice.isActive)
                     AppTextProperty(name = "Mac address:", value = connectedDevice.macAddress)
                     AppTextProperty(name = "Host name:", value = connectedDevice.hostName)

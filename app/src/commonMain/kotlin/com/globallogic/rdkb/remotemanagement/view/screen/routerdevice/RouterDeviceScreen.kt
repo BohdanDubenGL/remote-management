@@ -2,17 +2,17 @@ package com.globallogic.rdkb.remotemanagement.view.screen.routerdevice
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Lan
+import androidx.compose.material.icons.filled.Memory
 import androidx.compose.material.icons.filled.Router
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material.icons.filled.Wifi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -20,17 +20,23 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
+import com.globallogic.rdkb.remotemanagement.domain.entity.AccessPointGroup
+import com.globallogic.rdkb.remotemanagement.domain.entity.AccessPointSettings
 import com.globallogic.rdkb.remotemanagement.domain.entity.RouterDevice
+import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.GetAccessPointGroupsUseCase
+import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.GetAccessPointSettingsUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.GetSelectedRouterDeviceUseCase
-import com.globallogic.rdkb.remotemanagement.domain.utils.Resource
+import com.globallogic.rdkb.remotemanagement.domain.utils.Resource.Success
 import com.globallogic.rdkb.remotemanagement.domain.utils.ResourceState
 import com.globallogic.rdkb.remotemanagement.domain.utils.dataOrElse
+import com.globallogic.rdkb.remotemanagement.domain.utils.mapError
 import com.globallogic.rdkb.remotemanagement.view.base.MviViewModel
 import com.globallogic.rdkb.remotemanagement.view.component.AppCard
 import com.globallogic.rdkb.remotemanagement.view.component.AppDrawResourceState
-import com.globallogic.rdkb.remotemanagement.view.component.AppIcon
+import com.globallogic.rdkb.remotemanagement.view.component.AppHorizontalPivots
+import com.globallogic.rdkb.remotemanagement.view.component.AppLoadingSpinner
 import com.globallogic.rdkb.remotemanagement.view.component.AppTextProperty
-import com.globallogic.rdkb.remotemanagement.view.component.AppTitleText
+import com.globallogic.rdkb.remotemanagement.view.component.AppTitleTextWithIcon
 import com.globallogic.rdkb.remotemanagement.view.error.UiResourceError
 import com.globallogic.rdkb.remotemanagement.view.navigation.LocalNavController
 import org.koin.compose.viewmodel.koinViewModel
@@ -47,6 +53,7 @@ fun RouterDeviceScreen(
         onSuccess = { state ->
             RouterDeviceContent(
                 uiState = state,
+                onAccessPointGroupClicked = routerDeviceViewModel::onAccessPointGroupClicked,
             )
         }
     )
@@ -55,12 +62,20 @@ fun RouterDeviceScreen(
 @Composable
 private fun RouterDeviceContent(
     uiState: RouterDeviceUiState,
+    onAccessPointGroupClicked: (AccessPointGroup) -> Unit,
 ) {
     Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Top,
-        modifier = Modifier.fillMaxSize()
+        horizontalAlignment = Alignment.Start,
+        verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.Top),
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
     ) {
+        AppTitleTextWithIcon(
+            text = uiState.routerDevice.modelName,
+            imageVector = Icons.Default.Router,
+            modifier = Modifier.padding(horizontal = 32.dp),
+        )
         AppCard(
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
         ) {
@@ -69,33 +84,86 @@ private fun RouterDeviceContent(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 8.dp)
-                    .verticalScroll(rememberScrollState())
             ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    AppIcon(
-                        imageVector = Icons.Default.Router,
-                        contentColor = MaterialTheme.colorScheme.tertiary,
-                        modifier = Modifier.size(40.dp),
-                        iconPadding = 8.dp,
-                    )
-                    Spacer(modifier = Modifier.weight(1F))
-                    AppTitleText(text = uiState.routerDevice.modelName, color = MaterialTheme.colorScheme.tertiary)
-                }
-
-                AppTextProperty(name = "Name:", value = uiState.routerDevice.modelName)
                 AppTextProperty(name = "Manufacturer:", value = uiState.routerDevice.manufacturer)
+                AppTextProperty(name = "Firmware version:", value = uiState.routerDevice.firmwareVersion, vertical = true)
+            }
+        }
+        AppTitleTextWithIcon(
+            text = "Network info",
+            imageVector = Icons.Default.Lan,
+            modifier = Modifier.padding(horizontal = 32.dp),
+        )
+        AppCard(
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+        ) {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+            ) {
                 AppTextProperty(name = "IP v4:", value = uiState.routerDevice.ipAddressV4)
                 AppTextProperty(name = "IP v6:", value = uiState.routerDevice.ipAddressV6)
                 AppTextProperty(name = "Mac address:", value = uiState.routerDevice.macAddress)
-                AppTextProperty(name = "Model name:", value = uiState.routerDevice.modelName)
-                AppTextProperty(name = "Firmware version:", value = uiState.routerDevice.firmwareVersion, vertical = true)
+                AppTextProperty(name = "Available bands:", value = uiState.routerDevice.availableBands.joinToString(separator = ","))
+            }
+        }
+        if (uiState.currentAccessPointGroup != null) {
+            AppTitleTextWithIcon(
+                text = "WiFi interfaces",
+                imageVector = Icons.Default.Wifi,
+                modifier = Modifier.padding(horizontal = 32.dp),
+            )
+            AppHorizontalPivots(
+                pivots = uiState.accessPointGroups,
+                selectedPivot = uiState.currentAccessPointGroup,
+                pivotMapper = AccessPointGroup::name,
+                onPivotClick = onAccessPointGroupClicked
+            )
+            AppDrawResourceState(
+                resourceState = uiState.accessPointGroupSettings,
+                onSuccess = { state ->
+                    state.accessPoints.forEach { accessPoint ->
+                        AppCard(
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                        ) {
+                            Column(
+                                verticalArrangement = Arrangement.spacedBy(8.dp),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                            ) {
+                                AppTextProperty(name = "Enabled:", value = accessPoint.enabled)
+                                AppTextProperty(name = "SSID:", value = accessPoint.ssid)
+                                AppTextProperty(name = "Security mode:", value = accessPoint.securityMode)
+                                AppTextProperty(name = "Available security modes:", value = accessPoint.availableSecurityModes.joinToString(separator = ","), vertical = true)
+                                AppTextProperty(name = "Band:", value = accessPoint.band)
+                            }
+                        }
+                    }
+                },
+                onLoading = {
+                    AppLoadingSpinner(modifier = Modifier.height(450.dp).padding(128.dp))
+                }
+            )
+        }
+        AppTitleTextWithIcon(
+            text = "Memory info",
+            imageVector = Icons.Default.Memory,
+            modifier = Modifier.padding(horizontal = 32.dp),
+        )
+        AppCard(
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+        ) {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+            ) {
                 AppTextProperty(name = "Total memory:", value = uiState.routerDevice.totalMemory)
                 AppTextProperty(name = "Free memory:", value = "${uiState.routerDevice.freeMemory} (${uiState.routerDevice.freeMemoryPercent}%)")
-                AppTextProperty(name = "Available bands:", value = uiState.routerDevice.availableBands.joinToString(separator = ","))
             }
         }
     }
@@ -103,17 +171,65 @@ private fun RouterDeviceContent(
 
 class RouterDeviceViewModel(
     private val getSelectedRouterDevice: GetSelectedRouterDeviceUseCase,
+    private val getAccessPointGroups: GetAccessPointGroupsUseCase,
+    private val getAccessPointSettings: GetAccessPointSettingsUseCase,
 ) : MviViewModel<ResourceState<RouterDeviceUiState, UiResourceError>>(ResourceState.None) {
 
     override suspend fun onInitState() = loadSelectedRouterDeviceInfo()
 
-    private fun loadSelectedRouterDeviceInfo() = launchUpdateState { state ->
-        val routerDevice = getSelectedRouterDevice()
-            .dataOrElse { error -> return@launchUpdateState state }
-        Resource.Success(RouterDeviceUiState(routerDevice = routerDevice))
+    private fun loadSelectedRouterDeviceInfo() = launchOnViewModelScope {
+        val originalState = uiState.value
+        updateState { state -> ResourceState.Loading }
+        updateState { state ->
+            val routerDevice = getSelectedRouterDevice()
+                .dataOrElse { error -> return@updateState originalState }
+            val accessPointGroups = getAccessPointGroups(routerDevice)
+                .dataOrElse { error -> return@updateState originalState }
+            val currentAccessPointGroup = accessPointGroups.firstOrNull()
+            val accessPointGroupSettings = when (currentAccessPointGroup) {
+                null -> ResourceState.None
+                else -> getAccessPointSettings(routerDevice, currentAccessPointGroup)
+                    .mapError { error -> UiResourceError("", "") }
+            }
+            Success(
+                RouterDeviceUiState(
+                    routerDevice = routerDevice,
+                    currentAccessPointGroup = accessPointGroups.firstOrNull(),
+                    accessPointGroups = accessPointGroups,
+                    accessPointGroupSettings = accessPointGroupSettings,
+            ))
+        }
+    }
+
+    fun onAccessPointGroupClicked(accessPointGroup: AccessPointGroup) = launchOnViewModelScope {
+        val originalState = uiState.value
+        if (originalState !is Success || originalState.data.accessPointGroupSettings !is Success) {
+            return@launchOnViewModelScope
+        }
+        updateState { state ->
+            Success(originalState.data.copy(
+                currentAccessPointGroup = accessPointGroup,
+                accessPointGroupSettings = ResourceState.Loading,
+            ))
+        }
+        updateState { state ->
+            val routerDevice = getSelectedRouterDevice()
+                .dataOrElse { error -> return@updateState originalState }
+            val accessPointGroupSettings =
+                getAccessPointSettings(routerDevice, accessPointGroup)
+                    .dataOrElse { error -> return@updateState originalState }
+
+            Success(originalState.data.copy(
+                currentAccessPointGroup = accessPointGroup,
+                accessPointGroupSettings = Success(accessPointGroupSettings),
+            ))
+        }
     }
 }
 
 data class RouterDeviceUiState(
     val routerDevice: RouterDevice,
+    val currentAccessPointGroup: AccessPointGroup?,
+    val accessPointGroups: List<AccessPointGroup>,
+    val accessPointGroupSettings: ResourceState<AccessPointSettings, UiResourceError>,
 )

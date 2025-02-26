@@ -45,6 +45,7 @@ import com.globallogic.rdkb.remotemanagement.view.component.AppDrawResourceState
 import com.globallogic.rdkb.remotemanagement.view.component.AppIcon
 import com.globallogic.rdkb.remotemanagement.view.component.AppTextProperty
 import com.globallogic.rdkb.remotemanagement.view.component.AppTitleText
+import com.globallogic.rdkb.remotemanagement.view.component.AppTitleTextWithIcon
 import com.globallogic.rdkb.remotemanagement.view.component.SetupFloatingActionButton
 import com.globallogic.rdkb.remotemanagement.view.error.UiResourceError
 import com.globallogic.rdkb.remotemanagement.view.navigation.FloatingActionButtonState
@@ -135,27 +136,12 @@ private fun SearchRouterDeviceContent(
                         ),
                         modifier = Modifier.fillMaxWidth().padding(16.dp, 16.dp)
                     ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Center,
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            AppIcon(
-                                imageVector = Icons.Default.Router,
-                                contentColor = MaterialTheme.colorScheme.tertiary,
-                                modifier = Modifier.size(40.dp),
-                                iconPadding = 8.dp,
-                            )
-                            Spacer(modifier = Modifier.weight(1F))
-                            AppTitleText(
-                                text = foundDevice.name,
-                                color = MaterialTheme.colorScheme.tertiary
-                            )
-                        }
-
-                        AppTextProperty(name = "Name:", value = foundDevice.name)
-                        AppTextProperty(name = "IP address:", value = foundDevice.ip)
-                        AppTextProperty(name = "MAC address:", value = foundDevice.macAddress)
+                        AppTitleTextWithIcon(
+                            text = foundDevice.name,
+                            imageVector = Icons.Default.Router,
+                        )
+                        AppTextProperty(name = "ip:", value = foundDevice.ip)
+                        AppTextProperty(name = "mac:", value = foundDevice.macAddress)
                     }
                 }
             }
