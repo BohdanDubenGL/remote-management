@@ -323,7 +323,7 @@ class SetupRouterDeviceViewModel(
     fun saveData() = launchUpdateState { state ->
         when(state) {
             is Success -> {
-                setupDeviceAccessPoint(state.data.routerDevice, DeviceAccessPointSettings(state.data.bandsSettings))
+                setupDeviceAccessPoint(state.data.routerDevice, state.data.accessPointGroup, DeviceAccessPointSettings(state.data.bandsSettings))
                     .map { state.data.copy(dataSaved = true) }
                     .mapErrorToData { error -> state.data }
             }

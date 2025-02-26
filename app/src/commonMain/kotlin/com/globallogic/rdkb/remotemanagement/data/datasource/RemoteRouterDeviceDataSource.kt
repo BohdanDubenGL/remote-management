@@ -24,5 +24,5 @@ interface RemoteRouterDeviceDataSource {
 
     suspend fun loadAccessPointSettings(device: RouterDevice, accessPointGroup: AccessPointGroup): Resource<AccessPointSettings, IoDeviceError.WifiSettings>
 
-    suspend fun setupAccessPoint(device: RouterDevice, settings: DeviceAccessPointSettings): Resource<Unit, IoDeviceError.SetupDevice>
+    suspend fun setupAccessPoint(device: RouterDevice, accessPointGroup: AccessPointGroup, settings: DeviceAccessPointSettings): Resource<Unit, IoDeviceError.SetupDevice>
 }

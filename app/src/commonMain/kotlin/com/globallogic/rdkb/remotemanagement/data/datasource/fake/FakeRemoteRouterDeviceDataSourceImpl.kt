@@ -89,10 +89,10 @@ private class FakeRemoteRouterDeviceDataSourceImpl(
         }
     }
 
-    override suspend fun setupAccessPoint(device: RouterDevice, settings: DeviceAccessPointSettings): Resource<Unit, IoDeviceError.SetupDevice> {
+    override suspend fun setupAccessPoint(device: RouterDevice, accessPointGroup: AccessPointGroup, settings: DeviceAccessPointSettings): Resource<Unit, IoDeviceError.SetupDevice> {
         return when (device.macAddress) {
             hardcodedDevice.macAddress -> Success(Unit)
-            else -> original.setupAccessPoint(device, settings)
+            else -> original.setupAccessPoint(device, accessPointGroup, settings)
         }
     }
 

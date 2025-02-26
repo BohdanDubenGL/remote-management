@@ -1,5 +1,6 @@
 package com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice
 
+import com.globallogic.rdkb.remotemanagement.domain.entity.AccessPointGroup
 import com.globallogic.rdkb.remotemanagement.domain.entity.RouterDevice
 import com.globallogic.rdkb.remotemanagement.domain.entity.DeviceAccessPointSettings
 import com.globallogic.rdkb.remotemanagement.domain.error.DeviceError
@@ -10,10 +11,17 @@ import com.globallogic.rdkb.remotemanagement.domain.utils.Resource.Success
 class SetupDeviceAccessPointUseCase(
     private val routerDeviceRepository: RouterDeviceRepository
 ) {
-    suspend operator fun invoke(device: RouterDevice, settings: DeviceAccessPointSettings): Resource<Unit, DeviceError.SetupDevice> =
-        setupDeviceAccessPoint(device, settings)
+    suspend operator fun invoke(
+        device: RouterDevice,
+        accessPointGroup: AccessPointGroup,
+        settings: DeviceAccessPointSettings
+    ): Resource<Unit, DeviceError.SetupDevice> = setupDeviceAccessPoint(device, accessPointGroup, settings)
 
-    suspend fun setupDeviceAccessPoint(device: RouterDevice, settings: DeviceAccessPointSettings): Resource<Unit, DeviceError.SetupDevice> {
+    suspend fun setupDeviceAccessPoint(
+        device: RouterDevice,
+        accessPointGroup: AccessPointGroup,
+        settings: DeviceAccessPointSettings
+    ): Resource<Unit, DeviceError.SetupDevice> {
         if (settings.bands.isEmpty()) return Success(Unit)
 
         val firstBand = settings.bands.first()
@@ -31,6 +39,6 @@ class SetupDeviceAccessPointUseCase(
                 .filter { band -> band.ssid.isNotBlank() || band.password.isNotBlank() }
         )
 
-        return routerDeviceRepository.setupDeviceAccessPoint(device, settingsToSave)
+        return routerDeviceRepository.setupDeviceAccessPoint(device, accessPointGroup, settingsToSave)
     }
 }
