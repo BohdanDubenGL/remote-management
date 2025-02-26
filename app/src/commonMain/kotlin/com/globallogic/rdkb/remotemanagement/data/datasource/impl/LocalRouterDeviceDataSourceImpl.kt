@@ -37,7 +37,7 @@ class LocalRouterDeviceDataSourceImpl(
     override suspend fun saveConnectedDevices(device: RouterDevice, connectedDevices: List<ConnectedDevice>): Resource<Unit, IoDeviceError.SaveConnectedDevices> {
         val connectedDevicesDto =
             connectedDevices.map { ConnectedDeviceMapper.toConnectedDevice(device, it) }
-        runCatchingSafe { deviceDao.insertConnectedDevices(*connectedDevicesDto.toTypedArray()) }
+        runCatchingSafe { deviceDao.upsertConnectedDevices(*connectedDevicesDto.toTypedArray()) }
             .getOrElse { error -> return Failure(IoDeviceError.DatabaseError(error)) }
 
         return Success(Unit)
@@ -53,9 +53,9 @@ class LocalRouterDeviceDataSourceImpl(
     override suspend fun saveRouterDevice(device: RouterDevice, userEmail: String): Resource<Unit, IoDeviceError.SaveRouterDevice> {
         val deviceDto = RouterDeviceMapper.toRouterDeviceInfo(device)
 
-        runCatchingSafe { deviceDao.insertRouterDevice(deviceDto) }
+        runCatchingSafe { deviceDao.upsertRouterDevice(deviceDto) }
             .getOrElse { error -> return Failure(IoDeviceError.DatabaseError(error)) }
-        runCatchingSafe { deviceDao.insertUserRouterDevice(UserRouterDeviceDto(userEmail, device.macAddress)) }
+        runCatchingSafe { deviceDao.upsertUserRouterDevice(UserRouterDeviceDto(userEmail, device.macAddress)) }
             .getOrElse { error -> return Failure(IoDeviceError.DatabaseError(error)) }
 
         return Success(Unit)
@@ -63,12 +63,7 @@ class LocalRouterDeviceDataSourceImpl(
 
     override suspend fun removeRouterDevice(device: RouterDevice, userEmail: String): Resource<Unit, IoDeviceError.RemoveRouterDevice> {
         runCatchingSafe {
-            deviceDao.deleteUserRouterDevice(
-                UserRouterDeviceDto(
-                    userEmail,
-                    device.macAddress
-                )
-            )
+            deviceDao.deleteUserRouterDevice(UserRouterDeviceDto(userEmail, device.macAddress))
         }
             .getOrElse { error -> return Failure(IoDeviceError.DatabaseError(error)) }
         runCatchingSafe { deviceDao.deleteRouterDeviceByMacAddress(device.macAddress) }

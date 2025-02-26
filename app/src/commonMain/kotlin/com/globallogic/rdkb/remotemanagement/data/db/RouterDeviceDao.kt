@@ -2,8 +2,6 @@ package com.globallogic.rdkb.remotemanagement.data.db
 
 import androidx.room.Dao
 import androidx.room.Delete
-import androidx.room.Insert
-import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Upsert
@@ -13,21 +11,17 @@ import com.globallogic.rdkb.remotemanagement.data.db.dto.UserRouterDeviceDto
 
 @Dao
 interface RouterDeviceDao {
-
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertRouterDevice(router: RouterDeviceDto)
-
     @Upsert
-    suspend fun updateRouterDevice(router: RouterDeviceDto)
+    suspend fun upsertRouterDevice(router: RouterDeviceDto)
 
     @Query("DELETE FROM router_device WHERE macAddress = :macAddress")
     suspend fun deleteRouterDeviceByMacAddress(macAddress: String)
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertUserRouterDevice(userRouterDevice: UserRouterDeviceDto)
+    @Upsert
+    suspend fun upsertUserRouterDevice(userRouterDevice: UserRouterDeviceDto)
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertConnectedDevices(vararg connectedDevices: ConnectedDeviceDto)
+    @Upsert
+    suspend fun upsertConnectedDevices(vararg connectedDevices: ConnectedDeviceDto)
 
     @Delete
     suspend fun deleteUserRouterDevice(userRouterDevice: UserRouterDeviceDto)

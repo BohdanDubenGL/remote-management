@@ -26,6 +26,7 @@ import androidx.navigation.NavController
 import com.globallogic.rdkb.remotemanagement.domain.entity.RouterDevice
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.SelectRouterDeviceUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdeviceconnection.GetRouterDeviceListUseCase
+import com.globallogic.rdkb.remotemanagement.domain.utils.Resource
 import com.globallogic.rdkb.remotemanagement.domain.utils.ResourceState
 import com.globallogic.rdkb.remotemanagement.domain.utils.dataOrElse
 import com.globallogic.rdkb.remotemanagement.domain.utils.map
@@ -41,6 +42,7 @@ import com.globallogic.rdkb.remotemanagement.view.component.AppTitleTextWithIcon
 import com.globallogic.rdkb.remotemanagement.view.error.UiResourceError
 import com.globallogic.rdkb.remotemanagement.view.navigation.LocalNavController
 import com.globallogic.rdkb.remotemanagement.view.navigation.Screen
+import kotlinx.coroutines.flow.collectLatest
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
@@ -127,12 +129,19 @@ class RouterDeviceListViewModel(
     }
 
     private fun loadRouterDevices() = launchOnViewModelScope {
-        updateState { state -> ResourceState.Loading }
-        updateState { state ->
-            getRouterDeviceList()
-                .map { routerDevices -> RouterDeviceListUiState(routerDevices = routerDevices) }
-                .mapErrorToData { error -> RouterDeviceListUiState(routerDevices = emptyList()) }
-        }
+        getRouterDeviceList()
+            .collectLatest { routerDevices ->
+                updateState { state ->
+                    when(routerDevices) {
+                        is ResourceState.Cancelled -> routerDevices
+                        is ResourceState.Loading -> routerDevices
+                        is ResourceState.None -> routerDevices
+                        is Resource -> routerDevices
+                            .map { routerDevices -> RouterDeviceListUiState(routerDevices = routerDevices) }
+                            .mapErrorToData { error -> RouterDeviceListUiState(routerDevices = emptyList()) }
+                    }
+                }
+            }
     }
 
     fun onRouterDeviceSelected(routerDevice: RouterDevice) = launchUpdateState { state ->

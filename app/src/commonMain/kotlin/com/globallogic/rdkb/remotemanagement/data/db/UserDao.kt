@@ -1,19 +1,14 @@
 package com.globallogic.rdkb.remotemanagement.data.db
 
 import androidx.room.Dao
-import androidx.room.Insert
-import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Upsert
 import com.globallogic.rdkb.remotemanagement.data.db.dto.UserDto
 
 @Dao
 interface UserDao {
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertUser(user: UserDto)
-
     @Upsert
-    suspend fun updateUser(user: UserDto)
+    suspend fun upsertUser(user: UserDto)
 
     @Query("SELECT * FROM user where email = :email LIMIT 1")
     suspend fun findUserByEmail(email: String): UserDto?

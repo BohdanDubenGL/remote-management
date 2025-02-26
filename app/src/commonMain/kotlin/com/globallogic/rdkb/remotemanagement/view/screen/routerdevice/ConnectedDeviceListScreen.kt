@@ -36,6 +36,7 @@ import com.globallogic.rdkb.remotemanagement.view.component.AppTitleText
 import com.globallogic.rdkb.remotemanagement.view.component.AppTitleTextWithIcon
 import com.globallogic.rdkb.remotemanagement.view.error.UiResourceError
 import com.globallogic.rdkb.remotemanagement.view.navigation.LocalNavController
+import kotlinx.coroutines.flow.collectLatest
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
@@ -107,13 +108,23 @@ class ConnectedDeviceListViewModel(
     override suspend fun onInitState() = loadConnectedDevices()
 
     private fun loadConnectedDevices() = launchOnViewModelScope {
-        updateState { state -> ResourceState.Loading }
-        updateState { state ->
-            val routerDevice = getSelectedRouterDevice()
-                .dataOrElse { error -> return@updateState state }
-            val connectedDevices = getRouterDeviceConnectedDevices(routerDevice)
-                .dataOrElse { error -> return@updateState state }
-            Resource.Success(ConnectedDeviceListUiState(connectedDevices = connectedDevices))
+        val routerDevice = getSelectedRouterDevice()
+            .dataOrElse { error -> return@launchOnViewModelScope }
+
+        getRouterDeviceConnectedDevices(routerDevice).collectLatest { connectedDevices ->
+            updateState { state ->
+                when (connectedDevices) {
+                    is ResourceState.Cancelled -> connectedDevices
+                    is ResourceState.Loading -> connectedDevices
+                    is ResourceState.None -> connectedDevices
+                    is Resource -> {
+                        Resource.Success(ConnectedDeviceListUiState(
+                            connectedDevices = connectedDevices.dataOrElse { error -> return@updateState state }
+                        ))
+                    }
+                }
+
+            }
         }
     }
 }
