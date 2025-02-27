@@ -85,7 +85,7 @@ private fun RouterDeviceContent(
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 8.dp)
             ) {
-                AppTextProperty(name = "Manufacturer:", value = uiState.routerDevice.manufacturer)
+                AppTextProperty(name = "Manufacturer:", value = uiState.routerDevice.manufacturer, vertical = true)
                 AppTextProperty(name = "Firmware version:", value = uiState.routerDevice.firmwareVersion, vertical = true)
             }
         }
@@ -137,7 +137,6 @@ private fun RouterDeviceContent(
                                 AppTextProperty(name = "Enabled:", value = accessPoint.enabled)
                                 AppTextProperty(name = "SSID:", value = accessPoint.ssid)
                                 AppTextProperty(name = "Security mode:", value = accessPoint.securityMode)
-                                AppTextProperty(name = "Available security modes:", value = accessPoint.availableSecurityModes.joinToString(separator = ","), vertical = true)
                                 AppTextProperty(name = "Band:", value = accessPoint.band)
                                 AppTextProperty(name = "Clients:", value = accessPoint.clientsCount)
                             }
@@ -178,28 +177,26 @@ class RouterDeviceViewModel(
 
     override suspend fun onInitState() = loadSelectedRouterDeviceInfo()
 
-    private fun loadSelectedRouterDeviceInfo() = launchOnViewModelScope {
-        val originalState = uiState.value
-        updateState { state -> ResourceState.Loading }
-        updateState { state ->
-            val routerDevice = getSelectedRouterDevice()
-                .dataOrElse { error -> return@updateState originalState }
-            val accessPointGroups = getAccessPointGroups(routerDevice)
-                .dataOrElse { error -> return@updateState originalState }
-            val currentAccessPointGroup = accessPointGroups.firstOrNull()
-            val accessPointGroupSettings = when (currentAccessPointGroup) {
-                null -> ResourceState.None
-                else -> getAccessPointSettings(routerDevice, currentAccessPointGroup)
-                    .mapError { error -> UiResourceError("", "") }
-            }
-            Success(
-                RouterDeviceUiState(
-                    routerDevice = routerDevice,
-                    currentAccessPointGroup = accessPointGroups.firstOrNull(),
-                    accessPointGroups = accessPointGroups,
-                    accessPointGroupSettings = accessPointGroupSettings,
-            ))
+    private fun loadSelectedRouterDeviceInfo() = launchUpdateStateFromFlow { originalState ->
+        send(ResourceState.Loading)
+        val routerDevice = getSelectedRouterDevice()
+            .dataOrElse { error -> return@launchUpdateStateFromFlow }
+        val accessPointGroups = getAccessPointGroups(routerDevice)
+            .dataOrElse { error -> return@launchUpdateStateFromFlow }
+        val currentAccessPointGroup = accessPointGroups.firstOrNull()
+        val accessPointGroupSettings = when (currentAccessPointGroup) {
+            null -> ResourceState.None
+            else -> getAccessPointSettings(routerDevice, currentAccessPointGroup)
+                .mapError { error -> UiResourceError("", "") }
         }
+        val state = Success(
+            RouterDeviceUiState(
+                routerDevice = routerDevice,
+                currentAccessPointGroup = accessPointGroups.firstOrNull(),
+                accessPointGroups = accessPointGroups,
+                accessPointGroupSettings = accessPointGroupSettings,
+        ))
+        send(state)
     }
 
     fun onAccessPointGroupClicked(accessPointGroup: AccessPointGroup) = launchOnViewModelScope {

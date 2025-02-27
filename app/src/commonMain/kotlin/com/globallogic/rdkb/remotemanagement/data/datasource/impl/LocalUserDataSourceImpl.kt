@@ -4,6 +4,7 @@ import com.globallogic.rdkb.remotemanagement.data.datasource.LocalUserDataSource
 import com.globallogic.rdkb.remotemanagement.data.db.UserDao
 import com.globallogic.rdkb.remotemanagement.data.db.dto.UserDto
 import com.globallogic.rdkb.remotemanagement.data.error.IoUserError
+import com.globallogic.rdkb.remotemanagement.data.utils.md5
 import com.globallogic.rdkb.remotemanagement.domain.entity.User
 import com.globallogic.rdkb.remotemanagement.domain.utils.Resource
 import com.globallogic.rdkb.remotemanagement.domain.utils.Resource.Failure
@@ -19,7 +20,7 @@ class LocalUserDataSourceImpl(
             .getOrElse { error -> return Failure(IoUserError.DatabaseError(error)) }
         if (userFromDb != null) return Failure(IoUserError.UserAlreadyExist)
 
-        val newUser = UserDto(email = email, name = name, password = password)
+        val newUser = UserDto(email = email, name = name, password = password.md5())
         runCatchingSafe { userDao.upsertUser(newUser) }
             .getOrElse { error -> return Failure(IoUserError.DatabaseError(error)) }
         return Success(UserMapper.toDomain(newUser))
@@ -30,7 +31,7 @@ class LocalUserDataSourceImpl(
             .getOrElse { error -> return Failure(IoUserError.DatabaseError(error)) }
             ?: return Failure(IoUserError.UserNotFound)
 
-        val updatedUser = user.copy(email = newEmail, name = newName, password = newPassword)
+        val updatedUser = user.copy(email = newEmail, name = newName, password = newPassword.md5())
         runCatchingSafe { userDao.upsertUser(updatedUser) }
             .getOrElse { error -> return Failure(IoUserError.DatabaseError(error)) }
 
@@ -46,7 +47,7 @@ class LocalUserDataSourceImpl(
     }
 
     override suspend fun findUserByCredentials(email: String, password: String): Resource<User, IoUserError.FindUserByCredentials> {
-        val user = runCatchingSafe { userDao.findUserByCredentials(email, password) }
+        val user = runCatchingSafe { userDao.findUserByCredentials(email, password.md5()) }
             .getOrElse { error -> return Failure(IoUserError.DatabaseError(error)) }
             ?: return Failure(IoUserError.UserNotFound)
 

@@ -122,7 +122,7 @@ private fun SearchRouterDeviceContent(
         LazyColumn(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.Top),
-            modifier = Modifier.fillMaxSize().padding(24.dp, 8.dp)
+            modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp, vertical = 8.dp)
         ) {
             items(uiState.foundRouterDevices) { foundDevice ->
                 AppCard(
@@ -130,18 +130,22 @@ private fun SearchRouterDeviceContent(
                 ) {
                     Column(
                         horizontalAlignment = Alignment.Start,
-                        verticalArrangement = Arrangement.spacedBy(
-                            4.dp,
-                            Alignment.CenterVertically
-                        ),
-                        modifier = Modifier.fillMaxWidth().padding(16.dp, 16.dp)
+                        verticalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterVertically),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 8.dp, vertical = 8.dp),
                     ) {
                         AppTitleTextWithIcon(
                             text = foundDevice.name,
                             imageVector = Icons.Default.Router,
                         )
-                        AppTextProperty(name = "ip:", value = foundDevice.ip)
-                        AppTextProperty(name = "mac:", value = foundDevice.macAddress)
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterVertically),
+                            modifier = Modifier.padding(start = 48.dp),
+                        ) {
+                            AppTextProperty(name = "ip:", value = foundDevice.ip)
+                            AppTextProperty(name = "mac:", value = foundDevice.macAddress)
+                        }
                     }
                 }
             }

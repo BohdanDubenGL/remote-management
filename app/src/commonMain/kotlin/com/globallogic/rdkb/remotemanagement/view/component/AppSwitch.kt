@@ -31,7 +31,7 @@ fun AppSwitch(
             checked = checked,
             onCheckedChange = onCheckedChange,
             colors = SwitchDefaults.colors(
-                checkedTrackColor = MaterialTheme.colorScheme.primary,
+                checkedTrackColor = MaterialTheme.colorScheme.tertiary,
                 uncheckedTrackColor = MaterialTheme.colorScheme.primaryContainer,
             ),
         )
