@@ -1,5 +1,6 @@
 package com.globallogic.rdkb.remotemanagement.view.screen.routerdevice
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -19,6 +20,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.globallogic.rdkb.remotemanagement.domain.entity.ConnectedDevice
@@ -70,29 +72,45 @@ private fun ConnectedDeviceListContent(
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
             ) {
                 Column(
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp).fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                    modifier = Modifier.fillMaxSize().padding(horizontal = 8.dp, vertical = 8.dp),
                 ) {
                     AppTitleTextWithIcon(
                         text = connectedDevice.hostName,
                         imageVector = Icons.Default.Devices,
                     )
-                    AppTextProperty(name = "Online:", value = connectedDevice.isActive)
-                    AppTextProperty(name = "Mac address:", value = connectedDevice.macAddress)
-                    AppTextProperty(name = "Ip address:", value = connectedDevice.ipAddress)
-                    AppTextProperty(name = "Vendor class:", value = connectedDevice.vendorClassId)
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                        modifier = Modifier.padding(start = 48.dp),
+                    ) {
+                        AppTextProperty(name = "Online:", value = connectedDevice.isActive)
+                        AppTextProperty(name = "Mac address:", value = connectedDevice.macAddress)
+                        AppTextProperty(name = "Ip address:", value = connectedDevice.ipAddress)
+                        AppTextProperty(name = "Vendor class:", value = connectedDevice.vendorClassId)
+                    }
 
-                    if (connectedDevice.stats.hasData()) {
-                        AppTitleTextWithIcon(
-                            text = "Network stats",
-                            imageVector = Icons.Default.SyncAlt,
-                            modifier = Modifier.padding(top = 8.dp)
-                        )
-                        AppTextProperty(name = "Bytes sent:", value = connectedDevice.stats.bytesSent)
-                        AppTextProperty(name = "Bytes received:", value = connectedDevice.stats.bytesReceived)
-                        AppTextProperty(name = "Packets sent:", value = connectedDevice.stats.packetsSent)
-                        AppTextProperty(name = "Packets received:", value = connectedDevice.stats.packetsReceived)
-                        AppTextProperty(name = "Errors sent:", value = connectedDevice.stats.errorsSent)
+                    AnimatedVisibility (connectedDevice.stats.hasData()) {
+                        Column(
+                            modifier = Modifier.padding(start = 8.dp)
+                        ) {
+                            AppTitleTextWithIcon(
+                                text = "Network stats",
+                                imageVector = Icons.Default.SyncAlt,
+                                fontSize = 20.sp,
+                                iconSize = 24.dp,
+                                modifier = Modifier.padding(top = 8.dp),
+                            )
+                            Column(
+                                verticalArrangement = Arrangement.spacedBy(4.dp),
+                                modifier = Modifier.padding(start = 40.dp)
+                            ) {
+                                AppTextProperty(name = "Bytes sent:", value = connectedDevice.stats.bytesSent)
+                                AppTextProperty(name = "Bytes received:", value = connectedDevice.stats.bytesReceived)
+                                AppTextProperty(name = "Packets sent:", value = connectedDevice.stats.packetsSent)
+                                AppTextProperty(name = "Packets received:", value = connectedDevice.stats.packetsReceived)
+                                AppTextProperty(name = "Errors sent:", value = connectedDevice.stats.errorsSent)
+                            }
+                        }
                     }
                 }
             }

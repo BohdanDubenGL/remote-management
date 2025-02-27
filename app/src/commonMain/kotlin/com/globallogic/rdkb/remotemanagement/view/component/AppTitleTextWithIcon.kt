@@ -11,7 +11,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 
 @Composable
 fun AppTitleTextWithIcon(
@@ -20,6 +23,8 @@ fun AppTitleTextWithIcon(
     imageVector: ImageVector,
     iconColor: Color = MaterialTheme.colorScheme.tertiary,
     textColor: Color = MaterialTheme.colorScheme.tertiary,
+    fontSize: TextUnit = 24.sp,
+    iconSize: Dp = 32.dp,
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -30,11 +35,12 @@ fun AppTitleTextWithIcon(
             imageVector = imageVector,
             contentDescription = text,
             tint = iconColor,
-            modifier = Modifier.size(32.dp),
+            modifier = Modifier.size(iconSize),
         )
         AppTitleText(
             text = text,
             color = textColor,
+            fontSize = fontSize
         )
     }
 }

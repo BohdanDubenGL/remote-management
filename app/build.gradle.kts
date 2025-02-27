@@ -83,6 +83,8 @@ kotlin {
             implementation(libs.koin.androidx.compose)
 
             implementation(libs.ktor.client.okhttp)
+
+            implementation(libs.cryptography.provider.jdk)
         }
         iosMain.dependencies {
             implementation(libs.ktor.client.darwin)

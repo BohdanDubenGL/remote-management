@@ -71,16 +71,6 @@ class LocalRouterDeviceDataSourceImpl(
 
         return Success(Unit)
     }
-
-    override suspend fun findLocalRouterDevice(userEmail: String): Resource<RouterDevice, IoDeviceError.FindLocalRouterDevice> {
-        val device = runCatchingSafe {
-            deviceDao.findRouterDevicesForUser(userEmail).firstOrNull()
-        }
-            .getOrElse { error -> return Failure(IoDeviceError.DatabaseError(error)) }
-            ?: return Failure(IoDeviceError.NoDeviceFound)
-
-        return Success(RouterDeviceMapper.toRouterDeviceInfo(device))
-    }
 }
 
 private object RouterDeviceMapper {

@@ -90,26 +90,29 @@ private fun RouterDeviceListContent(
             )
         }
     } else {
-        Column(
+        LazyColumn(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Top,
             modifier = Modifier.fillMaxSize(),
         ) {
-            LazyColumn {
-                items(uiState.routerDevices) { routerDevice ->
-                    AppCard(
-                        modifier = Modifier
-                            .padding(16.dp, 8.dp)
-                            .clickable { onRouterDeviceClicked(routerDevice) }
+            items(uiState.routerDevices) { routerDevice ->
+                AppCard(
+                    modifier = Modifier
+                        .padding(16.dp, 8.dp)
+                        .clickable { onRouterDeviceClicked(routerDevice) }
+                ) {
+                    Column(
+                        modifier = Modifier.padding(8.dp, 8.dp).fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
+                        AppTitleTextWithIcon(
+                            text = routerDevice.modelName,
+                            imageVector = Icons.Default.Router,
+                        )
                         Column(
-                            modifier = Modifier.padding(16.dp, 8.dp).fillMaxWidth(),
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                            verticalArrangement = Arrangement.spacedBy(4.dp),
+                            modifier = Modifier.padding(start = 48.dp)
                         ) {
-                            AppTitleTextWithIcon(
-                                text = routerDevice.modelName,
-                                imageVector = Icons.Default.Router,
-                            )
                             AppTextProperty(name = "ip:", value = routerDevice.ipAddressV4)
                             AppTextProperty(name = "mac:", value = routerDevice.macAddress)
                         }

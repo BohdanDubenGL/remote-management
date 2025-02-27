@@ -1,101 +1,213 @@
 package com.globallogic.rdkb.remotemanagement.view.component
 
-import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGestures
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Devices
-import androidx.compose.material.icons.filled.NetworkWifi
-import androidx.compose.material.icons.filled.Phone
-import androidx.compose.material.icons.filled.Public
-import androidx.compose.material.icons.filled.Router
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.sizeIn
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.State
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.graphics.BlendModeColorFilter
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
+import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.VectorPainter
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.unit.DpSize
+import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlin.math.PI
 import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.sin
 
-data class Network(val name: String, val icon: ImageVector = Icons.Default.Public)
-data class Router(val name: String, val icon: ImageVector = Icons.Default.Router)
-data class Client(val name: String, val icon: ImageVector = Icons.Default.Phone)
+data class TopologyNode(
+    val name: String,
+    val icon: ImageVector,
+    val rippleColor: Color,
+    val rippleIntervalMillis: Long,
+    val rippleDurationMillis: Int,
+    val rippleTarget: Float,
+    val rippleCount: Int,
+) {
+    fun createRipples(node: State<NodeState>): Array<Ripple> = Array(rippleCount) { i ->
+        Ripple(
+            initialDelay = (rippleDurationMillis * (1F - i.inc().toFloat() / rippleCount)).toLong(),
+            positionFn = { node.value.position },
+            color = rippleColor,
+            target = rippleTarget,
+            animationDurationMillis = rippleDurationMillis,
+        )
+    }
+}
 
-data class NodeState(val position: Offset, val label: String, val icon: VectorPainter, val color: Color)
+data class NodeState(
+    val topologyNode: TopologyNode,
+    val position: Offset,
+    val label: String,
+    val icon: VectorPainter,
+    val color: Color,
+    val iconSize: DpSize = DpSize(35.dp, 35.dp),
+)
 
+// todo: 5+ clients
 @Composable
 fun TopologyDiagram(
-    network: Network,
-    router: Router,
-    clients: List<Client>
+    modifier: Modifier = Modifier,
+    network: TopologyNode,
+    router: TopologyNode,
+    clients: List<TopologyNode>,
+    arrowColor: Color = MaterialTheme.colorScheme.tertiary,
+    textColor: Color = MaterialTheme.colorScheme.tertiary,
+    tapColor: Color = MaterialTheme.colorScheme.tertiary,
 ) {
     val networkVectorPainter = rememberVectorPainter(network.icon)
     val routerVectorPainter = rememberVectorPainter(router.icon)
     val clientsVectorPainter = clients.associateWith { rememberVectorPainter(it.icon) }
 
-    val networkState = remember { mutableStateOf(NodeState(Offset(300f, 100f), network.name, networkVectorPainter, Color.Blue)) }
-    val routerState = remember { mutableStateOf(NodeState(Offset(300f, 300f), router.name, routerVectorPainter, Color.Red)) }
-    val clientStates = remember { clients.mapIndexed { i, client -> mutableStateOf(NodeState(Offset(100f + i * 200f, 500f), client.name, clientsVectorPainter[client]!!, Color.Green)) } }
+    val networkNode = remember(network) { mutableStateOf(NodeState(network, Offset(300f, 100f), network.name, networkVectorPainter, Color(0xff1A5FD5))) }
+    val routerNode = remember(router) { mutableStateOf(NodeState(router, Offset(300f, 300f), router.name, routerVectorPainter, Color(0xff1A7FD5))) }
+    val clientNodes = remember(clients) { clients.mapIndexed { i, client -> mutableStateOf(NodeState(client, Offset(100f + i * 200f, 500f), client.name, clientsVectorPainter[client]!!, Color(0xff1AD4D5))) } }
+    val nodes by remember(network, router, clients) { mutableStateOf(listOf(networkNode, routerNode).plus(clientNodes)) }
     val textMeasurer = rememberTextMeasurer()
 
-    Canvas(modifier = Modifier.fillMaxSize().pointerInput(Unit) {
-        networkState.value = networkState.value.copy(position = Offset(size.width / 2F, size.height / 4F))
-        routerState.value = routerState.value.copy(position = Offset(size.width / 2F, size.height / 2F))
-        val offset = size.width / clients.size.inc().toFloat()
-        clientStates.forEachIndexed { index, client ->
-            client.value = client.value.copy(position = Offset(offset + index * offset, size.height * 3F / 4F))
-        }
-        detectDragGestures { change, dragAmount ->
-            change.consume()
-            listOf(networkState, routerState).plus(clientStates).forEach {
-                if ((change.position - it.value.position).getDistance() < 50f) {
-                    it.value = it.value.copy(position = it.value.position + dragAmount)
+    val coroutineScope = rememberCoroutineScope()
+    val ripples = remember(nodes) {
+        mutableStateListOf(
+            *network.createRipples(networkNode),
+            *router.createRipples(routerNode),
+            *clients.zip(clientNodes, TopologyNode::createRipples)
+                .flatMap { it.toList() }
+                .toTypedArray()
+        )
+    }
+
+    Box(
+        content = {},
+        modifier = modifier
+            .sizeIn(minWidth = 400.dp, minHeight = 400.dp)
+            .onSizeChanged { size ->
+                networkNode.value = networkNode.value.copy(
+                    position = Offset(size.width * 0.5F, size.height * 0.3F)
+                )
+                routerNode.value = routerNode.value.copy(
+                    position = Offset(size.width * 0.5F, size.height * 0.5F)
+                )
+                val offset = size.width / clients.size.inc().toFloat()
+                clientNodes.forEachIndexed { index, client ->
+                    client.value = client.value.copy(
+                        position = Offset(offset + index * offset, size.height * 0.7F)
+                    )
                 }
             }
+            .pointerInput(nodes) {
+                detectDragGestures { change, dragAmount ->
+                    change.consume()
+                    nodes.forEach { node ->
+                        if ((change.position - node.value.position).getDistance() < node.value.iconSize.toSize().maxDimension) {
+                            val position = node.value.position + dragAmount
+                            if (position.x in 0F..size.width.toFloat() && position.y in 0F..size.height.toFloat()) {
+                                node.value = node.value.copy(position = position)
+                            }
+                        }
+                    }
+                }
+            }
+            .pointerInput(Unit) {
+                detectTapGestures { offset ->
+                    val ripple = Ripple(
+                        infinite = false,
+                        positionFn = { offset },
+                        color = tapColor,
+                        target = 150F,
+                        animationDurationMillis = 1_500,
+                    )
+                    ripples.add(ripple)
+                    coroutineScope.launch { ripple.startAnimation() }
+                }
+            }
+            .drawBehind {
+                ripples.forEach { ripple ->
+                    drawCircle(
+                        color = ripple.color.copy(alpha = ripple.alpha),
+                        center = ripple.position,
+                        radius = ripple.radius,
+                    )
+                    drawCircle(
+                        color = ripple.color.copy(alpha = ripple.alpha * 1.5F),
+                        center = ripple.position,
+                        radius = ripple.radius,
+                        style = Stroke(width = 2F),
+                    )
+                }
+
+                drawArrow(networkNode.value.position, routerNode.value.position, networkNode.value.iconSize.height.toPx(), arrowColor)
+                clientNodes.forEach { client -> drawArrow(routerNode.value.position, client.value.position, routerNode.value.iconSize.height.toPx(), arrowColor) }
+
+                nodes.forEach { node -> drawNode(node.value, textMeasurer, textColor) }
+            },
+    )
+    LaunchedEffect(ripples) {
+        ripples.forEach { ripple ->
+            launch { ripple.startAnimation() }
         }
-    }) {
-        drawNode(networkState.value, textMeasurer)
-        drawNode(routerState.value, textMeasurer)
-        clientStates.forEach { drawNode(it.value, textMeasurer) }
-        drawArrow(networkState.value.position, routerState.value.position)
-        clientStates.forEach { drawArrow(routerState.value.position, it.value.position) }
+        while (true) {
+            delay(1_000)
+            ripples.removeAll { it.isFinished }
+        }
     }
 }
 
-fun DrawScope.drawNode(node: NodeState, textMeasurer: TextMeasurer) {
-    drawCircle(color = node.color, center = node.position, radius = 40f)
+private fun DrawScope.drawNode(node: NodeState, textMeasurer: TextMeasurer, textColor: Color) {
+    val iconSize = node.iconSize.toSize()
+    drawCircle(color = node.color, center = node.position, radius = iconSize.maxDimension)
+
     drawIntoCanvas { canvas ->
+        translate(node.position.x - iconSize.width / 2F, node.position.y - iconSize.height / 2F) {
+            with(node.icon) {
+                draw(
+                    size = iconSize,
+                    colorFilter = BlendModeColorFilter(Color.White, BlendMode.SrcIn)
+                )
+            }
+        }
+
         val textLayout = textMeasurer.measure(AnnotatedString(node.label))
         drawText(
             textLayoutResult = textLayout,
+            color = textColor,
             topLeft = Offset(
                 x = node.position.x - textLayout.size.width / 2,
-                y = node.position.y + 60
+                y = node.position.y + iconSize.height
             )
         )
     }
 }
 
-fun DrawScope.drawArrow(start: Offset, end: Offset) {
-    val nodeRadius = 40f
-    val arrowHeadSize = 20f
+private fun DrawScope.drawArrow(start: Offset, end: Offset, nodeRadius: Float, arrowColor: Color) {
+    val arrowHeadSize = 20F
     val angle = atan2((end.y - start.y).toDouble(), (end.x - start.x).toDouble()).toFloat()
     val startOffset = Offset(
         start.x + nodeRadius * cos(angle.toDouble()).toFloat(),
@@ -106,11 +218,11 @@ fun DrawScope.drawArrow(start: Offset, end: Offset) {
         end.y - (nodeRadius + arrowHeadSize) * sin(angle.toDouble()).toFloat()
     )
     drawLine(
-        color = Color.Black,
+        color = arrowColor,
         start = startOffset,
         end = endOffset,
-        strokeWidth = 4f,
-        pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 10f)),
+        strokeWidth = 4F,
+        pathEffect = PathEffect.dashPathEffect(floatArrayOf(10F, 10F)),
     )
     val path = Path().apply {
         moveTo(endOffset.x, endOffset.y)
@@ -124,5 +236,5 @@ fun DrawScope.drawArrow(start: Offset, end: Offset) {
             endOffset.y - arrowHeadSize * sin(angle + PI / 6).toFloat()
         )
     }
-    drawPath(path, color = Color.Black, style = androidx.compose.ui.graphics.drawscope.Stroke(width = 4f))
+    drawPath(path, color = arrowColor, style = Stroke(width = 4F))
 }

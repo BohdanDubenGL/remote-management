@@ -5,10 +5,12 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.outlined.Devices
+import androidx.compose.material.icons.outlined.Public
+import androidx.compose.material.icons.outlined.Router
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -26,14 +28,11 @@ import com.globallogic.rdkb.remotemanagement.domain.utils.ResourceState
 import com.globallogic.rdkb.remotemanagement.domain.utils.dataOrElse
 import com.globallogic.rdkb.remotemanagement.view.base.MviViewModel
 import com.globallogic.rdkb.remotemanagement.view.component.AppButton
-import com.globallogic.rdkb.remotemanagement.view.component.AppCard
 import com.globallogic.rdkb.remotemanagement.view.component.AppDrawResourceState
 import com.globallogic.rdkb.remotemanagement.view.component.AppTitleText
-import com.globallogic.rdkb.remotemanagement.view.component.Client
-import com.globallogic.rdkb.remotemanagement.view.component.Network
-import com.globallogic.rdkb.remotemanagement.view.component.Router
 import com.globallogic.rdkb.remotemanagement.view.component.SetupFloatingActionButton
 import com.globallogic.rdkb.remotemanagement.view.component.TopologyDiagram
+import com.globallogic.rdkb.remotemanagement.view.component.TopologyNode
 import com.globallogic.rdkb.remotemanagement.view.error.UiResourceError
 import com.globallogic.rdkb.remotemanagement.view.navigation.FloatingActionButtonState
 import com.globallogic.rdkb.remotemanagement.view.navigation.LocalNavController
@@ -85,17 +84,38 @@ private fun TopologyContent(
                 modifier = Modifier.width(250.dp)
             )
         }
-        is TopologyUiState.Data -> AppCard(
-            color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 32.dp)
-                .padding(top = 32.dp, bottom = 72.dp),
-        ) {
+        is TopologyUiState.Data -> {
             TopologyDiagram(
-                Network("Internet"),
-                Router(uiState.routerDevice.modelName),
-                uiState.connectedDevices.map { Client(it.hostName) }
+                network = TopologyNode(
+                    name = "Internet",
+                    icon = Icons.Outlined.Public,
+                    rippleColor = MaterialTheme.colorScheme.tertiaryContainer,
+                    rippleIntervalMillis = 1_000L,
+                    rippleDurationMillis = 5_000,
+                    rippleTarget = 300F,
+                    rippleCount = 3,
+                ),
+                router = TopologyNode(
+                    name = uiState.routerDevice.modelName,
+                    icon = Icons.Outlined.Router,
+                    rippleColor = MaterialTheme.colorScheme.tertiaryContainer,
+                    rippleIntervalMillis = 2_500L,
+                    rippleDurationMillis = 10_000,
+                    rippleTarget = 600F,
+                    rippleCount = 5,
+                ),
+                clients = uiState.connectedDevices.map { connectedDevice ->
+                    TopologyNode(
+                        name = connectedDevice.hostName,
+                        icon = Icons.Outlined.Devices,
+                        rippleColor = MaterialTheme.colorScheme.tertiaryContainer,
+                        rippleIntervalMillis = 500L,
+                        rippleDurationMillis = 1_500,
+                        rippleTarget = 150F,
+                        rippleCount = 3,
+                    )
+                },
+                modifier = Modifier.fillMaxSize(),
             )
         }
     }
@@ -109,8 +129,12 @@ class TopologyViewModel(
     override suspend fun onSubscribeState() = loadTopologyData()
 
     fun loadTopologyData() = launchOnViewModelScope {
+        updateState { ResourceState.Loading }
         val routerDevice = getLocalRouterDevice()
-            .dataOrElse { error -> return@launchOnViewModelScope }
+            .dataOrElse { error ->
+                updateState { Resource.Success(TopologyUiState.NoData) }
+                return@launchOnViewModelScope
+            }
         getRouterDeviceConnectedDevices(routerDevice).collectLatest { connectedDevices ->
             updateState { state ->
                 when(connectedDevices) {

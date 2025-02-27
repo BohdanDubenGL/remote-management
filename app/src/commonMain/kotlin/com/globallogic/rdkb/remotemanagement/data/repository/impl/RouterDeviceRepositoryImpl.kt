@@ -99,8 +99,17 @@ class RouterDeviceRepositoryImpl(
     override suspend fun getLocalRouterDevice(): Resource<RouterDevice, DeviceError.NoDeviceFound> {
         val email = appPreferences.currentUserEmailPref.get()
             ?: return Failure(DeviceError.NoDeviceFound)
-        return localRouterDeviceDataSource.findLocalRouterDevice(email)
-            .mapError { error -> DeviceError.NoDeviceFound }
+        val macAvailableDevices = remoteRouterDeviceDataSource.findAvailableRouterDevices()
+            .dataOrElse { error -> return Failure(DeviceError.NoDeviceFound) }
+            .map { device -> device.macAddress }
+        val updatedDevices = localRouterDeviceDataSource.loadRouterDevicesForUser(email)
+            .dataOrElse { error -> return Failure(DeviceError.NoDeviceFound) }
+
+        val localDevice = updatedDevices
+            .firstOrNull { device -> device.macAddress in macAvailableDevices }
+            ?: updatedDevices.firstOrNull()
+            ?: return Failure(DeviceError.NoDeviceFound)
+        return Success(localDevice)
     }
 
     override suspend fun doAction(device: RouterDevice, action: RouterDeviceAction): Resource<Unit, DeviceError.NoDeviceFound> {

@@ -9,9 +9,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.movableContentOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 
 @Composable
 fun AppTextProperty(
@@ -20,18 +22,21 @@ fun AppTextProperty(
     value: Any = "",
     vertical: Boolean = false,
 ) {
+    if (value.toString().isBlank()) return
     val content = movableContentOf {
         Text(
             text = name,
             fontWeight = FontWeight.Bold,
+            fontSize = 15.sp,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
-            color = MaterialTheme.colorScheme.primary,
+            color = MaterialTheme.colorScheme.onTertiaryContainer,
         )
         Text(
             text = value.toString(),
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
+            maxLines = if (vertical) 20 else 1,
+            overflow = if (vertical) TextOverflow.Clip else TextOverflow.Ellipsis,
+            color = Color.White,
         )
     }
     if (vertical) {
