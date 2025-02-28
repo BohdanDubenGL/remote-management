@@ -2,18 +2,19 @@ package com.globallogic.rdkb.remotemanagement.data.datasource.fake
 
 import com.globallogic.rdkb.remotemanagement.data.datasource.RemoteRouterDeviceDataSource
 import com.globallogic.rdkb.remotemanagement.data.error.IoDeviceError
-import com.globallogic.rdkb.remotemanagement.domain.entity.ConnectedDevice
-import com.globallogic.rdkb.remotemanagement.domain.entity.FoundRouterDevice
-import com.globallogic.rdkb.remotemanagement.domain.entity.RouterDevice
-import com.globallogic.rdkb.remotemanagement.domain.entity.DeviceAccessPointSettings
 import com.globallogic.rdkb.remotemanagement.domain.entity.AccessPoint
 import com.globallogic.rdkb.remotemanagement.domain.entity.AccessPointGroup
 import com.globallogic.rdkb.remotemanagement.domain.entity.AccessPointSettings
+import com.globallogic.rdkb.remotemanagement.domain.entity.ConnectedDevice
 import com.globallogic.rdkb.remotemanagement.domain.entity.ConnectedDeviceStats
+import com.globallogic.rdkb.remotemanagement.domain.entity.DeviceAccessPointSettings
+import com.globallogic.rdkb.remotemanagement.domain.entity.FoundRouterDevice
+import com.globallogic.rdkb.remotemanagement.domain.entity.RouterDevice
 import com.globallogic.rdkb.remotemanagement.domain.utils.Resource
 import com.globallogic.rdkb.remotemanagement.domain.utils.Resource.Success
 import com.globallogic.rdkb.remotemanagement.domain.utils.flatMapData
 import com.globallogic.rdkb.remotemanagement.domain.utils.map
+import com.globallogic.rdkb.remotemanagement.domain.utils.mapErrorToData
 
 fun RemoteRouterDeviceDataSource.fake(): RemoteRouterDeviceDataSource =
     FakeRemoteRouterDeviceDataSourceImpl(this)
@@ -44,7 +45,9 @@ private class FakeRemoteRouterDeviceDataSourceImpl(
     override suspend fun findAvailableRouterDevices(): Resource<List<FoundRouterDevice>, IoDeviceError.NoAvailableRouterDevices> {
         return Success(listOf(hardcodedDevice.toFoundRouterDevice()))
             .flatMapData { fake ->
-                original.findAvailableRouterDevices().map { fake + it }
+                original.findAvailableRouterDevices()
+                    .map { fake + it }
+                    .mapErrorToData { fake }
             }
     }
 

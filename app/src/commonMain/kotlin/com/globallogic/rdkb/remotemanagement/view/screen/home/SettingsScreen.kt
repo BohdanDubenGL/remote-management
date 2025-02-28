@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
@@ -70,6 +71,7 @@ private fun SettingsContent(
                 AppIcon(
                     imageVector = Icons.Default.Person,
                     modifier = Modifier.size(128.dp),
+                    contentColor = MaterialTheme.colorScheme.primary,
                 )
                 AppCard {
                     Column(

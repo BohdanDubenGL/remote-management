@@ -8,20 +8,17 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Wifi
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.globallogic.rdkb.remotemanagement.domain.entity.AccessPointGroup
@@ -32,6 +29,7 @@ import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.GetAcce
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.GetAccessPointSettingsUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.GetSelectedRouterDeviceUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.SetupDeviceAccessPointUseCase
+import com.globallogic.rdkb.remotemanagement.domain.utils.Resource.Failure
 import com.globallogic.rdkb.remotemanagement.domain.utils.Resource.Success
 import com.globallogic.rdkb.remotemanagement.domain.utils.ResourceState
 import com.globallogic.rdkb.remotemanagement.domain.utils.dataOrElse
@@ -43,11 +41,9 @@ import com.globallogic.rdkb.remotemanagement.view.component.AppCard
 import com.globallogic.rdkb.remotemanagement.view.component.AppCheckBox
 import com.globallogic.rdkb.remotemanagement.view.component.AppComboBox
 import com.globallogic.rdkb.remotemanagement.view.component.AppDrawResourceState
-import com.globallogic.rdkb.remotemanagement.view.component.AppIcon
 import com.globallogic.rdkb.remotemanagement.view.component.AppPasswordTextField
 import com.globallogic.rdkb.remotemanagement.view.component.AppSwitch
 import com.globallogic.rdkb.remotemanagement.view.component.AppTextField
-import com.globallogic.rdkb.remotemanagement.view.component.AppTitleText
 import com.globallogic.rdkb.remotemanagement.view.component.AppTitleTextWithIcon
 import com.globallogic.rdkb.remotemanagement.view.error.UiResourceError
 import com.globallogic.rdkb.remotemanagement.view.navigation.LocalNavController
@@ -205,7 +201,7 @@ class SetupRouterDeviceViewModel(
                     val device = getSelectedRouterDevice()
                         .dataOrElse { error -> return@updateState state }
                     val wifiSettings = getAccessPointSettings(device, accessPointGroup)
-                        .dataOrElse { error -> return@updateState state }
+                        .dataOrElse { error -> return@updateState Failure(UiResourceError("Error", "No data")) }
                     Success(originalState.data.copy(
                         routerDevice = device,
                         accessPointGroup = accessPointGroup,
@@ -292,11 +288,11 @@ class SetupRouterDeviceViewModel(
             val device = getSelectedRouterDevice()
                 .dataOrElse { error -> return@updateState state }
             val accessPointGroups = getAccessPointGroups(device)
-                .dataOrElse { error -> return@updateState state }
+                .dataOrElse { error -> return@updateState Failure(UiResourceError("Error", "No data")) }
             val currentAccessPointGroup = accessPointGroups.firstOrNull()
-                ?: return@updateState state
+                ?: return@updateState Failure(UiResourceError("Error", "No data"))
             val wifiSettings = getAccessPointSettings(device, currentAccessPointGroup)
-                .dataOrElse { error -> return@updateState state }
+                .dataOrElse { error -> return@updateState Failure(UiResourceError("Error", "No data")) }
 
             Success(SetupRouterDeviceUiState(
                 routerDevice = device,

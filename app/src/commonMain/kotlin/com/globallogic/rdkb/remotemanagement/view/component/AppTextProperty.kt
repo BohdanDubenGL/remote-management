@@ -30,7 +30,7 @@ fun AppTextProperty(
             fontSize = 15.sp,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
-            color = MaterialTheme.colorScheme.onTertiaryContainer,
+            color = MaterialTheme.colorScheme.onSurface,
         )
         Text(
             text = value.toString(),
@@ -42,7 +42,7 @@ fun AppTextProperty(
     if (vertical) {
         Column(
             modifier = modifier,
-            verticalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterVertically),
+            verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.Start,
             content = { content() },
         )

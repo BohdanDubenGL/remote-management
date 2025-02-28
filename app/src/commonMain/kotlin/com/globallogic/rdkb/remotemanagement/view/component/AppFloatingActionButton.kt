@@ -41,7 +41,7 @@ fun AppFloatingActionButton(
                 imageVector = state.buttonIcon,
                 contentDescription = state.iconDescription,
                 color = MaterialTheme.colorScheme.secondaryContainer,
-                contentColor = MaterialTheme.colorScheme.secondary,
+                contentColor = MaterialTheme.colorScheme.onSurface,
             )
         }
     }

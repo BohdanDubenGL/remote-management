@@ -30,6 +30,6 @@ fun AppCheckBox(
                 uncheckedColor = MaterialTheme.colorScheme.primary,
             )
         )
-        AppTitleText(text = text, fontSize = fontSize)
+        AppTitleText(text = text, fontSize = fontSize, color = MaterialTheme.colorScheme.onSurface)
     }
 }

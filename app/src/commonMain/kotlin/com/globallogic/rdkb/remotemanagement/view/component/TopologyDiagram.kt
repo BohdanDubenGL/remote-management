@@ -46,6 +46,7 @@ import kotlin.math.sin
 data class TopologyNode(
     val name: String,
     val icon: ImageVector,
+    val iconColor: Color,
     val rippleColor: Color,
     val rippleIntervalMillis: Long,
     val rippleDurationMillis: Int,
@@ -79,17 +80,17 @@ fun TopologyDiagram(
     network: TopologyNode,
     router: TopologyNode,
     clients: List<TopologyNode>,
-    arrowColor: Color = MaterialTheme.colorScheme.tertiary,
-    textColor: Color = MaterialTheme.colorScheme.tertiary,
+    arrowColor: Color = MaterialTheme.colorScheme.onSurface,
+    textColor: Color = MaterialTheme.colorScheme.onSurface,
     tapColor: Color = MaterialTheme.colorScheme.tertiary,
 ) {
     val networkVectorPainter = rememberVectorPainter(network.icon)
     val routerVectorPainter = rememberVectorPainter(router.icon)
     val clientsVectorPainter = clients.associateWith { rememberVectorPainter(it.icon) }
 
-    val networkNode = remember(network) { mutableStateOf(NodeState(network, Offset(300f, 100f), network.name, networkVectorPainter, Color(0xff1A5FD5))) }
-    val routerNode = remember(router) { mutableStateOf(NodeState(router, Offset(300f, 300f), router.name, routerVectorPainter, Color(0xff1A7FD5))) }
-    val clientNodes = remember(clients) { clients.mapIndexed { i, client -> mutableStateOf(NodeState(client, Offset(100f + i * 200f, 500f), client.name, clientsVectorPainter[client]!!, Color(0xff1AD4D5))) } }
+    val networkNode = remember(network) { mutableStateOf(NodeState(network, Offset(300f, 100f), network.name, networkVectorPainter, network.iconColor)) }
+    val routerNode = remember(router) { mutableStateOf(NodeState(router, Offset(300f, 300f), router.name, routerVectorPainter, router.iconColor)) }
+    val clientNodes = remember(clients) { clients.mapIndexed { i, client -> mutableStateOf(NodeState(client, Offset(100f + i * 200f, 500f), client.name, clientsVectorPainter[client]!!, client.iconColor)) } }
     val nodes by remember(network, router, clients) { mutableStateOf(listOf(networkNode, routerNode).plus(clientNodes)) }
     val textMeasurer = rememberTextMeasurer()
 
@@ -200,7 +201,7 @@ private fun DrawScope.drawNode(node: NodeState, textMeasurer: TextMeasurer, text
             color = textColor,
             topLeft = Offset(
                 x = node.position.x - textLayout.size.width / 2,
-                y = node.position.y + iconSize.height
+                y = node.position.y + iconSize.height + 8.dp.toPx(),
             )
         )
     }

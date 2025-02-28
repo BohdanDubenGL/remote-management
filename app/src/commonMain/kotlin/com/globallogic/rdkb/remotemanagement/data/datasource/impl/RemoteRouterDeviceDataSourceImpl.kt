@@ -144,12 +144,13 @@ class RemoteRouterDeviceDataSourceImpl(
                 loadAccessPointGroup(accessPointGroupAccessor)
             } }
             .awaitAll()
+            .filterNotNull()
         return@coroutineScope Success(accessPointGroups)
     }
 
     private suspend fun loadAccessPointGroup(
         accessPointGroupAccessor: RdkCentralAccessorService.AccessPointGroupAccessor,
-    ): AccessPointGroup = coroutineScope {
+    ): AccessPointGroup? = coroutineScope {
         val names = accessPointGroupAccessor.accessPoints()
             .map { accessPointAccessor -> async {
                 accessPointAccessor.getWifiName()
@@ -157,11 +158,12 @@ class RemoteRouterDeviceDataSourceImpl(
             } }
             .awaitAll()
             .filterNotNull()
+        if (names.isEmpty()) return@coroutineScope null
         val prefixName = names.findCommonPrefix()
             .replace("_", " ")
             .takeIf { it.length > 3 }
         val name = when {
-            accessPointGroupAccessor.accessPointGroupId == 1 -> "Main${prefixName?.let { " ($it)" }}"
+            accessPointGroupAccessor.accessPointGroupId == 1 -> "Main${prefixName?.let { " ($it)" }.orEmpty()}"
             prefixName != null -> prefixName
             else -> names.joinToString("/")
         }
