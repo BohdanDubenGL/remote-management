@@ -4,6 +4,7 @@ import com.globallogic.rdkb.remotemanagement.data.datasource.RemoteRouterDeviceD
 import com.globallogic.rdkb.remotemanagement.data.error.IoDeviceError
 import com.globallogic.rdkb.remotemanagement.data.network.service.RdkCentralAccessorService
 import com.globallogic.rdkb.remotemanagement.data.network.service.model.Band
+import com.globallogic.rdkb.remotemanagement.data.upnp.UpnpService
 import com.globallogic.rdkb.remotemanagement.data.wifi.WifiScanner
 import com.globallogic.rdkb.remotemanagement.data.wifi.model.WifiInfo
 import com.globallogic.rdkb.remotemanagement.domain.entity.ConnectedDevice
@@ -28,20 +29,30 @@ import kotlinx.coroutines.supervisorScope
 class RemoteRouterDeviceDataSourceImpl(
     private val rdkCentralAccessorService: RdkCentralAccessorService,
     private val wifiScanner: WifiScanner,
+    private val upnpService: UpnpService,
 ) : RemoteRouterDeviceDataSource {
 
     override suspend fun findAvailableRouterDevices(): Resource<List<FoundRouterDevice>, IoDeviceError.NoAvailableRouterDevices> = supervisorScope {
-        val currentWifi = wifiScanner.getCurrentWifi()
         val foundDevices = rdkCentralAccessorService.getAvailableDevices()
             .map { devices ->
-                devices
-                    .filter { macAddress -> isMacAddressSimilarToCurrentWifi(macAddress, currentWifi) }
+                filterAvailableDevices(devices)
                     .map { macAddress -> async { loadFoundRouterDevice(macAddress) } }
                     .awaitAll()
                     .filterNotNull()
             }
             .mapError { error -> IoDeviceError.NoAvailableRouterDevices }
         return@supervisorScope foundDevices
+    }
+
+    private suspend fun filterAvailableDevices(devices: List<String>): List<String> {
+        val currentWifi = wifiScanner.getCurrentWifi()
+        val upnpDeviceMacAddresses = upnpService.getDevices()
+            .map { device -> upnpService.getDeviceMac(device) }
+        return devices
+            .filter { macAddress ->
+                macAddress in upnpDeviceMacAddresses
+                        || isMacAddressSimilarToCurrentWifi(macAddress, currentWifi)
+            }
     }
 
     private suspend fun loadFoundRouterDevice(macAddress: String): FoundRouterDevice? = coroutineScope {

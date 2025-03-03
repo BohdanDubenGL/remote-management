@@ -13,7 +13,10 @@ import io.ktor.client.request.header
 import io.ktor.http.ContentType
 import io.ktor.serialization.kotlinx.KotlinxSerializationConverter
 import io.ktor.serialization.kotlinx.json.json
+import io.ktor.serialization.kotlinx.xml.xml
 import kotlinx.serialization.json.Json
+import nl.adaptivity.xmlutil.XmlDeclMode
+import nl.adaptivity.xmlutil.serialization.XML
 import kotlin.time.Duration.Companion.seconds
 
 expect fun PlatformHttpClient(config: HttpClientConfig<*>.() -> Unit = {}): HttpClient
@@ -39,6 +42,9 @@ fun RdkCentralHttpClient(): HttpClient = PlatformHttpClient {
             prettyPrint = true
         }
         json(json = json)
+        xml(format = XML {
+            xmlDeclMode = XmlDeclMode.Charset
+        })
         register(ContentType.Text.Plain, KotlinxSerializationConverter(json))
     }
 }
