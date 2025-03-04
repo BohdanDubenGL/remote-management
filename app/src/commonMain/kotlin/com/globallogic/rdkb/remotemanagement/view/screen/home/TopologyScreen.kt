@@ -16,6 +16,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
@@ -89,6 +90,7 @@ private fun TopologyContent(
                 network = TopologyNode(
                     name = "Internet",
                     icon = Icons.Outlined.Public,
+                    iconColor = Color(0xff25ade8),
                     rippleColor = MaterialTheme.colorScheme.tertiaryContainer,
                     rippleIntervalMillis = 1_000L,
                     rippleDurationMillis = 5_000,
@@ -98,6 +100,7 @@ private fun TopologyContent(
                 router = TopologyNode(
                     name = uiState.routerDevice.modelName,
                     icon = Icons.Outlined.Router,
+                    iconColor = Color(0xffe89d25),
                     rippleColor = MaterialTheme.colorScheme.tertiaryContainer,
                     rippleIntervalMillis = 2_500L,
                     rippleDurationMillis = 10_000,
@@ -108,6 +111,7 @@ private fun TopologyContent(
                     TopologyNode(
                         name = connectedDevice.hostName,
                         icon = Icons.Outlined.Devices,
+                        iconColor = Color(0xff25e8d5),
                         rippleColor = MaterialTheme.colorScheme.tertiaryContainer,
                         rippleIntervalMillis = 500L,
                         rippleDurationMillis = 1_500,

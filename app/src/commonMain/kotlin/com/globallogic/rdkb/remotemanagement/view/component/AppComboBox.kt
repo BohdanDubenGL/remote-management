@@ -6,9 +6,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
@@ -83,12 +81,13 @@ fun <T: Any> AppComboBox(
                     Text(
                         text = label,
                         fontSize = 14.sp,
-                        color = MaterialTheme.colorScheme.secondary,
+                        color = MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.Bold,
                     )
                     Text(
                         text = optionMapper(selectedOption),
                         fontSize = 16.sp,
+                        color = Color.White,
                         fontWeight = FontWeight.Normal,
                     )
                 }
@@ -114,7 +113,7 @@ fun <T: Any> AppComboBox(
                         expanded = false
                     },
                     colors = MenuDefaults.itemColors(
-                        textColor = MaterialTheme.colorScheme.primary,
+                        textColor = MaterialTheme.colorScheme.onSurface,
                     )
                 )
             }

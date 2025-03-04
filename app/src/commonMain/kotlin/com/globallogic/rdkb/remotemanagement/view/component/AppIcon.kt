@@ -21,7 +21,7 @@ fun AppIcon(
     imageVector: ImageVector,
     contentDescription: String = "",
     color: Color = MaterialTheme.colorScheme.primaryContainer,
-    contentColor: Color = MaterialTheme.colorScheme.primary,
+    contentColor: Color = MaterialTheme.colorScheme.onSurface,
     iconPadding: Dp = 16.dp,
 ) {
     Box(

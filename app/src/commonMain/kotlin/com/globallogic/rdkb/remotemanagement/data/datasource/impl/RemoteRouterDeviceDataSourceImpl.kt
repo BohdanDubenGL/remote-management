@@ -4,6 +4,7 @@ import com.globallogic.rdkb.remotemanagement.data.datasource.RemoteRouterDeviceD
 import com.globallogic.rdkb.remotemanagement.data.error.IoDeviceError
 import com.globallogic.rdkb.remotemanagement.data.network.service.RdkCentralAccessorService
 import com.globallogic.rdkb.remotemanagement.data.network.service.model.Band
+import com.globallogic.rdkb.remotemanagement.data.upnp.UpnpService
 import com.globallogic.rdkb.remotemanagement.data.wifi.WifiScanner
 import com.globallogic.rdkb.remotemanagement.data.wifi.model.WifiInfo
 import com.globallogic.rdkb.remotemanagement.domain.entity.ConnectedDevice
@@ -28,20 +29,37 @@ import kotlinx.coroutines.supervisorScope
 class RemoteRouterDeviceDataSourceImpl(
     private val rdkCentralAccessorService: RdkCentralAccessorService,
     private val wifiScanner: WifiScanner,
+    private val upnpService: UpnpService,
 ) : RemoteRouterDeviceDataSource {
 
     override suspend fun findAvailableRouterDevices(): Resource<List<FoundRouterDevice>, IoDeviceError.NoAvailableRouterDevices> = supervisorScope {
-        val currentWifi = wifiScanner.getCurrentWifi()
         val foundDevices = rdkCentralAccessorService.getAvailableDevices()
             .map { devices ->
-                devices
-                    .filter { macAddress -> isMacAddressSimilarToCurrentWifi(macAddress, currentWifi) }
+                filterAvailableDevices(devices)
                     .map { macAddress -> async { loadFoundRouterDevice(macAddress) } }
                     .awaitAll()
                     .filterNotNull()
             }
             .mapError { error -> IoDeviceError.NoAvailableRouterDevices }
         return@supervisorScope foundDevices
+    }
+
+    private suspend fun filterAvailableDevices(devices: List<String>): List<String> {
+        val currentWifi = wifiScanner.getCurrentWifi()
+        val upnpDeviceMacAddresses = upnpService.getDevices()
+            .map { device -> upnpService.getDeviceMac(device) }
+            .map { mac -> mac.replace(":", "").lowercase() }
+        return devices
+            .filter { macAddress ->
+                macAddress in upnpDeviceMacAddresses
+                        || isMacAddressSimilarToCurrentWifi(macAddress, currentWifi)
+            }
+    }
+
+    private fun isMacAddressSimilarToCurrentWifi(macAddress: String, currentWifiInfo: WifiInfo?): Boolean {
+        val currentWifiBssid = currentWifiInfo?.bssid?.replace(":", "")?.lowercase()
+        return macAddress.take(macAddressSimilarSymbols)
+            .equals(currentWifiBssid?.take(macAddressSimilarSymbols), ignoreCase = true)
     }
 
     private suspend fun loadFoundRouterDevice(macAddress: String): FoundRouterDevice? = coroutineScope {
@@ -55,12 +73,6 @@ class RemoteRouterDeviceDataSourceImpl(
             ip = ip.await().dataOrElse { error -> return@coroutineScope null },
             macAddress = mac.await().dataOrElse { error -> return@coroutineScope null },
         )
-    }
-
-    private fun isMacAddressSimilarToCurrentWifi(macAddress: String, currentWifiInfo: WifiInfo?): Boolean {
-        val currentWifiBssid = currentWifiInfo?.bssid?.replace(":", "")
-        return macAddress.take(macAddressSimilarSymbols)
-            .equals(currentWifiBssid?.take(macAddressSimilarSymbols), ignoreCase = true)
     }
 
     override suspend fun findRouterDeviceByMacAddress(macAddress: String): Resource<RouterDevice, IoDeviceError.CantConnectToRouterDevice> = coroutineScope {
@@ -144,12 +156,13 @@ class RemoteRouterDeviceDataSourceImpl(
                 loadAccessPointGroup(accessPointGroupAccessor)
             } }
             .awaitAll()
+            .filterNotNull()
         return@coroutineScope Success(accessPointGroups)
     }
 
     private suspend fun loadAccessPointGroup(
         accessPointGroupAccessor: RdkCentralAccessorService.AccessPointGroupAccessor,
-    ): AccessPointGroup = coroutineScope {
+    ): AccessPointGroup? = coroutineScope {
         val names = accessPointGroupAccessor.accessPoints()
             .map { accessPointAccessor -> async {
                 accessPointAccessor.getWifiName()
@@ -157,11 +170,12 @@ class RemoteRouterDeviceDataSourceImpl(
             } }
             .awaitAll()
             .filterNotNull()
+        if (names.isEmpty()) return@coroutineScope null
         val prefixName = names.findCommonPrefix()
             .replace("_", " ")
             .takeIf { it.length > 3 }
         val name = when {
-            accessPointGroupAccessor.accessPointGroupId == 1 -> "Main${prefixName?.let { " ($it)" }}"
+            accessPointGroupAccessor.accessPointGroupId == 1 -> "Main${prefixName?.let { " ($it)" }.orEmpty()}"
             prefixName != null -> prefixName
             else -> names.joinToString("/")
         }

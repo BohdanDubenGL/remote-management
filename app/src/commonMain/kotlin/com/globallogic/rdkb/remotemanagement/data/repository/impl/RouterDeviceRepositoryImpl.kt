@@ -100,7 +100,7 @@ class RouterDeviceRepositoryImpl(
         val email = appPreferences.currentUserEmailPref.get()
             ?: return Failure(DeviceError.NoDeviceFound)
         val macAvailableDevices = remoteRouterDeviceDataSource.findAvailableRouterDevices()
-            .dataOrElse { error -> return Failure(DeviceError.NoDeviceFound) }
+            .dataOrElse { error -> emptyList() }
             .map { device -> device.macAddress }
         val updatedDevices = localRouterDeviceDataSource.loadRouterDevicesForUser(email)
             .dataOrElse { error -> return Failure(DeviceError.NoDeviceFound) }

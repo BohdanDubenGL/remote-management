@@ -25,7 +25,7 @@ fun AppSwitch(
         verticalAlignment = Alignment.CenterVertically,
         modifier = modifier
     ) {
-        AppTitleText(text = text, fontSize = fontSize)
+        AppTitleText(text = text, fontSize = fontSize, color = MaterialTheme.colorScheme.onSurface)
         Spacer(modifier = Modifier.width(8.dp))
         Switch(
             checked = checked,

@@ -56,7 +56,7 @@ fun AppTextField(
         TextField(
             value = value,
             onValueChange = onValueChange,
-            textStyle = TextStyle(color = MaterialTheme.colorScheme.primary, fontSize = 16.sp),
+            textStyle = TextStyle(color = Color.White, fontSize = 16.sp),
             placeholder = {
                 Text(
                     text = placeholder,
@@ -67,7 +67,7 @@ fun AppTextField(
             label = {
                 Text(
                     text = label,
-                    color = MaterialTheme.colorScheme.secondary,
+                    color = MaterialTheme.colorScheme.primary,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(bottom = 6.dp)

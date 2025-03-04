@@ -11,9 +11,11 @@ import com.globallogic.rdkb.remotemanagement.data.db.AppDatabase
 import com.globallogic.rdkb.remotemanagement.data.db.RouterDeviceDao
 import com.globallogic.rdkb.remotemanagement.data.db.UserDao
 import com.globallogic.rdkb.remotemanagement.data.network.RdkCentralHttpClient
+import com.globallogic.rdkb.remotemanagement.data.network.service.NetworkUpnpDeviceDataService
 import com.globallogic.rdkb.remotemanagement.data.network.service.RdkCentralPropertyService
 import com.globallogic.rdkb.remotemanagement.data.network.service.RdkCentralNetworkApiService
 import com.globallogic.rdkb.remotemanagement.data.network.service.RdkCentralAccessorService
+import com.globallogic.rdkb.remotemanagement.data.network.service.impl.NetworkUpnpDeviceDataServiceImpl
 import com.globallogic.rdkb.remotemanagement.data.network.service.impl.RdkCentralNetworkApiServiceImpl
 import com.globallogic.rdkb.remotemanagement.data.network.service.impl.RdkCentralPropertyServiceImpl
 import com.globallogic.rdkb.remotemanagement.data.network.service.impl.RdkCentralAccessorServiceImpl
@@ -47,6 +49,7 @@ val dataModule: Module = module {
     singleOf(::RdkCentralNetworkApiServiceImpl).bind<RdkCentralNetworkApiService>()
     singleOf(::RdkCentralPropertyServiceImpl).bind<RdkCentralPropertyService>()
     singleOf(::RdkCentralAccessorServiceImpl).bind<RdkCentralAccessorService>()
+    singleOf(::NetworkUpnpDeviceDataServiceImpl).bind<NetworkUpnpDeviceDataService>()
 
     singleOf(::AppPreferencesImpl).bind<AppPreferences>()
 

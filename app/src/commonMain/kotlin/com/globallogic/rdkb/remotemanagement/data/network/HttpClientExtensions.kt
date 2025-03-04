@@ -8,6 +8,7 @@ import io.ktor.client.call.body
 import io.ktor.client.request.HttpRequestBuilder
 import io.ktor.client.request.get
 import io.ktor.client.request.patch
+import io.ktor.client.request.post
 
 inline fun <T> HttpClient.safeCall(body: () -> T): Resource<T, ThrowableResourceError> = runCatchingSafe(body).fold(
     onSuccess = { result -> Resource.Success(result) },
@@ -16,6 +17,9 @@ inline fun <T> HttpClient.safeCall(body: () -> T): Resource<T, ThrowableResource
 
 suspend inline fun <reified T> HttpClient.safeGet(block: HttpRequestBuilder.() -> Unit): Resource<T, ThrowableResourceError> =
     safeCall { get(block).body<T>() }
+
+suspend inline fun <reified T> HttpClient.safePost(block: HttpRequestBuilder.() -> Unit): Resource<T, ThrowableResourceError> =
+    safeCall { post(block).body<T>() }
 
 suspend inline fun <reified T> HttpClient.safePatch(block: HttpRequestBuilder.() -> Unit): Resource<T, ThrowableResourceError> =
     safeCall { patch(block).body<T>() }

@@ -26,7 +26,7 @@ fun AppButton(
     fontSize: TextUnit = 16.sp,
     fontWeight: FontWeight = FontWeight.Bold,
     containerColor: Color = MaterialTheme.colorScheme.primaryContainer,
-    contentColor: Color = MaterialTheme.colorScheme.primary,
+    contentColor: Color = MaterialTheme.colorScheme.onSurface,
     minHeight: Dp = 56.dp,
     minWidth: Dp = 200.dp,
     enabled: Boolean = true,

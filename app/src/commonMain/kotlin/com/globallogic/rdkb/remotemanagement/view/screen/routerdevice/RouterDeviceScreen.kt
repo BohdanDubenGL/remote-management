@@ -18,6 +18,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.globallogic.rdkb.remotemanagement.domain.entity.AccessPointGroup
@@ -134,11 +135,21 @@ private fun RouterDeviceContent(
                                     .fillMaxWidth()
                                     .padding(horizontal = 16.dp, vertical = 8.dp)
                             ) {
-                                AppTextProperty(name = "Enabled:", value = accessPoint.enabled)
-                                AppTextProperty(name = "SSID:", value = accessPoint.ssid)
-                                AppTextProperty(name = "Security mode:", value = accessPoint.securityMode)
-                                AppTextProperty(name = "Band:", value = accessPoint.band)
-                                AppTextProperty(name = "Clients:", value = accessPoint.clientsCount)
+                                AppTitleTextWithIcon(
+                                    text = accessPoint.ssid,
+                                    imageVector = Icons.Default.Wifi,
+                                    fontSize = 20.sp,
+                                    iconSize = 24.dp,
+                                )
+                                Column(
+                                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                                    modifier = Modifier.padding(start = 40.dp)
+                                ) {
+                                    AppTextProperty(name = "Enabled:", value = accessPoint.enabled)
+                                    AppTextProperty(name = "Security mode:", value = accessPoint.securityMode)
+                                    AppTextProperty(name = "Band:", value = accessPoint.band)
+                                    AppTextProperty(name = "Clients:", value = accessPoint.clientsCount)
+                                }
                             }
                         }
                     }
