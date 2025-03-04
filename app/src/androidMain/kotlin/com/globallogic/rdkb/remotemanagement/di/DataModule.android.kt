@@ -20,5 +20,5 @@ actual val platformDataModule: Module = module {
     single { createRoomDatabase(createDatabaseBuilder<AppDatabase>(androidContext(), AppDatabase.fileName)) }.bind<AppDatabase>()
 
     single { WifiScanner(androidContext()) }.bind<WifiScanner>()
-    single { UpnpServiceImpl() }.bind<UpnpService>()
+    single { UpnpServiceImpl(get()) }.bind<UpnpService>()
 }

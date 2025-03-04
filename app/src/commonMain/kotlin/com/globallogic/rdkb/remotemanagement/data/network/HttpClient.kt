@@ -41,10 +41,12 @@ fun RdkCentralHttpClient(): HttpClient = PlatformHttpClient {
             ignoreUnknownKeys = true
             prettyPrint = true
         }
-        json(json = json)
-        xml(format = XML {
+        val xml = XML {
             xmlDeclMode = XmlDeclMode.Charset
-        })
+        }
+        json(json = json)
+        xml(format = xml)
         register(ContentType.Text.Plain, KotlinxSerializationConverter(json))
+        register(ContentType.Text.Xml, KotlinxSerializationConverter(xml))
     }
 }

@@ -48,11 +48,18 @@ class RemoteRouterDeviceDataSourceImpl(
         val currentWifi = wifiScanner.getCurrentWifi()
         val upnpDeviceMacAddresses = upnpService.getDevices()
             .map { device -> upnpService.getDeviceMac(device) }
+            .map { mac -> mac.replace(":", "").lowercase() }
         return devices
             .filter { macAddress ->
                 macAddress in upnpDeviceMacAddresses
                         || isMacAddressSimilarToCurrentWifi(macAddress, currentWifi)
             }
+    }
+
+    private fun isMacAddressSimilarToCurrentWifi(macAddress: String, currentWifiInfo: WifiInfo?): Boolean {
+        val currentWifiBssid = currentWifiInfo?.bssid?.replace(":", "")?.lowercase()
+        return macAddress.take(macAddressSimilarSymbols)
+            .equals(currentWifiBssid?.take(macAddressSimilarSymbols), ignoreCase = true)
     }
 
     private suspend fun loadFoundRouterDevice(macAddress: String): FoundRouterDevice? = coroutineScope {
@@ -66,12 +73,6 @@ class RemoteRouterDeviceDataSourceImpl(
             ip = ip.await().dataOrElse { error -> return@coroutineScope null },
             macAddress = mac.await().dataOrElse { error -> return@coroutineScope null },
         )
-    }
-
-    private fun isMacAddressSimilarToCurrentWifi(macAddress: String, currentWifiInfo: WifiInfo?): Boolean {
-        val currentWifiBssid = currentWifiInfo?.bssid?.replace(":", "")
-        return macAddress.take(macAddressSimilarSymbols)
-            .equals(currentWifiBssid?.take(macAddressSimilarSymbols), ignoreCase = true)
     }
 
     override suspend fun findRouterDeviceByMacAddress(macAddress: String): Resource<RouterDevice, IoDeviceError.CantConnectToRouterDevice> = coroutineScope {

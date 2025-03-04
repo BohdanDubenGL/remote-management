@@ -1,7 +1,11 @@
 package com.globallogic.rdkb.remotemanagement.data.upnp.impl
 
+import com.globallogic.rdkb.remotemanagement.data.network.service.NetworkUpnpDeviceDataService
 import com.globallogic.rdkb.remotemanagement.data.upnp.UpnpService
 import com.globallogic.rdkb.remotemanagement.data.upnp.model.UpnpDevice
+import com.globallogic.rdkb.remotemanagement.domain.utils.dataOrElse
+import com.globallogic.rdkb.remotemanagement.domain.utils.map
+import io.ktor.http.Url
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -17,6 +21,7 @@ import java.nio.charset.Charset
 import kotlin.time.Duration.Companion.seconds
 
 class UpnpServiceImpl(
+    private val networkUpnpDeviceDataService: NetworkUpnpDeviceDataService,
     private val loadingTimeoutMillis: Long = 5.seconds.inWholeMilliseconds,
 ) : UpnpService {
     override suspend fun getDevices(): List<UpnpDevice> = coroutineScope {
@@ -52,7 +57,10 @@ class UpnpServiceImpl(
     }
 
     override suspend fun getDeviceMac(device: UpnpDevice): String {
-        TODO("Not yet implemented") // todo:
+        val locationUrl = Url(device.location)
+        return networkUpnpDeviceDataService.getMacAddress(locationUrl.host, locationUrl.port)
+            .map { it.body.getMACAddressResponse.newMACAddress.macAddress }
+            .dataOrElse { error -> "" }
     }
 
     private fun createMSearchRequest(): DatagramPacket {
