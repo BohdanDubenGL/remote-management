@@ -4,7 +4,9 @@ import com.globallogic.rdkb.remotemanagement.domain.utils.ResourceError
 
 sealed interface DeviceError : ResourceError {
     data object NoAvailableRouterDevices : DeviceError
-    data object CantConnectToRouterDevice : DeviceError
+    sealed interface ConnectionError: DeviceError
+    data object CantConnectToRouterDevice : DeviceError, ConnectionError
+    data object WrongMacAddressFormat : DeviceError, ConnectionError
 
     data object SetupDevice : DeviceError
 

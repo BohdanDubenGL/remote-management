@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
+import com.globallogic.rdkb.remotemanagement.domain.error.DeviceError
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdeviceconnection.AddRouterDeviceManuallyUseCase
 import com.globallogic.rdkb.remotemanagement.domain.utils.dataOrElse
 import com.globallogic.rdkb.remotemanagement.domain.utils.map
@@ -61,6 +62,8 @@ private fun AddRouterDeviceManuallyContent(
             value = uiState.deviceMacAddress,
             onValueChange = onMacAddressEntered,
             label = "Mac address",
+            isError = uiState.deviceMacAddressErrorMessage.isNotBlank(),
+            errorMessage = uiState.deviceMacAddressErrorMessage,
             placeholder = "Enter device mac address",
         )
         Spacer(modifier = Modifier.height(16.dp))
@@ -79,14 +82,20 @@ class AddRouterDeviceManuallyViewModel(
         state.copy(deviceMacAddress = macAddress)
     }
 
-    fun connectToDevice() = launchUpdateState { state ->
-        addRouterDeviceManually(state.deviceMacAddress)
+    fun connectToDevice() = launchUpdateStateFromFlow { state ->
+        send(state.copy(deviceMacAddressErrorMessage = "", deviceConnected = false))
+        val newState = addRouterDeviceManually(state.deviceMacAddress)
             .map { routerDevice -> state.copy(deviceConnected = true) }
-            .dataOrElse { error -> state }
+            .dataOrElse { error -> when(error) {
+                is DeviceError.WrongMacAddressFormat -> state.copy(deviceMacAddressErrorMessage = "Wrong mac address format")
+                is DeviceError.CantConnectToRouterDevice -> state.copy(deviceMacAddressErrorMessage = "Can't connect to device")
+            } }
+        send(newState)
     }
 }
 
 data class AddRouterDeviceManuallyUiState(
     val deviceMacAddress: String = "",
+    val deviceMacAddressErrorMessage: String = "",
     val deviceConnected: Boolean = false,
 )

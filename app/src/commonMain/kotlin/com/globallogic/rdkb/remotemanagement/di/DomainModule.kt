@@ -19,6 +19,7 @@ import com.globallogic.rdkb.remotemanagement.domain.usecase.user.ChangeAccountSe
 import com.globallogic.rdkb.remotemanagement.domain.usecase.user.GetCurrentLoggedInUserUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.user.VerifyEmailForAuthenticationUseCase
 import com.globallogic.rdkb.remotemanagement.domain.verification.EmailVerifier
+import com.globallogic.rdkb.remotemanagement.domain.verification.MacAddressVerifier
 import com.globallogic.rdkb.remotemanagement.domain.verification.PasswordVerifier
 import com.globallogic.rdkb.remotemanagement.domain.verification.UserNameVerifier
 import org.koin.core.module.Module
@@ -51,4 +52,5 @@ val domainModule: Module = module {
     factory { UserNameVerifier() }.bind<UserNameVerifier>()
     factory { EmailVerifier() }.bind<EmailVerifier>()
     factory { PasswordVerifier() }.bind<PasswordVerifier>()
+    factory { MacAddressVerifier() }.bind<MacAddressVerifier>()
 }
