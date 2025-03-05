@@ -6,5 +6,4 @@
     <string name="screen_bottom_nav_title_router_device">Device</string>
     <string name="screen_bottom_nav_title_connected_devices">Clients</string>
     <string name="screen_bottom_nav_title_router_device_setup">Setup</string>
-    <string name="screen_bottom_nav_title_router_device_settings">Actions</string>
 </resources>
