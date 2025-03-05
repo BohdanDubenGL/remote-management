@@ -6,7 +6,6 @@ import rdkbremotemanagement.app.generated.resources.Res
 import rdkbremotemanagement.app.generated.resources.screen_bottom_nav_title_connected_devices
 import rdkbremotemanagement.app.generated.resources.screen_bottom_nav_title_router_device
 import rdkbremotemanagement.app.generated.resources.screen_bottom_nav_title_router_device_list
-import rdkbremotemanagement.app.generated.resources.screen_bottom_nav_title_router_device_settings
 import rdkbremotemanagement.app.generated.resources.screen_bottom_nav_title_router_device_setup
 import rdkbremotemanagement.app.generated.resources.screen_bottom_nav_title_settings
 import rdkbremotemanagement.app.generated.resources.screen_bottom_nav_title_topology
@@ -15,7 +14,6 @@ import rdkbremotemanagement.app.generated.resources.screen_title_change_account_
 import rdkbremotemanagement.app.generated.resources.screen_title_connected_devices
 import rdkbremotemanagement.app.generated.resources.screen_title_router_device
 import rdkbremotemanagement.app.generated.resources.screen_title_router_device_list
-import rdkbremotemanagement.app.generated.resources.screen_title_router_device_settings
 import rdkbremotemanagement.app.generated.resources.screen_title_router_device_setup
 import rdkbremotemanagement.app.generated.resources.screen_title_search_router_device
 import rdkbremotemanagement.app.generated.resources.screen_title_settings
@@ -50,7 +48,6 @@ sealed interface Screen {
         @Serializable data object RouterDevice : Screen
         @Serializable data object Setup : Screen
         @Serializable data object ConnectedDevices : Screen
-        @Serializable data object RouterSettings : Screen
     }
 }
 
@@ -68,7 +65,6 @@ fun getRouteTitle(route: String?): StringResource? = when (route) {
     routeString<Screen.RouterDeviceGraph.RouterDevice>() -> Res.string.screen_title_router_device
     routeString<Screen.RouterDeviceGraph.ConnectedDevices>() -> Res.string.screen_title_connected_devices
     routeString<Screen.RouterDeviceGraph.Setup>() -> Res.string.screen_title_router_device_setup
-    routeString<Screen.RouterDeviceGraph.RouterSettings>() -> Res.string.screen_title_router_device_settings
 
     else -> null
 }
@@ -86,7 +82,6 @@ fun getRouteBottomBarTitle(route: String?): StringResource? = when (route) {
     routeString<Screen.RouterDeviceGraph.RouterDevice>() -> Res.string.screen_bottom_nav_title_router_device
     routeString<Screen.RouterDeviceGraph.ConnectedDevices>() -> Res.string.screen_bottom_nav_title_connected_devices
     routeString<Screen.RouterDeviceGraph.Setup>() -> Res.string.screen_bottom_nav_title_router_device_setup
-    routeString<Screen.RouterDeviceGraph.RouterSettings>() -> Res.string.screen_bottom_nav_title_router_device_settings
 
     else -> null
 }

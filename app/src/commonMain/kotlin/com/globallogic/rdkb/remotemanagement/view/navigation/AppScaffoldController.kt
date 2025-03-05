@@ -1,13 +1,11 @@
 package com.globallogic.rdkb.remotemanagement.view.navigation
 
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Category
 import androidx.compose.material.icons.filled.Devices
 import androidx.compose.material.icons.filled.Hub
 import androidx.compose.material.icons.filled.PhonelinkSetup
 import androidx.compose.material.icons.filled.Router
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.outlined.Category
 import androidx.compose.material.icons.outlined.Devices
 import androidx.compose.material.icons.outlined.Hub
 import androidx.compose.material.icons.outlined.PhonelinkSetup
@@ -28,7 +26,6 @@ fun appScaffoldController(): ScaffoldController = viewModel {
             BottomBarRoute(Screen.RouterDeviceGraph.RouterDevice, Screen.RouterDeviceGraph, Icons.Filled.Router, Icons.Outlined.Router),
             BottomBarRoute(Screen.RouterDeviceGraph.ConnectedDevices, Screen.RouterDeviceGraph, Icons.Filled.Devices, Icons.Outlined.Devices),
             BottomBarRoute(Screen.RouterDeviceGraph.Setup, Screen.RouterDeviceGraph, Icons.Filled.PhonelinkSetup, Icons.Outlined.PhonelinkSetup),
-            BottomBarRoute(Screen.RouterDeviceGraph.RouterSettings, Screen.RouterDeviceGraph, Icons.Filled.Category, Icons.Outlined.Category),
         ),
     )
 }

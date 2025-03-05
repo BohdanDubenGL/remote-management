@@ -29,6 +29,7 @@ fun AppButton(
     contentColor: Color = MaterialTheme.colorScheme.onSurface,
     minHeight: Dp = 56.dp,
     minWidth: Dp = 200.dp,
+    cornerRadius: Dp = 24.dp,
     enabled: Boolean = true,
     onClick: () -> Unit = { },
 ) {
@@ -36,9 +37,9 @@ fun AppButton(
         onClick = onClick,
         modifier = modifier
             .defaultMinSize(minWidth = minWidth, minHeight = minHeight)
-            .background(contentColor.copy(alpha = 0.25F), shape = RoundedCornerShape(24.dp))
+            .background(contentColor.copy(alpha = 0.25F), shape = RoundedCornerShape(cornerRadius))
             .padding(1.dp),
-        shape = RoundedCornerShape(24.dp),
+        shape = RoundedCornerShape(cornerRadius),
         colors = ButtonDefaults.buttonColors(
             containerColor = containerColor,
             contentColor = contentColor,
