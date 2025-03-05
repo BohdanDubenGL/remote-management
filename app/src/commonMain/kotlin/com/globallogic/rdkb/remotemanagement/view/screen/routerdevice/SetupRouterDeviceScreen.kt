@@ -29,12 +29,15 @@ import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.GetAcce
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.GetAccessPointSettingsUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.GetSelectedRouterDeviceUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.SetupDeviceAccessPointUseCase
+import com.globallogic.rdkb.remotemanagement.domain.utils.Resource
 import com.globallogic.rdkb.remotemanagement.domain.utils.Resource.Failure
 import com.globallogic.rdkb.remotemanagement.domain.utils.Resource.Success
 import com.globallogic.rdkb.remotemanagement.domain.utils.ResourceState
 import com.globallogic.rdkb.remotemanagement.domain.utils.dataOrElse
 import com.globallogic.rdkb.remotemanagement.domain.utils.map
+import com.globallogic.rdkb.remotemanagement.domain.utils.mapError
 import com.globallogic.rdkb.remotemanagement.domain.utils.mapErrorToData
+import com.globallogic.rdkb.remotemanagement.domain.utils.onFailure
 import com.globallogic.rdkb.remotemanagement.view.base.MviViewModel
 import com.globallogic.rdkb.remotemanagement.view.component.AppButton
 import com.globallogic.rdkb.remotemanagement.view.component.AppCard
@@ -48,6 +51,8 @@ import com.globallogic.rdkb.remotemanagement.view.component.AppTitleTextWithIcon
 import com.globallogic.rdkb.remotemanagement.view.error.UiResourceError
 import com.globallogic.rdkb.remotemanagement.view.navigation.LocalNavController
 import com.globallogic.rdkb.remotemanagement.view.navigation.Screen
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.map
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
@@ -192,33 +197,44 @@ class SetupRouterDeviceViewModel(
 
     override suspend fun onInitState() = loadRouterDevice()
 
-    fun onAccessPointGroupChanged(accessPointGroup: AccessPointGroup) = launchOnViewModelScope {
-        val originalState = uiState.value
-        updateState { state -> ResourceState.Loading }
-        updateState { state ->
-            when (originalState) {
-                is Success -> {
-                    val device = getSelectedRouterDevice()
-                        .dataOrElse { error -> return@updateState state }
-                    val wifiSettings = getAccessPointSettings(device, accessPointGroup)
-                        .dataOrElse { error -> return@updateState Failure(UiResourceError("Error", "No data")) }
-                    Success(originalState.data.copy(
-                        routerDevice = device,
-                        accessPointGroup = accessPointGroup,
-                        bandsSettings = wifiSettings.accessPoints
-                            .map { wifi -> BandSettings(
-                                frequency = wifi.band,
-                                ssid = wifi.ssid,
-                                password = "",
-                                securityMode = wifi.securityMode,
-                                availableSecurityModes = wifi.availableSecurityModes,
-                                enabled = wifi.enabled,
-                                sameAsFirst = false
-                            ) }
-                    ))
-                }
-                else -> state
+    fun onAccessPointGroupChanged(accessPointGroup: AccessPointGroup) = launchUpdateStateFromFlow { originalState ->
+        send(ResourceState.Loading)
+        when (originalState) {
+            is Success -> {
+                val device = getSelectedRouterDevice()
+                    .onFailure { send(Failure(UiResourceError("Error", "Can't load device info"))) }
+                    .dataOrElse { error -> return@launchUpdateStateFromFlow }
+                getAccessPointSettings(device, accessPointGroup)
+                    .map { accessPointGroupSettingsState ->
+                        when (accessPointGroupSettingsState) {
+                            is ResourceState.Cancelled -> accessPointGroupSettingsState
+                            is ResourceState.Loading -> accessPointGroupSettingsState
+                            is ResourceState.None -> accessPointGroupSettingsState
+                            is Resource -> accessPointGroupSettingsState
+                                .mapError { UiResourceError("Error", "Can't load access point settings") }
+                                .map { wifiSettings ->
+                                    originalState.data.copy(
+                                        routerDevice = device,
+                                        accessPointGroup = accessPointGroup,
+                                        bandsSettings = wifiSettings.accessPoints
+                                            .map { wifi -> BandSettings(
+                                                frequency = wifi.band,
+                                                ssid = wifi.ssid,
+                                                password = "",
+                                                securityMode = wifi.securityMode,
+                                                availableSecurityModes = wifi.availableSecurityModes,
+                                                enabled = wifi.enabled,
+                                                sameAsFirst = false
+                                            ) }
+                                    )
+                                }
+                        }
+                    }
+                    .collectLatest { state ->
+                        send(state)
+                    }
             }
+            else -> send(originalState)
         }
     }
 
@@ -282,34 +298,63 @@ class SetupRouterDeviceViewModel(
         }
     }
 
-    private fun loadRouterDevice() = launchOnViewModelScope {
-        updateState { state -> ResourceState.Loading }
-        updateState { state ->
-            val device = getSelectedRouterDevice()
-                .dataOrElse { error -> return@updateState state }
-            val accessPointGroups = getAccessPointGroups(device)
-                .dataOrElse { error -> return@updateState Failure(UiResourceError("Error", "No data")) }
-            val currentAccessPointGroup = accessPointGroups.firstOrNull()
-                ?: return@updateState Failure(UiResourceError("Error", "No data"))
-            val wifiSettings = getAccessPointSettings(device, currentAccessPointGroup)
-                .dataOrElse { error -> return@updateState Failure(UiResourceError("Error", "No data")) }
+    private fun loadRouterDevice() = launchUpdateStateFromFlow { originalState ->
+        send(ResourceState.Loading)
+        val device = getSelectedRouterDevice()
+            .onFailure { send(Failure(UiResourceError("Error", "Can't load router data"))) }
+            .dataOrElse { error -> return@launchUpdateStateFromFlow }
+        getAccessPointGroups(device).collectLatest { accessPointGroupsState ->
+            when(accessPointGroupsState) {
+                is ResourceState.Cancelled -> send(accessPointGroupsState)
+                is ResourceState.Loading -> send(accessPointGroupsState)
+                is ResourceState.None -> send(accessPointGroupsState)
+                is Failure -> {
+                    val newState = accessPointGroupsState
+                        .mapError { UiResourceError("Error", "Can't load access point group") }
+                    send(newState)
+                }
+                is Success -> {
+                    val accessPointGroups = accessPointGroupsState.data
+                    val currentAccessPointGroup = accessPointGroups.firstOrNull()
+                    if (currentAccessPointGroup == null) {
+                        send(Failure(UiResourceError("Error", "Can't load access point data")))
+                        return@collectLatest
+                    }
+                    getAccessPointSettings(device, currentAccessPointGroup)
+                        .map { accessPointGroupSettingsState ->
+                            when(accessPointGroupSettingsState) {
+                                is ResourceState.Cancelled -> accessPointGroupSettingsState
+                                is ResourceState.Loading -> accessPointGroupSettingsState
+                                is ResourceState.None -> accessPointGroupSettingsState
+                                is Resource -> accessPointGroupSettingsState
+                                    .mapError { UiResourceError("Error", "Can't load access point data") }
+                                    .map { wifiSettings ->
+                                        SetupRouterDeviceUiState(
+                                            routerDevice = device,
+                                            availableAccessPointGroups = accessPointGroups,
+                                            accessPointGroup = currentAccessPointGroup,
+                                            bandsSettings = wifiSettings.accessPoints
+                                                .map { wifi ->
+                                                    BandSettings(
+                                                        frequency = wifi.band,
+                                                        ssid = wifi.ssid,
+                                                        password = "",
+                                                        securityMode = wifi.securityMode,
+                                                        availableSecurityModes = wifi.availableSecurityModes,
+                                                        enabled = wifi.enabled,
+                                                        sameAsFirst = false
+                                                    )
+                                                },
+                                        )
+                                    }
+                            }
+                        }
+                        .collectLatest { state ->
+                            send(state)
+                        }
+                }
+            }
 
-            Success(SetupRouterDeviceUiState(
-                routerDevice = device,
-                availableAccessPointGroups = accessPointGroups,
-                accessPointGroup = currentAccessPointGroup,
-                bandsSettings = wifiSettings.accessPoints
-                    .map { wifi ->
-                        BandSettings(
-                            frequency = wifi.band,
-                            ssid = wifi.ssid,
-                            password = "",
-                            securityMode = wifi.securityMode,
-                            availableSecurityModes = wifi.availableSecurityModes,
-                            enabled = wifi.enabled,
-                            sameAsFirst = false
-                        ) },
-            ))
         }
     }
 

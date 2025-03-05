@@ -1,6 +1,7 @@
 package com.globallogic.rdkb.remotemanagement.data.datasource.impl
 
 import com.globallogic.rdkb.remotemanagement.data.datasource.LocalUserDataSource
+import com.globallogic.rdkb.remotemanagement.data.datasource.impl.mapper.UserMapper
 import com.globallogic.rdkb.remotemanagement.data.db.UserDao
 import com.globallogic.rdkb.remotemanagement.data.db.dto.UserDto
 import com.globallogic.rdkb.remotemanagement.data.error.IoUserError
@@ -23,7 +24,7 @@ class LocalUserDataSourceImpl(
         val newUser = UserDto(email = email, name = name, password = password.md5())
         runCatchingSafe { userDao.upsertUser(newUser) }
             .getOrElse { error -> return Failure(IoUserError.DatabaseError(error)) }
-        return Success(UserMapper.toDomain(newUser))
+        return Success(UserMapper.toUser(newUser))
     }
 
     override suspend fun updateUser(email: String, newEmail: String, newName: String, newPassword: String): Resource<User, IoUserError.UpdateUser> {
@@ -35,7 +36,7 @@ class LocalUserDataSourceImpl(
         runCatchingSafe { userDao.upsertUser(updatedUser) }
             .getOrElse { error -> return Failure(IoUserError.DatabaseError(error)) }
 
-        return Success(UserMapper.toDomain(updatedUser))
+        return Success(UserMapper.toUser(updatedUser))
     }
 
     override suspend fun findUserByEmail(email: String): Resource<User, IoUserError.FindUserById> {
@@ -43,7 +44,7 @@ class LocalUserDataSourceImpl(
             .getOrElse { error -> return Failure(IoUserError.DatabaseError(error)) }
             ?: return Failure(IoUserError.UserNotFound)
 
-        return Success(UserMapper.toDomain(user))
+        return Success(UserMapper.toUser(user))
     }
 
     override suspend fun findUserByCredentials(email: String, password: String): Resource<User, IoUserError.FindUserByCredentials> {
@@ -51,10 +52,6 @@ class LocalUserDataSourceImpl(
             .getOrElse { error -> return Failure(IoUserError.DatabaseError(error)) }
             ?: return Failure(IoUserError.UserNotFound)
 
-        return Success(UserMapper.toDomain(user))
+        return Success(UserMapper.toUser(user))
     }
-}
-
-private object UserMapper {
-    fun toDomain(user: UserDto): User = User(username = user.name, email = user.email)
 }

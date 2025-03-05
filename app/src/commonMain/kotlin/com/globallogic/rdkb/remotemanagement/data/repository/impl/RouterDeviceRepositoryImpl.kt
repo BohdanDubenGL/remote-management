@@ -27,7 +27,9 @@ class RouterDeviceRepositoryImpl(
     private val localRouterDeviceDataSource: LocalRouterDeviceDataSource,
 ) : RouterDeviceRepository {
 
-    override suspend fun getDeviceList(forceUpdate: Boolean): Flow<ResourceState<List<RouterDevice>, DeviceError.NoDevicesFound>> = channelFlow {
+    override suspend fun getDeviceList(
+        forceUpdate: Boolean
+    ): Flow<ResourceState<List<RouterDevice>, DeviceError.NoDevicesFound>> = channelFlow {
         send(ResourceState.Loading)
 
         val email = appPreferences.currentUserEmailPref.get()
@@ -53,7 +55,10 @@ class RouterDeviceRepositoryImpl(
         }
     }
 
-    override suspend fun getRouterDeviceConnectedDevices(device: RouterDevice, forceUpdate: Boolean): Flow<ResourceState<List<ConnectedDevice>, DeviceError.NoConnectedDevicesFound>> = channelFlow {
+    override suspend fun getRouterDeviceConnectedDevices(
+        device: RouterDevice,
+        forceUpdate: Boolean
+    ): Flow<ResourceState<List<ConnectedDevice>, DeviceError.NoConnectedDevicesFound>> = channelFlow {
         send(ResourceState.Loading)
 
         val savedConnectedDevices = localRouterDeviceDataSource.loadConnectedDevices(device)
@@ -74,14 +79,53 @@ class RouterDeviceRepositoryImpl(
         }
     }
 
-    override suspend fun loadAccessPointGroups(device: RouterDevice): Resource<List<AccessPointGroup>, DeviceError.WifiSettings> {
-        return remoteRouterDeviceDataSource.loadAccessPointGroups(device)
+    override suspend fun loadAccessPointGroups(
+        device: RouterDevice,
+        forceUpdate: Boolean
+    ): Flow<ResourceState<List<AccessPointGroup>, DeviceError.WifiSettings>> = channelFlow {
+        send(ResourceState.Loading)
+
+        val savedAccessPointGroups = localRouterDeviceDataSource.loadAccessPointGroups(device)
             .mapError { error -> DeviceError.WifiSettings }
+        send(savedAccessPointGroups)
+
+        if (forceUpdate) {
+            val accessPointGroups = remoteRouterDeviceDataSource.loadAccessPointGroups(device)
+                .dataOrElse { error -> null }
+            if (accessPointGroups != null) {
+                localRouterDeviceDataSource.saveAccessPointGroups(device, accessPointGroups)
+                    .dataOrElse { error -> null }
+
+                val updatedAccessPointGroups = localRouterDeviceDataSource.loadAccessPointGroups(device)
+                    .mapError { error -> DeviceError.WifiSettings }
+                send(updatedAccessPointGroups)
+            }
+        }
     }
 
-    override suspend fun getDeviceAccessPointSettings(device: RouterDevice, accessPointGroup: AccessPointGroup): Resource<AccessPointSettings, DeviceError.WifiSettings> {
-        return remoteRouterDeviceDataSource.loadAccessPointSettings(device, accessPointGroup)
+    override suspend fun getDeviceAccessPointSettings(
+        device: RouterDevice,
+        accessPointGroup: AccessPointGroup,
+        forceUpdate: Boolean
+    ): Flow<ResourceState<AccessPointSettings, DeviceError.WifiSettings>> = channelFlow {
+        send(ResourceState.Loading)
+
+        val savedAccessPointSettings = localRouterDeviceDataSource.loadDeviceAccessPointSettings(device, accessPointGroup)
             .mapError { error -> DeviceError.WifiSettings }
+        send(savedAccessPointSettings)
+
+        if (forceUpdate) {
+            val accessPointSettings = remoteRouterDeviceDataSource.loadAccessPointSettings(device, accessPointGroup)
+                .dataOrElse { error -> null }
+            if (accessPointSettings != null) {
+                localRouterDeviceDataSource.saveDeviceAccessPointSettings(device, accessPointSettings)
+                    .dataOrElse { error -> null }
+
+                val updatedAccessPointSettings = localRouterDeviceDataSource.loadDeviceAccessPointSettings(device, accessPointGroup)
+                    .mapError { error -> DeviceError.WifiSettings }
+                send(updatedAccessPointSettings)
+            }
+        }
     }
 
     override suspend fun selectRouterDevice(device: RouterDevice): Success<Unit> {
@@ -112,7 +156,10 @@ class RouterDeviceRepositoryImpl(
         return Success(localDevice)
     }
 
-    override suspend fun doAction(device: RouterDevice, action: RouterDeviceAction): Resource<Unit, DeviceError.NoDeviceFound> {
+    override suspend fun doAction(
+        device: RouterDevice,
+        action: RouterDeviceAction
+    ): Resource<Unit, DeviceError.NoDeviceFound> {
         return when(action) {
             RouterDeviceAction.Restart -> remoteRouterDeviceDataSource.rebootDevice(device)
                 .mapError { error -> DeviceError.NoDeviceFound }
@@ -137,7 +184,11 @@ class RouterDeviceRepositoryImpl(
         return Success(Unit)
     }
 
-    override suspend fun setupDeviceAccessPoint(device: RouterDevice, accessPointGroup: AccessPointGroup, settings: DeviceAccessPointSettings): Resource<Unit, DeviceError.SetupDevice> {
+    override suspend fun setupDeviceAccessPoint(
+        device: RouterDevice,
+        accessPointGroup: AccessPointGroup,
+        settings: DeviceAccessPointSettings
+    ): Resource<Unit, DeviceError.SetupDevice> {
         return remoteRouterDeviceDataSource.setupAccessPoint(device, accessPointGroup, settings)
             .mapError { error -> DeviceError.SetupDevice }
     }

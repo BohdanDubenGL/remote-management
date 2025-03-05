@@ -28,11 +28,14 @@ import androidx.navigation.NavController
 import com.globallogic.rdkb.remotemanagement.domain.entity.AccessPointGroup
 import com.globallogic.rdkb.remotemanagement.domain.entity.AccessPointSettings
 import com.globallogic.rdkb.remotemanagement.domain.entity.RouterDevice
+import com.globallogic.rdkb.remotemanagement.domain.error.DeviceError
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.DoRouterDeviceActionUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.GetAccessPointGroupsUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.GetAccessPointSettingsUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.GetSelectedRouterDeviceUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.RouterDeviceAction
+import com.globallogic.rdkb.remotemanagement.domain.utils.Resource
+import com.globallogic.rdkb.remotemanagement.domain.utils.Resource.Failure
 import com.globallogic.rdkb.remotemanagement.domain.utils.Resource.Success
 import com.globallogic.rdkb.remotemanagement.domain.utils.ResourceState
 import com.globallogic.rdkb.remotemanagement.domain.utils.dataOrElse
@@ -51,6 +54,10 @@ import com.globallogic.rdkb.remotemanagement.view.component.AppTitleTextWithIcon
 import com.globallogic.rdkb.remotemanagement.view.error.UiResourceError
 import com.globallogic.rdkb.remotemanagement.view.navigation.LocalNavController
 import com.globallogic.rdkb.remotemanagement.view.navigation.Screen
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.filterIsInstance
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
@@ -276,51 +283,81 @@ class RouterDeviceViewModel(
     private fun loadSelectedRouterDeviceInfo() = launchUpdateStateFromFlow { originalState ->
         send(ResourceState.Loading)
         val routerDevice = getSelectedRouterDevice()
+            .onFailure { send(Failure(UiResourceError("Error", "Can't load router data"))) }
             .dataOrElse { error -> return@launchUpdateStateFromFlow }
-        val accessPointGroups = getAccessPointGroups(routerDevice)
-            .dataOrElse { error -> return@launchUpdateStateFromFlow }
-        val currentAccessPointGroup = accessPointGroups.firstOrNull()
-        val accessPointGroupSettings = when (currentAccessPointGroup) {
-            null -> ResourceState.None
-            else -> getAccessPointSettings(routerDevice, currentAccessPointGroup)
-                .mapError { error -> UiResourceError("", "") }
+        getAccessPointGroups(routerDevice).collectLatest { accessPointGroupsState ->
+            when(accessPointGroupsState) {
+                is ResourceState.Cancelled -> send(accessPointGroupsState)
+                is ResourceState.Loading -> send(accessPointGroupsState)
+                is ResourceState.None -> send(accessPointGroupsState)
+                is Failure -> {
+                    val newState = accessPointGroupsState
+                        .mapError { UiResourceError("Error", "Can't load access point groups") }
+                    send(newState)
+                }
+                is Success -> {
+                    val accessPointGroups = accessPointGroupsState.data
+                    val accessPointGroupSettingsStateFlow = when (val currentAccessPointGroup = accessPointGroups.firstOrNull()) {
+                        null -> flowOf(ResourceState.None)
+                        else -> getAccessPointSettings(routerDevice, currentAccessPointGroup)
+                    }
+                    accessPointGroupSettingsStateFlow
+                        .map { accessPointGroupSettingsState ->
+                            when (accessPointGroupSettingsState) {
+                                is ResourceState.Cancelled -> accessPointGroupSettingsState
+                                is ResourceState.Loading -> accessPointGroupSettingsState
+                                is ResourceState.None -> accessPointGroupSettingsState
+                                is Resource -> accessPointGroupSettingsState
+                                    .mapError { UiResourceError("Error", "Can't load access point group settings") }
+                            }
+                        }
+                        .collectLatest { accessPointGroupSettingsState ->
+                            val newState = RouterDeviceUiState.DeviceLoaded(
+                                routerDevice = routerDevice,
+                                currentAccessPointGroup = accessPointGroups.firstOrNull(),
+                                accessPointGroups = accessPointGroups,
+                                accessPointGroupSettings = accessPointGroupSettingsState,
+                                webGuiUrl = routerDevice.webGuiUrl,
+                                openWebGui = false,
+                            )
+                            send(Success(newState))
+                        }
+                }
+            }
         }
-        val state = Success(
-            RouterDeviceUiState.DeviceLoaded(
-                routerDevice = routerDevice,
-                currentAccessPointGroup = accessPointGroups.firstOrNull(),
-                accessPointGroups = accessPointGroups,
-                accessPointGroupSettings = accessPointGroupSettings,
-                webGuiUrl = "http://${routerDevice.ipAddressV4}/",
-                openWebGui = false,
-        ))
-        send(state)
     }
 
-    fun onAccessPointGroupClicked(accessPointGroup: AccessPointGroup) = launchOnViewModelScope {
-        val originalState = uiState.value
-        if (originalState !is Success) return@launchOnViewModelScope
-        val data = originalState.data as? RouterDeviceUiState.DeviceLoaded ?: return@launchOnViewModelScope
-        if (data.accessPointGroupSettings !is Success) return@launchOnViewModelScope
+    fun onAccessPointGroupClicked(accessPointGroup: AccessPointGroup) = launchUpdateStateFromFlow { originalState ->
+        if (originalState !is Success) return@launchUpdateStateFromFlow
+        val data = originalState.data as? RouterDeviceUiState.DeviceLoaded ?: return@launchUpdateStateFromFlow
+        if (data.accessPointGroupSettings !is Success) return@launchUpdateStateFromFlow
 
-        updateState { state ->
-            Success(data.copy(
-                currentAccessPointGroup = accessPointGroup,
-                accessPointGroupSettings = ResourceState.Loading,
-            ))
-        }
-        updateState { state ->
-            val routerDevice = getSelectedRouterDevice()
-                .dataOrElse { error -> return@updateState originalState }
-            val accessPointGroupSettings =
-                getAccessPointSettings(routerDevice, accessPointGroup)
-                    .dataOrElse { error -> return@updateState originalState }
+        send(Success(data.copy(
+            currentAccessPointGroup = accessPointGroup,
+            accessPointGroupSettings = ResourceState.Loading,
+        )))
 
-            Success(data.copy(
-                currentAccessPointGroup = accessPointGroup,
-                accessPointGroupSettings = Success(accessPointGroupSettings),
-            ))
-        }
+        val routerDevice = getSelectedRouterDevice()
+            .onFailure { send(Failure(UiResourceError("Error", "Can't load router data"))) }
+            .dataOrElse { error -> return@launchUpdateStateFromFlow }
+        getAccessPointSettings(routerDevice, accessPointGroup)
+            .map { accessPointGroupSettingsState ->
+                when (accessPointGroupSettingsState) {
+                    is ResourceState.Cancelled -> accessPointGroupSettingsState
+                    is ResourceState.Loading -> accessPointGroupSettingsState
+                    is ResourceState.None -> accessPointGroupSettingsState
+                    is Success -> accessPointGroupSettingsState
+                    is Failure -> accessPointGroupSettingsState
+                        .mapError { UiResourceError("Error", "Can't load access point group settings") }
+                }
+            }
+            .collectLatest { accessPointGroupSettingsState ->
+                val newState = data.copy(
+                    currentAccessPointGroup = accessPointGroup,
+                    accessPointGroupSettings = accessPointGroupSettingsState,
+                )
+                send(Success(newState))
+            }
     }
 
     fun onRestartRouterDevice() = launchUpdateStateFromFlow { state ->

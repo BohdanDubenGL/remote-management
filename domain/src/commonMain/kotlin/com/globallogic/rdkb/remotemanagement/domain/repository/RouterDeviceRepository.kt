@@ -15,8 +15,8 @@ interface RouterDeviceRepository {
     suspend fun getDeviceList(forceUpdate: Boolean): Flow<ResourceState<List<RouterDevice>, DeviceError.NoDevicesFound>>
 
     suspend fun getRouterDeviceConnectedDevices(device: RouterDevice, forceUpdate: Boolean): Flow<ResourceState<List<ConnectedDevice>, DeviceError.NoConnectedDevicesFound>>
-    suspend fun loadAccessPointGroups(device: RouterDevice): Resource<List<AccessPointGroup>, DeviceError.WifiSettings>
-    suspend fun getDeviceAccessPointSettings(device: RouterDevice, accessPointGroup: AccessPointGroup): Resource<AccessPointSettings, DeviceError.WifiSettings>
+    suspend fun loadAccessPointGroups(device: RouterDevice, forceUpdate: Boolean): Flow<ResourceState<List<AccessPointGroup>, DeviceError.WifiSettings>>
+    suspend fun getDeviceAccessPointSettings(device: RouterDevice, accessPointGroup: AccessPointGroup, forceUpdate: Boolean): Flow<ResourceState<AccessPointSettings, DeviceError.WifiSettings>>
     suspend fun setupDeviceAccessPoint(device: RouterDevice, accessPointGroup: AccessPointGroup, settings: DeviceAccessPointSettings): Resource<Unit, DeviceError.SetupDevice>
     suspend fun doAction(device: RouterDevice, action: RouterDeviceAction): Resource<Unit, DeviceError.NoDeviceFound>
 
