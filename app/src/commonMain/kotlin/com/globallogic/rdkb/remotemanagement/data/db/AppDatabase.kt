@@ -4,6 +4,8 @@ import androidx.room.ConstructedBy
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.RoomDatabaseConstructor
+import com.globallogic.rdkb.remotemanagement.data.db.dto.AccessPointDto
+import com.globallogic.rdkb.remotemanagement.data.db.dto.AccessPointGroupDto
 import com.globallogic.rdkb.remotemanagement.data.db.dto.ConnectedDeviceDto
 import com.globallogic.rdkb.remotemanagement.data.db.dto.RouterDeviceDto
 import com.globallogic.rdkb.remotemanagement.data.db.dto.UserDto
@@ -16,6 +18,8 @@ import com.globallogic.rdkb.remotemanagement.data.db.dto.UserRouterDeviceDto
         RouterDeviceDto::class,
         UserRouterDeviceDto::class,
         ConnectedDeviceDto::class,
+        AccessPointGroupDto::class,
+        AccessPointDto::class,
     ],
     version = 1,
 )

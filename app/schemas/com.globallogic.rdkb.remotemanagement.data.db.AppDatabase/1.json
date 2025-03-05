@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "686f3b6e6393997596406e3c02af1e11",
+    "identityHash": "86505eed634a00482013d25155852239",
     "entities": [
       {
         "tableName": "user",
@@ -251,11 +251,143 @@
             ]
           }
         ]
+      },
+      {
+        "tableName": "access_point_group",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`routerDeviceMacAddress` TEXT NOT NULL, `id` INTEGER NOT NULL, `name` TEXT NOT NULL, PRIMARY KEY(`routerDeviceMacAddress`, `id`), FOREIGN KEY(`routerDeviceMacAddress`) REFERENCES `router_device`(`macAddress`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "routerDeviceMacAddress",
+            "columnName": "routerDeviceMacAddress",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "routerDeviceMacAddress",
+            "id"
+          ]
+        },
+        "foreignKeys": [
+          {
+            "table": "router_device",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "routerDeviceMacAddress"
+            ],
+            "referencedColumns": [
+              "macAddress"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "access_point",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`routerDeviceMacAddress` TEXT NOT NULL, `accessPointId` INTEGER NOT NULL, `band` TEXT NOT NULL, `ssid` TEXT NOT NULL, `enabled` INTEGER NOT NULL, `availableSecurityModes` TEXT NOT NULL, `securityMode` TEXT NOT NULL, `clientsCount` INTEGER NOT NULL, PRIMARY KEY(`routerDeviceMacAddress`, `accessPointId`, `band`), FOREIGN KEY(`routerDeviceMacAddress`) REFERENCES `router_device`(`macAddress`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`routerDeviceMacAddress`, `accessPointId`) REFERENCES `access_point_group`(`routerDeviceMacAddress`, `id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "routerDeviceMacAddress",
+            "columnName": "routerDeviceMacAddress",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "accessPointId",
+            "columnName": "accessPointId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "band",
+            "columnName": "band",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "ssid",
+            "columnName": "ssid",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "enabled",
+            "columnName": "enabled",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "availableSecurityModes",
+            "columnName": "availableSecurityModes",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "securityMode",
+            "columnName": "securityMode",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "clientsCount",
+            "columnName": "clientsCount",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "routerDeviceMacAddress",
+            "accessPointId",
+            "band"
+          ]
+        },
+        "foreignKeys": [
+          {
+            "table": "router_device",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "routerDeviceMacAddress"
+            ],
+            "referencedColumns": [
+              "macAddress"
+            ]
+          },
+          {
+            "table": "access_point_group",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "routerDeviceMacAddress",
+              "accessPointId"
+            ],
+            "referencedColumns": [
+              "routerDeviceMacAddress",
+              "id"
+            ]
+          }
+        ]
       }
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '686f3b6e6393997596406e3c02af1e11')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '86505eed634a00482013d25155852239')"
     ]
   }
 }

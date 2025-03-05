@@ -5,6 +5,8 @@ import androidx.room.Delete
 import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Upsert
+import com.globallogic.rdkb.remotemanagement.data.db.dto.AccessPointDto
+import com.globallogic.rdkb.remotemanagement.data.db.dto.AccessPointGroupDto
 import com.globallogic.rdkb.remotemanagement.data.db.dto.ConnectedDeviceDto
 import com.globallogic.rdkb.remotemanagement.data.db.dto.RouterDeviceDto
 import com.globallogic.rdkb.remotemanagement.data.db.dto.UserRouterDeviceDto
@@ -20,9 +22,6 @@ interface RouterDeviceDao {
     @Upsert
     suspend fun upsertUserRouterDevice(userRouterDevice: UserRouterDeviceDto)
 
-    @Upsert
-    suspend fun upsertConnectedDevices(vararg connectedDevices: ConnectedDeviceDto)
-
     @Delete
     suspend fun deleteUserRouterDevice(userRouterDevice: UserRouterDeviceDto)
 
@@ -34,6 +33,30 @@ interface RouterDeviceDao {
         JOIN router_device r ON ur.routerDeviceMacAddress = r.macAddress WHERE ur.userEmail = :userEmail""")
     suspend fun findRouterDevicesForUser(userEmail: String): List<RouterDeviceDto>
 
+
+    @Upsert
+    suspend fun upsertConnectedDevices(vararg connectedDevices: ConnectedDeviceDto)
+
     @Query("SELECT * FROM connected_device WHERE routerDeviceMacAddress = :macAddress")
     suspend fun findConnectedDevices(macAddress: String): List<ConnectedDeviceDto>
+
+
+    @Upsert
+    suspend fun upsertAccessPointGroups(vararg accessPointGroup: AccessPointGroupDto)
+
+    @Query("SELECT * FROM access_point_group WHERE routerDeviceMacAddress = :macAddress")
+    suspend fun findAccessPointGroups(macAddress: String): List<AccessPointGroupDto>
+
+    @Query("DELETE FROM access_point_group WHERE routerDeviceMacAddress = :macAddress")
+    suspend fun deleteAccessPointGroupsForDevice(macAddress: String)
+
+
+    @Upsert
+    suspend fun upsertAccessPoints(vararg accessPointGroup: AccessPointDto)
+
+    @Query("SELECT * FROM access_point WHERE routerDeviceMacAddress = :macAddress AND accessPointId = :accessPointGroupId")
+    suspend fun findAccessPoints(macAddress: String, accessPointGroupId: Int): List<AccessPointDto>
+
+    @Query("DELETE FROM access_point WHERE routerDeviceMacAddress = :macAddress AND accessPointId = :accessPointGroupId")
+    suspend fun deleteAccessPointsForDevice(macAddress: String, accessPointGroupId: Int)
 }

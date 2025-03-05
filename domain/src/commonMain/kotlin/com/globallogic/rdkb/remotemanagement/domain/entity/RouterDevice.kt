@@ -13,4 +13,5 @@ data class RouterDevice(
     val availableBands: Set<String>,
 ) {
     val freeMemoryPercent: Double get() = 100.0 * freeMemory / totalMemory
+    val webGuiUrl: String get() = "http://$ipAddressV4/"
 }
