@@ -2,6 +2,5 @@
 <network-security-config>
     <domain-config cleartextTrafficPermitted="true">
         <domain includeSubdomains="true">webpa.rdkcentral.com</domain>
-        <domain includeSubdomains="true">10.0.0.1</domain>
     </domain-config>
 </network-security-config>

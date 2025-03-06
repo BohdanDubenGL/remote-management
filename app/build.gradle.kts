@@ -78,6 +78,7 @@ kotlin {
             implementation(compose.preview)
             implementation(libs.androidx.activity.compose)
 
+            implementation(libs.androidx.splashscreen)
             implementation(libs.androidx.room.runtime.android)
 
             implementation(libs.koin.android)
