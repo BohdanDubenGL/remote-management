@@ -1,5 +1,6 @@
 plugins {
     alias(libs.plugins.dependency.updates)
+    alias(libs.plugins.build.config) apply false
     alias(libs.plugins.android.application) apply false
     alias(libs.plugins.android.library) apply false
     alias(libs.plugins.compose.multiplatform) apply false

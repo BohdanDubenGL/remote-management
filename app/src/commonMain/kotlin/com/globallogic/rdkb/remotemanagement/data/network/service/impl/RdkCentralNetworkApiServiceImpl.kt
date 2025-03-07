@@ -1,5 +1,6 @@
 package com.globallogic.rdkb.remotemanagement.data.network.service.impl
 
+import RdkBRemoteManagement.app.BuildConfig
 import com.globallogic.rdkb.remotemanagement.data.network.safeGet
 import com.globallogic.rdkb.remotemanagement.data.network.safePatch
 import com.globallogic.rdkb.remotemanagement.data.network.service.RdkCentralNetworkApiService
@@ -19,12 +20,12 @@ import io.ktor.http.ContentType
 import io.ktor.http.contentType
 
 class RdkCentralNetworkApiServiceImpl(
-    private val httpClient: HttpClient
+    private val httpClient: HttpClient,
 ) : RdkCentralNetworkApiService {
     override suspend fun getAvailableDevices(): Resource<GetDevicesResponse, ThrowableResourceError> {
         return httpClient.safeGet<GetDevicesResponse> {
             url("/api/v2/devices")
-            port = 8080
+            port = BuildConfig.webPaDevicesPort
             contentType(ContentType.Application.Json)
         }
     }

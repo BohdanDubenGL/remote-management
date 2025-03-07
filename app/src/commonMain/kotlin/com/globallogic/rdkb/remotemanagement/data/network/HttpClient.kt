@@ -1,5 +1,6 @@
 package com.globallogic.rdkb.remotemanagement.data.network
 
+import RdkBRemoteManagement.app.BuildConfig
 import io.ktor.client.HttpClient
 import io.ktor.client.HttpClientConfig
 import io.ktor.client.plugins.HttpTimeout
@@ -21,10 +22,15 @@ import kotlin.time.Duration.Companion.seconds
 
 expect fun PlatformHttpClient(config: HttpClientConfig<*>.() -> Unit = {}): HttpClient
 
-fun RdkCentralHttpClient(): HttpClient = PlatformHttpClient {
+fun RdkCentralHttpClient(
+    scheme: String = BuildConfig.webPaScheme,
+    host: String = BuildConfig.webPaHostname,
+    port: Int = BuildConfig.webPaDeviceDataPort,
+    authorization: String = BuildConfig.webPaAuthorization,
+): HttpClient = PlatformHttpClient {
     defaultRequest {
-        url(scheme = "http", host = "webpa.rdkcentral.com", port = 9003)
-        header("Authorization", "Basic d3B1c2VyOndlYnBhQDEyMzQ1Njc4OTAK")
+        url(scheme = scheme, host = host, port = port)
+        header("Authorization", "Basic $authorization")
     }
     install(Logging) {
         level = LogLevel.NONE

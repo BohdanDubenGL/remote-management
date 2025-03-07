@@ -3,6 +3,7 @@ import org.jetbrains.kotlin.compose.compiler.gradle.ComposeFeatureFlag
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
+    alias(libs.plugins.build.config)
     alias(libs.plugins.kotlin.multiplatform)
     alias(libs.plugins.android.application)
     alias(libs.plugins.compose.multiplatform)
@@ -10,6 +11,14 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
     alias(libs.plugins.androidx.room)
+}
+
+buildConfig {
+    buildConfigField("webPaScheme", "http")
+    buildConfigField("webPaHostname", "130.162.226.194")
+    buildConfigField("webPaAuthorization", "dXNlcjpwYXNz")
+    buildConfigField("webPaDevicesPort", 6200)
+    buildConfigField("webPaDeviceDataPort", 6100)
 }
 
 kotlin {

@@ -45,7 +45,7 @@ val dataModule: Module = module {
     singleOf(::RemoteRouterDeviceDataSourceImpl).bind<RemoteRouterDeviceDataSourceImpl>()
     single { get<RemoteRouterDeviceDataSourceImpl>().fake() }.bind<RemoteRouterDeviceDataSource>() //fake
 
-    singleOf(::RdkCentralHttpClient).bind<HttpClient>()
+    single { RdkCentralHttpClient() }.bind<HttpClient>()
     singleOf(::RdkCentralNetworkApiServiceImpl).bind<RdkCentralNetworkApiService>()
     singleOf(::RdkCentralPropertyServiceImpl).bind<RdkCentralPropertyService>()
     singleOf(::RdkCentralAccessorServiceImpl).bind<RdkCentralAccessorService>()
