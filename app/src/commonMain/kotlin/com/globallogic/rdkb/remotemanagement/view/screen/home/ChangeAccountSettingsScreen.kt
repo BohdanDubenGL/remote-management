@@ -5,12 +5,18 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
@@ -67,6 +73,10 @@ private fun ChangeAccountSettingsContent(
     }
     SetupBottomNavigation(bottomNavigationState = BottomNavigationState.Hidden)
 
+    val newPasswordFocusRequester = remember { FocusRequester() }
+    val confirmNewPasswordFocusRequester = remember { FocusRequester() }
+    val currentPasswordFocusRequester = remember { FocusRequester() }
+
     if (uiState.userDataLoaded) {
         AppLayoutVerticalSections(
             modifier = Modifier.fillMaxSize(),
@@ -96,6 +106,12 @@ private fun ChangeAccountSettingsContent(
                         placeholder = "Enter your username",
                         isError = uiState.usernameError.isNotBlank(),
                         errorMessage = uiState.usernameError,
+                        keyboardOptions = KeyboardOptions.Default.copy(
+                            imeAction = ImeAction.Next,
+                        ),
+                        keyboardActions = KeyboardActions(
+                            onNext = { newPasswordFocusRequester.requestFocus() }
+                        ),
                     )
                     AppPasswordTextField(
                         value = uiState.newPassword,
@@ -104,6 +120,13 @@ private fun ChangeAccountSettingsContent(
                         placeholder = "Enter password",
                         isError = uiState.newPasswordError.isNotBlank(),
                         errorMessage = uiState.newPasswordError,
+                        keyboardOptions = KeyboardOptions.Default.copy(
+                            imeAction = ImeAction.Next,
+                        ),
+                        keyboardActions = KeyboardActions(
+                            onNext = { confirmNewPasswordFocusRequester.requestFocus() }
+                        ),
+                        modifier = Modifier.focusRequester(newPasswordFocusRequester),
                     )
                     AppPasswordTextField(
                         value = uiState.confirmNewPassword,
@@ -112,6 +135,13 @@ private fun ChangeAccountSettingsContent(
                         placeholder = "Re-enter password",
                         isError = uiState.confirmNewPasswordError.isNotBlank(),
                         errorMessage = uiState.confirmNewPasswordError,
+                        keyboardOptions = KeyboardOptions.Default.copy(
+                            imeAction = ImeAction.Next,
+                        ),
+                        keyboardActions = KeyboardActions(
+                            onNext = { currentPasswordFocusRequester.requestFocus() }
+                        ),
+                        modifier = Modifier.focusRequester(confirmNewPasswordFocusRequester),
                     )
                     AppTitleText(text = "Confirm it is you", modifier = Modifier.padding(top = 8.dp))
                     AppPasswordTextField(
@@ -121,6 +151,13 @@ private fun ChangeAccountSettingsContent(
                         placeholder = "Enter your current password",
                         isError = uiState.currentPasswordError.isNotBlank(),
                         errorMessage = uiState.currentPasswordError,
+                        keyboardOptions = KeyboardOptions.Default.copy(
+                            imeAction = ImeAction.Go,
+                        ),
+                        keyboardActions = KeyboardActions(
+                            onGo = { onSaveClicked() }
+                        ),
+                        modifier = Modifier.focusRequester(currentPasswordFocusRequester),
                     )
                 }
             },

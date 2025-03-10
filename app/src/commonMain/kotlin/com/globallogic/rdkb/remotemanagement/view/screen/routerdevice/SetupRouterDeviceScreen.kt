@@ -11,13 +11,19 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Wifi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
@@ -103,6 +109,7 @@ private fun SetupRouterDeviceContent(
         modifier = Modifier.fillMaxSize()
     ) {
         val firstBand = uiState.bandsSettings.firstOrNull()
+        val bandSettingsFocusRequesters = remember(uiState) { uiState.bandsSettings.map { FocusRequester() } }
         LazyColumn(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically),
@@ -127,6 +134,8 @@ private fun SetupRouterDeviceContent(
                         verticalArrangement = Arrangement.spacedBy(2.dp),
                         modifier = Modifier.padding(horizontal = 6.dp, vertical = 4.dp),
                     ) {
+                        val ssidFocusRequester = bandSettingsFocusRequesters[index]
+                        val passwordFocusRequester = remember(bandSettings) { FocusRequester() }
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.Center,
@@ -148,7 +157,15 @@ private fun SetupRouterDeviceContent(
                             label = "SSID",
                             placeholder = "Enter SSID",
                             enabled = !bandSettings.sameAsFirst,
-                            modifier = Modifier.fillMaxWidth(),
+                            keyboardOptions = KeyboardOptions.Default.copy(
+                                imeAction = ImeAction.Next,
+                            ),
+                            keyboardActions = KeyboardActions(
+                                onNext = { passwordFocusRequester.requestFocus() },
+                            ),
+                            modifier = Modifier
+                                .focusRequester(ssidFocusRequester)
+                                .fillMaxWidth(),
                         )
                         AppPasswordTextField(
                             value = if (bandSettings.sameAsFirst) firstBand?.password.orEmpty() else bandSettings.password,
@@ -156,7 +173,19 @@ private fun SetupRouterDeviceContent(
                             label = "Password",
                             placeholder = "Enter new password",
                             enabled = !bandSettings.sameAsFirst,
-                            modifier = Modifier.fillMaxWidth(),
+                            keyboardOptions = KeyboardOptions.Default.copy(
+                                imeAction = when {
+                                    index == uiState.bandsSettings.lastIndex -> ImeAction.Go
+                                    else -> ImeAction.Next
+                                },
+                            ),
+                            keyboardActions = KeyboardActions(
+                                onNext = { bandSettingsFocusRequesters.getOrNull(index.inc())?.requestFocus() },
+                                onGo = { onSaveClicked() },
+                            ),
+                            modifier = Modifier
+                                .focusRequester(passwordFocusRequester)
+                                .fillMaxWidth(),
                         )
                         AppComboBox(
                             label = "Security mode",

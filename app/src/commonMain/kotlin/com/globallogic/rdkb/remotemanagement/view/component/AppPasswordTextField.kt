@@ -1,5 +1,7 @@
 package com.globallogic.rdkb.remotemanagement.view.component
 
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -13,6 +15,8 @@ fun AppPasswordTextField(
     isError: Boolean = false,
     errorMessage: String = "",
     enabled: Boolean = true,
+    keyboardActions: KeyboardActions = KeyboardActions.Default,
+    keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     onValueChange: (String) -> Unit,
 ) {
     AppTextField(
@@ -24,6 +28,8 @@ fun AppPasswordTextField(
         errorMessage = errorMessage,
         enabled = enabled,
         visualTransformation = PasswordVisualTransformation(),
-        modifier = modifier
+        keyboardActions = keyboardActions,
+        keyboardOptions = keyboardOptions,
+        modifier = modifier,
     )
 }

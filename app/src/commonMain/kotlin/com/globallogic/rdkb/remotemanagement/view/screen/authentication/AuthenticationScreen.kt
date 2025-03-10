@@ -11,14 +11,20 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.twotone.ArrowBackIosNew
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
@@ -77,6 +83,9 @@ private fun AuthenticationContent(
     SideEffect {
         if (uiState is AuthenticationUiState.LoggedIn) onLoggedIn()
     }
+    val nameFocusRequester = remember { FocusRequester() }
+    val passwordFocusRequester = remember { FocusRequester() }
+    val confirmPasswordFocusRequester = remember { FocusRequester() }
 
     AppLayoutVerticalSections(
         topSectionWeight = 6F,
@@ -101,6 +110,12 @@ private fun AuthenticationContent(
                     isError = uiState.emailError.isNotBlank(),
                     errorMessage = uiState.emailError,
                     enabled = uiState.isEmailEditable,
+                    keyboardOptions = KeyboardOptions.Default.copy(
+                        imeAction = ImeAction.Go,
+                    ),
+                    keyboardActions = KeyboardActions(
+                        onGo = { onEnterClick() }
+                    ),
                 )
                 AnimatedVisibility(uiState.showNameInput) {
                     AppTextField(
@@ -111,6 +126,13 @@ private fun AuthenticationContent(
                         isError = uiState.nameError.isNotBlank(),
                         errorMessage = uiState.nameError,
                         enabled = uiState.isNameEditable,
+                        keyboardOptions = KeyboardOptions.Default.copy(
+                            imeAction = ImeAction.Next,
+                        ),
+                        keyboardActions = KeyboardActions(
+                            onNext = { passwordFocusRequester.requestFocus() }
+                        ),
+                        modifier = Modifier.focusRequester(nameFocusRequester),
                     )
                 }
                 AnimatedVisibility(uiState.showPasswordInput) {
@@ -121,6 +143,17 @@ private fun AuthenticationContent(
                         placeholder = "Enter your password",
                         isError = uiState.passwordError.isNotBlank(),
                         errorMessage = uiState.passwordError,
+                        keyboardOptions = KeyboardOptions.Default.copy(
+                            imeAction = when {
+                                uiState.showConfirmPasswordInput -> ImeAction.Next
+                                else -> ImeAction.Go
+                            }
+                        ),
+                        keyboardActions = KeyboardActions(
+                            onNext = { confirmPasswordFocusRequester.requestFocus() },
+                            onGo = { onEnterClick() }
+                        ),
+                        modifier = Modifier.focusRequester(passwordFocusRequester),
                     )
                 }
                 AnimatedVisibility(uiState.showConfirmPasswordInput) {
@@ -131,6 +164,13 @@ private fun AuthenticationContent(
                         placeholder = "Re-enter your password",
                         isError = uiState.confirmPasswordError.isNotBlank(),
                         errorMessage = uiState.confirmPasswordError,
+                        keyboardOptions = KeyboardOptions.Default.copy(
+                            imeAction = ImeAction.Go,
+                        ),
+                        keyboardActions = KeyboardActions(
+                            onGo = { onEnterClick() },
+                        ),
+                        modifier = Modifier.focusRequester(confirmPasswordFocusRequester),
                     )
                 }
             }

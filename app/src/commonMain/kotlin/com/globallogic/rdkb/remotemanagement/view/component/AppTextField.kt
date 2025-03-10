@@ -10,6 +10,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -18,7 +20,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
@@ -36,6 +37,8 @@ fun AppTextField(
     readOnly: Boolean = false,
     trailingIcon: @Composable () -> Unit = { },
     visualTransformation: VisualTransformation = VisualTransformation.None,
+    keyboardActions: KeyboardActions = KeyboardActions.Default,
+    keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     onValueChange: (String) -> Unit,
 ) {
     val borderColor = when {
@@ -86,10 +89,13 @@ fun AppTextField(
                 errorContainerColor = Color.Transparent,
                 errorTextColor = MaterialTheme.colorScheme.error,
             ),
+            keyboardActions = keyboardActions,
+            keyboardOptions = keyboardOptions,
             visualTransformation = visualTransformation,
             trailingIcon = trailingIcon,
             enabled = enabled,
             readOnly = readOnly,
+            singleLine = true,
             modifier = Modifier
                 .fillMaxWidth()
                 .height(64.dp)

@@ -6,11 +6,14 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
@@ -65,6 +68,12 @@ private fun AddRouterDeviceManuallyContent(
             isError = uiState.deviceMacAddressErrorMessage.isNotBlank(),
             errorMessage = uiState.deviceMacAddressErrorMessage,
             placeholder = "Enter device mac address",
+            keyboardOptions = KeyboardOptions.Default.copy(
+                imeAction = ImeAction.Go,
+            ),
+            keyboardActions = KeyboardActions(
+                onGo = { connectToDevice() }
+            ),
         )
         Spacer(modifier = Modifier.height(16.dp))
         AppButton(
