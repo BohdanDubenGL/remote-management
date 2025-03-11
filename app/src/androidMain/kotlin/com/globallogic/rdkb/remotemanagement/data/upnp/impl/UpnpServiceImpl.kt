@@ -22,7 +22,7 @@ import kotlin.time.Duration.Companion.seconds
 
 class UpnpServiceImpl(
     private val networkUpnpDeviceDataService: NetworkUpnpDeviceDataService,
-    private val loadingTimeoutMillis: Long = 5.seconds.inWholeMilliseconds,
+    private val loadingTimeoutMillis: Long = 3.seconds.inWholeMilliseconds,
 ) : UpnpService {
     override suspend fun getDevices(): List<UpnpDevice> = coroutineScope {
         var unicastSocket: DatagramSocket? = null

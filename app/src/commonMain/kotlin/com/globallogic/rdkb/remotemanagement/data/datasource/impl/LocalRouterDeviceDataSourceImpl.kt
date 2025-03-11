@@ -77,7 +77,7 @@ class LocalRouterDeviceDataSourceImpl(
         device: RouterDevice,
         accessPointGroups: List<AccessPointGroup>
     ): Resource<Unit, IoDeviceError.AccessPointGroups> {
-        runCatchingSafe { deviceDao.deleteAccessPointGroupsForDevice(device.macAddress) }
+        runCatchingSafe { deviceDao.deleteAccessPointGroupsForDevice(device.macAddress, accessPointGroups.map { it.id }) }
             .getOrElse { error -> return Failure(IoDeviceError.DatabaseError(error)) }
 
         val accessPointGroupsDto = accessPointGroups.map { AccessPointGroupMapper.toAccessPointGroup(device, it) }
@@ -104,7 +104,7 @@ class LocalRouterDeviceDataSourceImpl(
         val accessPoints = accessPointSettings.accessPoints
         val accessPointGroup = accessPointSettings.accessPointGroup
 
-        runCatchingSafe { deviceDao.deleteAccessPointsForDevice(device.macAddress, accessPointGroup.id) }
+        runCatchingSafe { deviceDao.deleteAccessPointsForDevice(device.macAddress, accessPointGroup.id, accessPoints.map { it.band }) }
             .getOrElse { error -> return Failure(IoDeviceError.DatabaseError(error)) }
 
         val accessPointGroupsDto = accessPoints.map { AccessPointMapper.toAccessPoint(device, accessPointGroup, it) }

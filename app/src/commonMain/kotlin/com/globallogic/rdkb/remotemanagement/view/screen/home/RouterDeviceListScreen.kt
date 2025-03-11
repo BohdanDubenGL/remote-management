@@ -132,9 +132,8 @@ class RouterDeviceListViewModel(
             .collectLatest { routerDevices ->
                 updateState { state ->
                     when(routerDevices) {
-                        is ResourceState.Cancelled -> routerDevices
-                        is ResourceState.Loading -> routerDevices
                         is ResourceState.None -> routerDevices
+                        is ResourceState.Loading -> routerDevices
                         is Resource -> routerDevices
                             .map { routerDevices -> RouterDeviceListUiState(routerDevices = routerDevices) }
                             .mapErrorToData { error -> RouterDeviceListUiState(routerDevices = emptyList()) }

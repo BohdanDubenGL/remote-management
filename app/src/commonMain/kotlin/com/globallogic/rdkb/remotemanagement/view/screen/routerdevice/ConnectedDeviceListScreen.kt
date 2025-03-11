@@ -125,9 +125,8 @@ class ConnectedDeviceListViewModel(
         getRouterDeviceConnectedDevices(routerDevice).collectLatest { connectedDevices ->
             updateState { state ->
                 when (connectedDevices) {
-                    is ResourceState.Cancelled -> connectedDevices
-                    is ResourceState.Loading -> connectedDevices
                     is ResourceState.None -> connectedDevices
+                    is ResourceState.Loading -> connectedDevices
                     is Resource -> {
                         Resource.Success(ConnectedDeviceListUiState(
                             connectedDevices = connectedDevices.dataOrElse { error -> return@updateState state }

@@ -47,8 +47,8 @@ interface RouterDeviceDao {
     @Query("SELECT * FROM access_point_group WHERE routerDeviceMacAddress = :macAddress")
     suspend fun findAccessPointGroups(macAddress: String): List<AccessPointGroupDto>
 
-    @Query("DELETE FROM access_point_group WHERE routerDeviceMacAddress = :macAddress")
-    suspend fun deleteAccessPointGroupsForDevice(macAddress: String)
+    @Query("DELETE FROM access_point_group WHERE routerDeviceMacAddress = :macAddress AND id NOT IN (:ids)")
+    suspend fun deleteAccessPointGroupsForDevice(macAddress: String, ids: List<Int>)
 
 
     @Upsert
@@ -57,6 +57,7 @@ interface RouterDeviceDao {
     @Query("SELECT * FROM access_point WHERE routerDeviceMacAddress = :macAddress AND accessPointId = :accessPointGroupId")
     suspend fun findAccessPoints(macAddress: String, accessPointGroupId: Int): List<AccessPointDto>
 
-    @Query("DELETE FROM access_point WHERE routerDeviceMacAddress = :macAddress AND accessPointId = :accessPointGroupId")
-    suspend fun deleteAccessPointsForDevice(macAddress: String, accessPointGroupId: Int)
+    @Query("""DELETE FROM access_point
+        WHERE routerDeviceMacAddress = :macAddress AND accessPointId = :accessPointGroupId AND band NOT IN (:bands)""")
+    suspend fun deleteAccessPointsForDevice(macAddress: String, accessPointGroupId: Int, bands: List<String>)
 }
