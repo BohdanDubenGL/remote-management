@@ -236,9 +236,8 @@ class SetupRouterDeviceViewModel(
                 getAccessPointSettings(device, accessPointGroup)
                     .map { accessPointGroupSettingsState ->
                         when (accessPointGroupSettingsState) {
-                            is ResourceState.Cancelled -> accessPointGroupSettingsState
-                            is ResourceState.Loading -> accessPointGroupSettingsState
                             is ResourceState.None -> accessPointGroupSettingsState
+                            is ResourceState.Loading -> accessPointGroupSettingsState
                             is Resource -> accessPointGroupSettingsState
                                 .mapError { UiResourceError("Error", "Can't load access point settings") }
                                 .map { wifiSettings ->
@@ -334,9 +333,8 @@ class SetupRouterDeviceViewModel(
             .dataOrElse { error -> return@launchUpdateStateFromFlow }
         getAccessPointGroups(device).collectLatest { accessPointGroupsState ->
             when(accessPointGroupsState) {
-                is ResourceState.Cancelled -> send(accessPointGroupsState)
-                is ResourceState.Loading -> send(accessPointGroupsState)
                 is ResourceState.None -> send(accessPointGroupsState)
+                is ResourceState.Loading -> send(accessPointGroupsState)
                 is Failure -> {
                     val newState = accessPointGroupsState
                         .mapError { UiResourceError("Error", "Can't load access point group") }
@@ -352,9 +350,8 @@ class SetupRouterDeviceViewModel(
                     getAccessPointSettings(device, currentAccessPointGroup)
                         .map { accessPointGroupSettingsState ->
                             when(accessPointGroupSettingsState) {
-                                is ResourceState.Cancelled -> accessPointGroupSettingsState
-                                is ResourceState.Loading -> accessPointGroupSettingsState
                                 is ResourceState.None -> accessPointGroupSettingsState
+                                is ResourceState.Loading -> accessPointGroupSettingsState
                                 is Resource -> accessPointGroupSettingsState
                                     .mapError { UiResourceError("Error", "Can't load access point data") }
                                     .map { wifiSettings ->

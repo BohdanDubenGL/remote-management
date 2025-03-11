@@ -11,14 +11,12 @@ import kotlin.jvm.JvmName
 fun <Data, Error: ResourceError> AppDrawResourceState(
     resourceState: ResourceState<Data, Error>,
     onNone: @Composable () -> Unit = { },
-    onCancelled: @Composable () -> Unit = { },
     onLoading: @Composable () -> Unit = { AppLoading() },
     onFailure: @Composable (Error) -> Unit = { },
     onSuccess: @Composable (Data) -> Unit = { },
 ) {
     when (resourceState) {
         is ResourceState.None -> onNone()
-        is ResourceState.Cancelled -> onCancelled()
         is ResourceState.Loading -> onLoading()
         is Resource.Failure -> onFailure(resourceState.error)
         is Resource.Success -> onSuccess(resourceState.data)
@@ -30,7 +28,6 @@ fun <Data, Error: ResourceError> AppDrawResourceState(
 fun <Data> AppDrawResourceState(
     resourceState: ResourceState<Data, UiResourceError>,
     onNone: @Composable () -> Unit = { },
-    onCancelled: @Composable () -> Unit = { },
     onLoading: @Composable () -> Unit = { AppLoading() },
     onFailure: @Composable (UiResourceError) -> Unit = { error -> AppError(error = error) },
     onSuccess: @Composable (Data) -> Unit = { },
@@ -38,7 +35,6 @@ fun <Data> AppDrawResourceState(
     AppDrawResourceState<Data, UiResourceError>(
         resourceState = resourceState,
         onNone = onNone,
-        onCancelled = onCancelled,
         onLoading = onLoading,
         onFailure = onFailure,
         onSuccess = onSuccess

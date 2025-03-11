@@ -6,7 +6,6 @@ import com.globallogic.rdkb.remotemanagement.domain.utils.Resource.Success
 sealed interface ResourceState<out Data, out Error: ResourceError> {
     data object None : ResourceState<Nothing, Nothing>
     data object Loading : ResourceState<Nothing, Nothing>
-    data object Cancelled : ResourceState<Nothing, Nothing>
 }
 
 interface ResourceError
