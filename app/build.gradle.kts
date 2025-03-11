@@ -131,8 +131,23 @@ android {
         versionCode = 1
         versionName = "1.0"
     }
+    signingConfigs.create("staging") {
+        storeFile(rootProject.file("./signingKey/stagingKey"))
+        storePassword = "remotemanagement"
+        keyPassword = "remotemanagement"
+        keyAlias = "staging"
+    }
     packaging.resources {
         excludes += "/META-INF/{AL2.0,LGPL2.1}"
+    }
+    buildTypes.getByName("debug") {
+        signingConfig = signingConfigs.getByName("staging")
+        isMinifyEnabled = false
+    }
+    buildTypes.create("staging") {
+        signingConfig = signingConfigs.getByName("staging")
+        isMinifyEnabled = false
+        isDebuggable = false
     }
     buildTypes.getByName("release") {
         isMinifyEnabled = false
