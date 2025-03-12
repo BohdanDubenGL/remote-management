@@ -1,6 +1,6 @@
 package com.globallogic.rdkb.remotemanagement.data.network.service
 
-import com.globallogic.rdkb.remotemanagement.data.network.service.model.Band
+import com.globallogic.rdkb.remotemanagement.domain.entity.Band
 import com.globallogic.rdkb.remotemanagement.domain.entity.WifiMotionEvent
 import com.globallogic.rdkb.remotemanagement.domain.utils.Resource
 import com.globallogic.rdkb.remotemanagement.domain.utils.ThrowableResourceError
@@ -45,6 +45,7 @@ interface RdkCentralAccessorService {
         suspend fun getConnectedDeviceMacAddress(): Resource<String, ThrowableResourceError>
         suspend fun getConnectedDeviceIpAddress(): Resource<String, ThrowableResourceError>
         suspend fun getConnectedDeviceVendorClassId(): Resource<String, ThrowableResourceError>
+        suspend fun getConnectedDeviceBand(): Resource<Int, ThrowableResourceError>
 
         suspend fun deviceStats(): Resource<ConnectedDeviceStatsAccessor, ThrowableResourceError>
     }

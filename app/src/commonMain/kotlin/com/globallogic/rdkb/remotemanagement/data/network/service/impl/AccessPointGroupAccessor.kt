@@ -2,7 +2,7 @@ package com.globallogic.rdkb.remotemanagement.data.network.service.impl
 
 import com.globallogic.rdkb.remotemanagement.data.network.service.RdkCentralAccessorService
 import com.globallogic.rdkb.remotemanagement.data.network.service.RdkCentralPropertyService
-import com.globallogic.rdkb.remotemanagement.data.network.service.model.Band
+import com.globallogic.rdkb.remotemanagement.domain.entity.Band
 
 class AccessPointGroupAccessor(
     private val rdkCentralPropertyService: RdkCentralPropertyService,

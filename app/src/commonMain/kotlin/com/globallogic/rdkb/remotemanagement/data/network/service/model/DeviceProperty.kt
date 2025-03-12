@@ -37,6 +37,7 @@ sealed interface DeviceProperty<T: Any> {
     data class ConnectedDeviceMacAddress(val host: Int) : StringProperty(name = "Device.Hosts.Host.$host.PhysAddress")
     data class ConnectedDeviceIpAddress(val host: Int) : StringProperty(name = "Device.Hosts.Host.$host.IPAddress")
     data class ConnectedDeviceVendorClassId(val host: Int) : StringProperty(name = "Device.Hosts.Host.$host.VendorClassID")
+    data class ConnectedDeviceLayer1Interface(val host: Int) : StringProperty(name = "Device.Hosts.Host.$host.Layer1Interface")
     data class ConnectedDeviceAssociatedDevice(val host: Int) : StringProperty(name = "Device.Hosts.Host.$host.AssociatedDevice")
 
     data class WifiName(val accessPoint: Int) : StringProperty(name = "Device.WiFi.SSID.$accessPoint.Name")

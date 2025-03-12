@@ -34,6 +34,17 @@ class ConnectedDeviceAccessor(
         return rdkCentralPropertyService.getDeviceProperty(macAddress, DeviceProperty.ConnectedDeviceVendorClassId(deviceId))
     }
 
+    override suspend fun getConnectedDeviceBand(): Resource<Int, ThrowableResourceError> {
+        val wifiSsid = rdkCentralPropertyService.getDeviceProperty(macAddress, DeviceProperty.ConnectedDeviceLayer1Interface(deviceId))
+            .dataOrElse { error -> return Failure(error) }
+        val match = wifiSsidRegex.find(wifiSsid)
+            ?: return Failure(ThrowableResourceError(IllegalArgumentException("Unexpected value of 'SSID' property: $wifiSsid")))
+        val (ssidString) = match.destructured
+        val ssid = ssidString.toIntOrNull()
+            ?: return Failure(ThrowableResourceError(IllegalArgumentException("Can't parse ssid: $wifiSsid")))
+        return Success(ssid / 10 * 10)
+    }
+
     override suspend fun deviceStats(): Resource<RdkCentralAccessorService.ConnectedDeviceStatsAccessor, ThrowableResourceError> {
         val associatedDevice = rdkCentralPropertyService.getDeviceProperty(macAddress, DeviceProperty.ConnectedDeviceAssociatedDevice(deviceId))
             .dataOrElse { error -> return Failure(error) }
@@ -52,5 +63,6 @@ class ConnectedDeviceAccessor(
 
     companion object {
         private val associatedDeviceRegex = "Device.WiFi.AccessPoint\\.(\\d+)\\.AssociatedDevice\\.(\\d+)".toRegex()
+        private val wifiSsidRegex = "Device.WiFi.SSID\\.(\\d+)".toRegex()
     }
 }

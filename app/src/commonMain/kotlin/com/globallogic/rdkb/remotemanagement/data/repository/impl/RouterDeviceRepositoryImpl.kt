@@ -5,6 +5,7 @@ import com.globallogic.rdkb.remotemanagement.data.datasource.RemoteRouterDeviceD
 import com.globallogic.rdkb.remotemanagement.data.preferences.AppPreferences
 import com.globallogic.rdkb.remotemanagement.domain.entity.AccessPointGroup
 import com.globallogic.rdkb.remotemanagement.domain.entity.AccessPointSettings
+import com.globallogic.rdkb.remotemanagement.domain.entity.Band
 import com.globallogic.rdkb.remotemanagement.domain.entity.ConnectedDevice
 import com.globallogic.rdkb.remotemanagement.domain.entity.DeviceAccessPointSettings
 import com.globallogic.rdkb.remotemanagement.domain.entity.RouterDevice
@@ -96,7 +97,9 @@ class RouterDeviceRepositoryImpl(
         val savedDevices = localRouterDeviceDataSource.loadRouterDevicesForUser(email)
             .dataOrElse { error -> return Failure(DeviceError.NoDeviceFound) }
 
+        println(macAvailableDevices)
         val localDevice = savedDevices
+            .reversed()
             .firstOrNull { device -> device.macAddress in macAvailableDevices }
             ?: savedDevices.firstOrNull()
             ?: return Failure(DeviceError.NoDeviceFound)
@@ -269,7 +272,7 @@ class RouterDeviceRepositoryImpl(
                 is ResourceState.None -> null
                 is ResourceState.Loading -> null
                 is Failure -> null
-                is Success -> hosts.data
+                is Success -> hosts.data.filter { it.band == Band.Band_5 }
             }
 
             if (currentHostMacAddress != null && motionPercent != null && hosts != null && motionEvents != null) {

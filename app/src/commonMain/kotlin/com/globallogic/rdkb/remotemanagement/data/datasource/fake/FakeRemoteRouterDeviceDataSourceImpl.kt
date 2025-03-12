@@ -5,6 +5,7 @@ import com.globallogic.rdkb.remotemanagement.data.error.IoDeviceError
 import com.globallogic.rdkb.remotemanagement.domain.entity.AccessPoint
 import com.globallogic.rdkb.remotemanagement.domain.entity.AccessPointGroup
 import com.globallogic.rdkb.remotemanagement.domain.entity.AccessPointSettings
+import com.globallogic.rdkb.remotemanagement.domain.entity.Band
 import com.globallogic.rdkb.remotemanagement.domain.entity.ConnectedDevice
 import com.globallogic.rdkb.remotemanagement.domain.entity.ConnectedDeviceStats
 import com.globallogic.rdkb.remotemanagement.domain.entity.DeviceAccessPointSettings
@@ -215,6 +216,7 @@ private class FakeRemoteRouterDeviceDataSourceImpl(
         val ipAddress: String,
         val vendorClassId: String = "android",
         val stats: FakeConnectedDeviceStats = FakeConnectedDeviceStats(),
+        val band: Band = Band.Band_5
     ) {
         fun toDomain(): ConnectedDevice = ConnectedDevice(
             isActive = true,
@@ -223,6 +225,7 @@ private class FakeRemoteRouterDeviceDataSourceImpl(
             ipAddress = ipAddress,
             vendorClassId = vendorClassId,
             stats = stats.toDomain(),
+            band = band
         )
     }
 

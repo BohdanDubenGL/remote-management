@@ -3,9 +3,8 @@ package com.globallogic.rdkb.remotemanagement.data.datasource.impl
 import com.globallogic.rdkb.remotemanagement.data.datasource.RemoteRouterDeviceDataSource
 import com.globallogic.rdkb.remotemanagement.data.error.IoDeviceError
 import com.globallogic.rdkb.remotemanagement.data.network.service.RdkCentralAccessorService
-import com.globallogic.rdkb.remotemanagement.data.network.service.model.Band
+import com.globallogic.rdkb.remotemanagement.domain.entity.Band
 import com.globallogic.rdkb.remotemanagement.data.upnp.UpnpService
-import com.globallogic.rdkb.remotemanagement.data.wifi.WifiScanner
 import com.globallogic.rdkb.remotemanagement.data.wifi.model.WifiInfo
 import com.globallogic.rdkb.remotemanagement.domain.entity.AccessPoint
 import com.globallogic.rdkb.remotemanagement.domain.entity.AccessPointGroup
@@ -127,6 +126,7 @@ class RemoteRouterDeviceDataSourceImpl(
         val mac = async { connectedDeviceAccessor.getConnectedDeviceMacAddress() }
         val ip = async { connectedDeviceAccessor.getConnectedDeviceIpAddress() }
         val vendorClassId = async { connectedDeviceAccessor.getConnectedDeviceVendorClassId() }
+        val band = async { connectedDeviceAccessor.getConnectedDeviceBand() }
 
         val bytesSent = async { connectedDeviceStatsAccessor?.getBytesSent() }
         val bytesReceived = async { connectedDeviceStatsAccessor?.getBytesReceived() }
@@ -140,6 +140,7 @@ class RemoteRouterDeviceDataSourceImpl(
             ipAddress = ip.await().dataOrElse { error -> return@coroutineScope null },
             isActive = isActive.await().dataOrElse { error -> return@coroutineScope null },
             vendorClassId = vendorClassId.await().dataOrElse { error -> return@coroutineScope null },
+            band = band.await().map { radio -> Band.entries.firstOrNull { it.radio == radio } ?: Band.Band_2_4 }.dataOrElse { error -> return@coroutineScope null },
             stats = ConnectedDeviceStats(
                 bytesSent = bytesSent.await()?.data ?: 0L,
                 bytesReceived = bytesReceived.await()?.data ?: 0L,

@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "86505eed634a00482013d25155852239",
+    "identityHash": "0d3680155e988dfbe29650974ece0f01",
     "entities": [
       {
         "tableName": "user",
@@ -163,7 +163,7 @@
       },
       {
         "tableName": "connected_device",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`macAddress` TEXT NOT NULL, `routerDeviceMacAddress` TEXT NOT NULL, `isActive` INTEGER NOT NULL, `hostName` TEXT NOT NULL, `ipAddress` TEXT NOT NULL, `vendorClassId` TEXT NOT NULL, `bytesSent` INTEGER NOT NULL, `bytesReceived` INTEGER NOT NULL, `packetsSent` INTEGER NOT NULL, `packetsReceived` INTEGER NOT NULL, `errorsSent` INTEGER NOT NULL, PRIMARY KEY(`macAddress`), FOREIGN KEY(`routerDeviceMacAddress`) REFERENCES `router_device`(`macAddress`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`macAddress` TEXT NOT NULL, `routerDeviceMacAddress` TEXT NOT NULL, `isActive` INTEGER NOT NULL, `hostName` TEXT NOT NULL, `ipAddress` TEXT NOT NULL, `vendorClassId` TEXT NOT NULL, `radio` INTEGER NOT NULL, `bytesSent` INTEGER NOT NULL, `bytesReceived` INTEGER NOT NULL, `packetsSent` INTEGER NOT NULL, `packetsReceived` INTEGER NOT NULL, `errorsSent` INTEGER NOT NULL, PRIMARY KEY(`macAddress`), FOREIGN KEY(`routerDeviceMacAddress`) REFERENCES `router_device`(`macAddress`) ON UPDATE NO ACTION ON DELETE CASCADE )",
         "fields": [
           {
             "fieldPath": "macAddress",
@@ -199,6 +199,12 @@
             "fieldPath": "vendorClassId",
             "columnName": "vendorClassId",
             "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "radio",
+            "columnName": "radio",
+            "affinity": "INTEGER",
             "notNull": true
           },
           {
@@ -387,7 +393,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '86505eed634a00482013d25155852239')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '0d3680155e988dfbe29650974ece0f01')"
     ]
   }
 }
