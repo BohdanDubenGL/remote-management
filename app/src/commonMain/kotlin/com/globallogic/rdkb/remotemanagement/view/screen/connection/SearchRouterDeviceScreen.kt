@@ -26,7 +26,6 @@ import com.globallogic.rdkb.remotemanagement.domain.entity.FoundRouterDevice
 import com.globallogic.rdkb.remotemanagement.domain.entity.RouterDevice
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdeviceconnection.ConnectToRouterDeviceUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdeviceconnection.SearchRouterDevicesUseCase
-import com.globallogic.rdkb.remotemanagement.domain.utils.Resource
 import com.globallogic.rdkb.remotemanagement.domain.utils.ResourceState
 import com.globallogic.rdkb.remotemanagement.domain.utils.map
 import com.globallogic.rdkb.remotemanagement.domain.utils.mapError
@@ -140,14 +139,9 @@ class SearchRouterDeviceViewModel(
     private val connectToRouterDevice: ConnectToRouterDeviceUseCase,
 ) : MviViewModel<ResourceState<SearchRouterDeviceUiState, UiResourceError>>(ResourceState.None) {
 
-    fun locationPermissionDenied() = launchUpdateState { state ->
-        Resource.Failure(UiResourceError(
-            errorMessage = "Can't load devices",
-            errorDescription = "App need location permission to check your local router.",
-        ))
-    }
+    override suspend fun onInitState() = searchDevices()
 
-    fun searchDevices() = launchOnViewModelScope {
+    private fun searchDevices() = launchOnViewModelScope {
         updateState { ResourceState.Loading }
         updateState { state ->
             searchRouterDevices()

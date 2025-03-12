@@ -212,13 +212,21 @@ class WifiMotionViewModel(
                     is Resource -> wifiMotionDataState
                         .mapError { error -> UiResourceError("Error", "Can't load motion data") }
                         .map { wifiMotionData ->
-                            WifiMotionUiState(
-                                connectedDevices = wifiMotionData.hosts,
-                                selectedConnectedDevice = wifiMotionData.selectedHost,
-                                motionState = wifiMotionData.isRunning,
-                                motionPercent = wifiMotionData.motionPercent,
-                                motionEvents = wifiMotionData.events
-                            )
+                            when (val state = uiState.value) {
+                                is Success -> state.data.copy(
+                                    connectedDevices = wifiMotionData.hosts,
+                                    motionState = wifiMotionData.isRunning,
+                                    motionPercent = wifiMotionData.motionPercent,
+                                    motionEvents = wifiMotionData.events,
+                                )
+                                else -> WifiMotionUiState(
+                                    connectedDevices = wifiMotionData.hosts,
+                                    selectedConnectedDevice = wifiMotionData.selectedHost,
+                                    motionState = wifiMotionData.isRunning,
+                                    motionPercent = wifiMotionData.motionPercent,
+                                    motionEvents = wifiMotionData.events,
+                                )
+                            }
                         }
                 }
             }

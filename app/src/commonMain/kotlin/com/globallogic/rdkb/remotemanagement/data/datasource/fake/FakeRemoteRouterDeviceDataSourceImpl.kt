@@ -13,13 +13,11 @@ import com.globallogic.rdkb.remotemanagement.domain.entity.RouterDevice
 import com.globallogic.rdkb.remotemanagement.domain.entity.WifiMotionEvent
 import com.globallogic.rdkb.remotemanagement.domain.utils.Resource
 import com.globallogic.rdkb.remotemanagement.domain.utils.Resource.Success
-import com.globallogic.rdkb.remotemanagement.domain.utils.ResourceState
 import com.globallogic.rdkb.remotemanagement.domain.utils.flatMapData
 import com.globallogic.rdkb.remotemanagement.domain.utils.map
 import com.globallogic.rdkb.remotemanagement.domain.utils.mapErrorToData
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.isActive
 
@@ -30,7 +28,6 @@ private class FakeRemoteRouterDeviceDataSourceImpl(
     private val original: RemoteRouterDeviceDataSource
 ) : RemoteRouterDeviceDataSource by original {
     private val hardcodedDevice: FakeRouterDevice = FakeRouterDevice(
-        name = "Hardcoded Router",
         macAddress = "dc:a6:32:0e:b9:bb",
         modelName = "ar1840",
         ipAddressV4 = "192.168.1.150",
@@ -48,13 +45,20 @@ private class FakeRemoteRouterDeviceDataSourceImpl(
             ),
         ),
     )
+    private val hardcodedAvailableDevices: List<FoundRouterDevice> = listOf(
+        FoundRouterDevice(
+            name = "BananapiBPI-R4",
+            ip = "172.24.198.95",
+            macAddress = "ca:3b:e1:9b:ba:8d"
+        ),
+    )
 
     override suspend fun findAvailableRouterDevices(): Resource<List<FoundRouterDevice>, IoDeviceError.NoAvailableRouterDevices> {
         return Success(listOf(hardcodedDevice.toFoundRouterDevice()))
-            .flatMapData { fake ->
+            .flatMapData { fakeDevice ->
                 original.findAvailableRouterDevices()
-                    .map { fake + it }
-                    .mapErrorToData { fake }
+                    .map { fakeDevice + it + hardcodedAvailableDevices }
+                    .mapErrorToData { fakeDevice }
             }
     }
 
@@ -169,10 +173,8 @@ private class FakeRemoteRouterDeviceDataSourceImpl(
     }
 
     private data class FakeRouterDevice(
-        val name: String = "Controller",
         val manufacturer: String = "Controller",
         val macAddress: String = "9a:1a:22:49:73:3c",
-        val connectedExtender: Int = 0,
         val modelName: String = "ar1840",
         val ipAddressV4: String = "192.168.1.150",
         val ipAddressV6: String = "192.168.1.151",
@@ -188,7 +190,7 @@ private class FakeRemoteRouterDeviceDataSourceImpl(
         val connectedDevices: List<FakeConnectedDevice> = emptyList(),
     ) {
         fun toFoundRouterDevice(): FoundRouterDevice = FoundRouterDevice(
-            name = name,
+            name = modelName,
             ip = ipAddressV4,
             macAddress = macAddress
         )

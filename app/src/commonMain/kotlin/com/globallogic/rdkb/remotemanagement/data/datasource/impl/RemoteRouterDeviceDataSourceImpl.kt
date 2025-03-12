@@ -5,6 +5,7 @@ import com.globallogic.rdkb.remotemanagement.data.error.IoDeviceError
 import com.globallogic.rdkb.remotemanagement.data.network.service.RdkCentralAccessorService
 import com.globallogic.rdkb.remotemanagement.data.network.service.model.Band
 import com.globallogic.rdkb.remotemanagement.data.upnp.UpnpService
+import com.globallogic.rdkb.remotemanagement.data.wifi.WifiScanner
 import com.globallogic.rdkb.remotemanagement.data.wifi.model.WifiInfo
 import com.globallogic.rdkb.remotemanagement.domain.entity.AccessPoint
 import com.globallogic.rdkb.remotemanagement.domain.entity.AccessPointGroup
@@ -51,6 +52,7 @@ class RemoteRouterDeviceDataSourceImpl(
         val upnpDeviceMacAddresses = upnpService.getDevices()
             .map { device -> upnpService.getDeviceMac(device) }
             .map { mac -> mac.replace(":", "").lowercase() }
+        println(upnpDeviceMacAddresses)
         return devices
             .filter { macAddress -> macAddress in upnpDeviceMacAddresses }
     }

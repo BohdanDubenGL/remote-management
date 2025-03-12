@@ -69,7 +69,7 @@ class RouterDeviceRepositoryImpl(
         val device = getLocalRouterDevice()
             .onFailure { error -> send(Failure(DeviceError.Topology)) }
             .dataOrElse { error -> return@channelFlow }
-        getRouterDeviceConnectedDevices(forceUpdate = true)
+        getRouterDeviceConnectedDevices(device, forceUpdate = true)
             .map { connectedDevicesState ->
                 when(connectedDevicesState) {
                     is ResourceState.None -> connectedDevicesState
@@ -93,12 +93,12 @@ class RouterDeviceRepositoryImpl(
         val macAvailableDevices = remoteRouterDeviceDataSource.findAvailableRouterDevices()
             .dataOrElse { error -> emptyList() }
             .map { device -> device.macAddress }
-        val updatedDevices = localRouterDeviceDataSource.loadRouterDevicesForUser(email)
+        val savedDevices = localRouterDeviceDataSource.loadRouterDevicesForUser(email)
             .dataOrElse { error -> return Failure(DeviceError.NoDeviceFound) }
 
-        val localDevice = updatedDevices
+        val localDevice = savedDevices
             .firstOrNull { device -> device.macAddress in macAvailableDevices }
-            ?: updatedDevices.firstOrNull()
+            ?: savedDevices.firstOrNull()
             ?: return Failure(DeviceError.NoDeviceFound)
         return Success(localDevice)
     }
@@ -111,6 +111,15 @@ class RouterDeviceRepositoryImpl(
         val device = getSelectRouterDevice()
             .onFailure { error -> send(Failure(DeviceError.NoConnectedDevicesFound)) }
             .dataOrElse { error -> return@channelFlow }
+        getRouterDeviceConnectedDevices(device, forceUpdate)
+            .collectLatest(::send)
+    }
+
+    private fun getRouterDeviceConnectedDevices(
+        device: RouterDevice,
+        forceUpdate: Boolean
+    ): Flow<ResourceState<List<ConnectedDevice>, DeviceError.NoConnectedDevicesFound>> = channelFlow {
+        send(ResourceState.Loading)
 
         val savedConnectedDevices = localRouterDeviceDataSource.loadConnectedDevices(device)
             .mapError { error -> DeviceError.NoConnectedDevicesFound }
@@ -248,6 +257,8 @@ class RouterDeviceRepositoryImpl(
         val motionEventsFlow = remoteRouterDeviceDataSource.pollWifiMotionEvents(device, updateIntervalMillis)
             .stateIn(this, SharingStarted.Eagerly, Success(emptyList()))
 
+        delay(updateIntervalMillis)
+
         while(isActive) {
             val currentHostMacAddress = remoteRouterDeviceDataSource.getWifiMotionState(device)
                 .dataOrElse { error -> null }
@@ -269,6 +280,8 @@ class RouterDeviceRepositoryImpl(
                     events = motionEvents,
                 )
                 send(Success(motionData))
+            } else {
+                send(Failure(DeviceError.WifiMotion))
             }
 
             delay(updateIntervalMillis)
