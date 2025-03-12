@@ -9,9 +9,11 @@ sealed interface DeviceError : ResourceError {
     data object WrongMacAddressFormat : DeviceError, ConnectionError
 
     data object SetupDevice : DeviceError
+    data object Topology : DeviceError
 
     data object NoDeviceFound : DeviceError
     data object NoDevicesFound : DeviceError
     data object NoConnectedDevicesFound : DeviceError
     data object WifiSettings : DeviceError
+    data object WifiMotion : DeviceError
 }

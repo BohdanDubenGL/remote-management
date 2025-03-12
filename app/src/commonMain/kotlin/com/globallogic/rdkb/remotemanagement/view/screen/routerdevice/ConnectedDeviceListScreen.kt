@@ -20,7 +20,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.globallogic.rdkb.remotemanagement.domain.entity.ConnectedDevice
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.GetRouterDeviceConnectedDevicesUseCase
-import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.GetSelectedRouterDeviceUseCase
 import com.globallogic.rdkb.remotemanagement.domain.utils.Resource
 import com.globallogic.rdkb.remotemanagement.domain.utils.ResourceState
 import com.globallogic.rdkb.remotemanagement.domain.utils.dataOrElse
@@ -112,17 +111,13 @@ private fun ConnectedDeviceListContent(
 }
 
 class ConnectedDeviceListViewModel(
-    private val getSelectedRouterDevice: GetSelectedRouterDeviceUseCase,
     private val getRouterDeviceConnectedDevices: GetRouterDeviceConnectedDevicesUseCase,
 ) : MviViewModel<ResourceState<ConnectedDeviceListUiState, UiResourceError>>(ResourceState.None) {
 
     override suspend fun onInitState() = loadConnectedDevices()
 
     private fun loadConnectedDevices() = launchOnViewModelScope {
-        val routerDevice = getSelectedRouterDevice()
-            .dataOrElse { error -> return@launchOnViewModelScope }
-
-        getRouterDeviceConnectedDevices(routerDevice).collectLatest { connectedDevices ->
+        getRouterDeviceConnectedDevices().collectLatest { connectedDevices ->
             updateState { state ->
                 when (connectedDevices) {
                     is ResourceState.None -> connectedDevices

@@ -12,6 +12,7 @@ sealed interface DeviceProperty<T: Any> {
     abstract class IntProperty(name: String) : Property<Int>(name, DataType.Integer)
     abstract class LongProperty(name: String) : Property<Long>(name, DataType.LongInt)
     abstract class BooleanProperty(name: String) : Property<Boolean>(name, DataType.Bool)
+    abstract class DataTimeProperty(name: String) : Property<String>(name, DataType.DateTime)
     abstract class Action(override val name: String, val value: String): DeviceProperty<String> {
         override val dataType: DataType<String> = DataType.Text
     }
@@ -51,6 +52,13 @@ sealed interface DeviceProperty<T: Any> {
     data class WifiClientPacketsSent(val accessPoint: Int, val clientId: Int) : LongProperty(name = "Device.WiFi.AccessPoint.$accessPoint.AssociatedDevice.$clientId.Stats.PacketsSent")
     data class WifiClientPacketsReceived(val accessPoint: Int, val clientId: Int) : LongProperty(name = "Device.WiFi.AccessPoint.$accessPoint.AssociatedDevice.$clientId.Stats.PacketsReceived")
     data class WifiClientErrorsSent(val accessPoint: Int, val clientId: Int) : LongProperty(name = "Device.WiFi.AccessPoint.$accessPoint.AssociatedDevice.$clientId.Stats.ErrorsSent")
+
+    data object MotionDetectionDeviceMacAddress : StringProperty(name = "Device.WiFi.X_RDK_MotionDetection.SensingDeviceMACAddress")
+    data object MotionDetectionNumberOfEntries : LongProperty(name = "Device.WiFi.X_RDK_MotionDetection.SensingEventsNumberOfEntries")
+    data object MotionDetectionPercent : LongProperty(name = "Device.WiFi.X_RDK_MotionDetection.Motion")
+    data class MotionDetectionSensingDevice(val eventId: Int) : StringProperty(name = "Device.WiFi.X_RDK_MotionDetection.SensingEvents.$eventId.SensingDevice")
+    data class MotionDetectionType(val eventId: Int) : StringProperty(name = "Device.WiFi.X_RDK_MotionDetection.SensingEvents.$eventId.Type")
+    data class MotionDetectionTime(val eventId: Int) : DataTimeProperty(name = "Device.WiFi.X_RDK_MotionDetection.SensingEvents.$eventId.Time")
 
     data object ActionReboot : Action(name = "Device.X_CISCO_COM_DeviceControl.RebootDevice", "Device")
     data object ActionFactoryReset : Action(name = "Device.X_CISCO_COM_DeviceControl.FactoryReset", "Router,Wifi,Firewall,VoIP,Docsis")

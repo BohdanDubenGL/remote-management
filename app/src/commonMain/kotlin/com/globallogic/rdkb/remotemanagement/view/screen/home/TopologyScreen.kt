@@ -22,11 +22,11 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.globallogic.rdkb.remotemanagement.domain.entity.ConnectedDevice
 import com.globallogic.rdkb.remotemanagement.domain.entity.RouterDevice
-import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.GetLocalRouterDeviceUseCase
-import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.GetRouterDeviceConnectedDevicesUseCase
+import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.GetTopologyDataUseCase
 import com.globallogic.rdkb.remotemanagement.domain.utils.Resource
 import com.globallogic.rdkb.remotemanagement.domain.utils.ResourceState
-import com.globallogic.rdkb.remotemanagement.domain.utils.dataOrElse
+import com.globallogic.rdkb.remotemanagement.domain.utils.map
+import com.globallogic.rdkb.remotemanagement.domain.utils.mapErrorToData
 import com.globallogic.rdkb.remotemanagement.view.base.MviViewModel
 import com.globallogic.rdkb.remotemanagement.view.component.AppButton
 import com.globallogic.rdkb.remotemanagement.view.component.AppDrawResourceState
@@ -39,6 +39,7 @@ import com.globallogic.rdkb.remotemanagement.view.navigation.FloatingActionButto
 import com.globallogic.rdkb.remotemanagement.view.navigation.LocalNavController
 import com.globallogic.rdkb.remotemanagement.view.navigation.Screen
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.map
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
@@ -126,32 +127,30 @@ private fun TopologyContent(
 }
 
 class TopologyViewModel(
-    private val getLocalRouterDevice: GetLocalRouterDeviceUseCase,
-    private val getRouterDeviceConnectedDevices: GetRouterDeviceConnectedDevicesUseCase,
+    private val getTopologyData: GetTopologyDataUseCase,
 ) : MviViewModel<ResourceState<TopologyUiState, UiResourceError>>(ResourceState.None) {
 
     override suspend fun onSubscribeState() = loadTopologyData()
 
-    fun loadTopologyData() = launchOnViewModelScope {
-        updateState { ResourceState.Loading }
-        val routerDevice = getLocalRouterDevice()
-            .dataOrElse { error ->
-                updateState { Resource.Success(TopologyUiState.NoData) }
-                return@launchOnViewModelScope
-            }
-        getRouterDeviceConnectedDevices(routerDevice).collectLatest { connectedDevices ->
-            updateState { state ->
-                when(connectedDevices) {
-                    is ResourceState.None -> connectedDevices
-                    is ResourceState.Loading -> connectedDevices
-                    is Resource -> Resource.Success(TopologyUiState.Data(
-                        routerDevice = routerDevice,
-                        connectedDevices = connectedDevices
-                            .dataOrElse { error -> return@updateState Resource.Success(TopologyUiState.NoData) }
-                    ))
+    fun loadTopologyData() = launchUpdateStateFromFlow { state ->
+        send(ResourceState.Loading)
+
+        getTopologyData()
+            .map { topologyDataState ->
+                when(topologyDataState) {
+                    is ResourceState.Loading -> topologyDataState
+                    is ResourceState.None -> topologyDataState
+                    is Resource -> topologyDataState
+                        .map { topologyData ->
+                            TopologyUiState.Data(
+                                routerDevice = topologyData.routerDevice,
+                                connectedDevices = topologyData.connectedDevices
+                            )
+                        }
+                        .mapErrorToData { error -> TopologyUiState.NoData }
                 }
             }
-        }
+            .collectLatest(::send)
     }
 }
 

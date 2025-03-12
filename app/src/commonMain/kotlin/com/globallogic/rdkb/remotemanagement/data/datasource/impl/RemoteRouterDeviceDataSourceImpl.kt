@@ -15,6 +15,7 @@ import com.globallogic.rdkb.remotemanagement.domain.entity.AccessPoint
 import com.globallogic.rdkb.remotemanagement.domain.entity.AccessPointGroup
 import com.globallogic.rdkb.remotemanagement.domain.entity.AccessPointSettings
 import com.globallogic.rdkb.remotemanagement.domain.entity.ConnectedDeviceStats
+import com.globallogic.rdkb.remotemanagement.domain.entity.WifiMotionEvent
 import com.globallogic.rdkb.remotemanagement.domain.utils.Resource
 import com.globallogic.rdkb.remotemanagement.domain.utils.Resource.Failure
 import com.globallogic.rdkb.remotemanagement.domain.utils.Resource.Success
@@ -24,6 +25,10 @@ import com.globallogic.rdkb.remotemanagement.domain.utils.mapError
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.channelFlow
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.supervisorScope
 
 class RemoteRouterDeviceDataSourceImpl(
@@ -254,6 +259,105 @@ class RemoteRouterDeviceDataSourceImpl(
         val deviceAccessor = rdkCentralAccessorService.device(device.macAddress)
         return deviceAccessor.rebootDevice()
             .mapError { error -> IoDeviceError.RestartDevice }
+    }
+
+    override suspend fun getWifiMotionState(device: RouterDevice): Resource<String, IoDeviceError.WifiMotion> {
+        return rdkCentralAccessorService.device(device.macAddress)
+            .wifiMotion()
+            .getSensingDeviceMacAddress()
+            .mapError { error -> IoDeviceError.WifiMotion }
+    }
+
+    override suspend fun getWifiMotionPercent(device: RouterDevice): Resource<Int, IoDeviceError.WifiMotion> {
+        return rdkCentralAccessorService.device(device.macAddress)
+            .wifiMotion()
+            .getMotionPercent()
+            .mapError { error -> IoDeviceError.WifiMotion }
+    }
+
+    override suspend fun startWifiMotion(device: RouterDevice, connectedDevice: ConnectedDevice): Resource<Unit, IoDeviceError.WifiMotion> {
+        return rdkCentralAccessorService.device(device.macAddress)
+            .wifiMotion()
+            .setSensingDeviceMacAddress(connectedDevice.macAddress)
+            .mapError { error -> IoDeviceError.WifiMotion }
+    }
+
+    override suspend fun stopWifiMotion(device: RouterDevice): Resource<Unit, IoDeviceError.WifiMotion> {
+        return rdkCentralAccessorService.device(device.macAddress)
+            .wifiMotion()
+            .setSensingDeviceMacAddress("")
+            .mapError { error -> IoDeviceError.WifiMotion }
+    }
+
+    override suspend fun loadWifiMotionEvents(device: RouterDevice): Resource<List<WifiMotionEvent>, IoDeviceError.WifiMotion> = coroutineScope {
+        return@coroutineScope rdkCentralAccessorService.device(device.macAddress)
+            .wifiMotion()
+            .getSensingEvents()
+            .map { motionEventAccessors ->
+                motionEventAccessors
+                    .map { motionEventAccessor -> async {
+                        motionEventAccessor.getMotionEvent()
+                            .dataOrElse { error -> null }
+                    } }
+                    .awaitAll()
+                    .filterNotNull()
+            }
+            .mapError { error -> IoDeviceError.WifiMotion }
+    }
+
+    override suspend fun pollWifiMotionEvents(
+        device: RouterDevice,
+        updateIntervalMillis: Long,
+    ): Flow<Resource<List<WifiMotionEvent>, IoDeviceError.WifiMotion>> = channelFlow {
+        val wifiMotionAccessor = rdkCentralAccessorService.device(device.macAddress)
+            .wifiMotion()
+        var events = wifiMotionAccessor
+            .getSensingEvents()
+            .dataOrElse { error -> emptyList() }
+            .map { motionEventAccessor -> async {
+                motionEventAccessor.getMotionEvent()
+                    .dataOrElse { error -> null }
+            } }
+            .awaitAll()
+            .filterNotNull()
+        send(Success(events))
+
+        while (isActive) {
+            val eventCount = wifiMotionAccessor.getSensingEventCount()
+                .dataOrElse { error -> 0 }
+            when {
+                eventCount == events.size -> Unit
+                eventCount > events.size -> {
+                    val eventIds = events.map { it.eventId }
+                    val newEvents = wifiMotionAccessor
+                        .getSensingEvents()
+                        .dataOrElse { error -> emptyList() }
+                        .filter { it.eventId !in eventIds }
+                        .map { motionEventAccessor -> async {
+                            motionEventAccessor.getMotionEvent()
+                                .dataOrElse { error -> null }
+                        } }
+                        .awaitAll()
+                        .filterNotNull()
+                    events = events + newEvents
+                    send(Success(events))
+                }
+                eventCount < events.size -> {
+                    events = wifiMotionAccessor
+                        .getSensingEvents()
+                        .dataOrElse { error -> emptyList() }
+                        .map { motionEventAccessor -> async {
+                            motionEventAccessor.getMotionEvent()
+                                .dataOrElse { error -> null }
+                        } }
+                        .awaitAll()
+                        .filterNotNull()
+                    send(Success(events))
+                }
+            }
+
+            delay(updateIntervalMillis)
+        }
     }
 
     companion object {

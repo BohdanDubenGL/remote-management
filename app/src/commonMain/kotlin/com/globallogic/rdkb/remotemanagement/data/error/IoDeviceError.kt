@@ -24,6 +24,7 @@ sealed interface IoDeviceError : ResourceError {
 
     data object NoDeviceFound : FindRouterDeviceByMacAddress, FindLocalRouterDevice, LoadDeviceInfo
     data object WifiSettings : FindRouterDeviceByMacAddress, FindLocalRouterDevice, LoadDeviceInfo
+    data object WifiMotion : IoDeviceError
 
     data class DatabaseError(val throwable: Throwable) : LoadRouterDevicesForUser, FindRouterDeviceByMacAddress,
         SaveConnectedDevices, LoadConnectedDevices, LoadDeviceInfo,

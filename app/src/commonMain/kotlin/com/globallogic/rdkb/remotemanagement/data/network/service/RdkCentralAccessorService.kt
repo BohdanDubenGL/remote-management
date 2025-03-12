@@ -1,6 +1,7 @@
 package com.globallogic.rdkb.remotemanagement.data.network.service
 
 import com.globallogic.rdkb.remotemanagement.data.network.service.model.Band
+import com.globallogic.rdkb.remotemanagement.domain.entity.WifiMotionEvent
 import com.globallogic.rdkb.remotemanagement.domain.utils.Resource
 import com.globallogic.rdkb.remotemanagement.domain.utils.ThrowableResourceError
 
@@ -34,6 +35,8 @@ interface RdkCentralAccessorService {
         fun connectedDevice(deviceId: Int): ConnectedDeviceAccessor
         fun accessPoint(accessPointGroupId: Int, band: Band): AccessPointAccessor
         fun accessPointGroup(accessPointGroupId: Int): AccessPointGroupAccessor
+
+        fun wifiMotion(): WifiMotionAccessor
     }
 
     interface ConnectedDeviceAccessor {
@@ -75,5 +78,26 @@ interface RdkCentralAccessorService {
         suspend fun setWifiSsid(ssid: String): Resource<Unit, ThrowableResourceError>
         suspend fun setWifiPassword(password: String): Resource<Unit, ThrowableResourceError>
         suspend fun setWifiSecurityMode(securityMode: String): Resource<Unit, ThrowableResourceError>
+    }
+
+    interface WifiMotionAccessor {
+        suspend fun getSensingDeviceMacAddress(): Resource<String, ThrowableResourceError>
+        suspend fun getSensingEventCount(): Resource<Int, ThrowableResourceError>
+        suspend fun getMotionPercent(): Resource<Int, ThrowableResourceError>
+        suspend fun getSensingEvents(): Resource<List<WifiMotionEventAccessor>, ThrowableResourceError>
+
+        suspend fun setSensingDeviceMacAddress(macAddress: String): Resource<Unit, ThrowableResourceError>
+
+        fun event(eventId: Int): WifiMotionEventAccessor
+    }
+
+    interface WifiMotionEventAccessor {
+        val eventId: Int
+
+        suspend fun getDeviceMacAddress(): Resource<String, ThrowableResourceError>
+        suspend fun getType(): Resource<String, ThrowableResourceError>
+        suspend fun getTime(): Resource<String, ThrowableResourceError>
+
+        suspend fun getMotionEvent(): Resource<WifiMotionEvent, ThrowableResourceError>
     }
 }

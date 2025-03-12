@@ -10,11 +10,18 @@ import com.globallogic.rdkb.remotemanagement.domain.entity.ConnectedDeviceStats
 import com.globallogic.rdkb.remotemanagement.domain.entity.DeviceAccessPointSettings
 import com.globallogic.rdkb.remotemanagement.domain.entity.FoundRouterDevice
 import com.globallogic.rdkb.remotemanagement.domain.entity.RouterDevice
+import com.globallogic.rdkb.remotemanagement.domain.entity.WifiMotionEvent
 import com.globallogic.rdkb.remotemanagement.domain.utils.Resource
 import com.globallogic.rdkb.remotemanagement.domain.utils.Resource.Success
+import com.globallogic.rdkb.remotemanagement.domain.utils.ResourceState
 import com.globallogic.rdkb.remotemanagement.domain.utils.flatMapData
 import com.globallogic.rdkb.remotemanagement.domain.utils.map
 import com.globallogic.rdkb.remotemanagement.domain.utils.mapErrorToData
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.asFlow
+import kotlinx.coroutines.flow.channelFlow
+import kotlinx.coroutines.isActive
 
 fun RemoteRouterDeviceDataSource.fake(): RemoteRouterDeviceDataSource =
     FakeRemoteRouterDeviceDataSourceImpl(this)
@@ -97,6 +104,67 @@ private class FakeRemoteRouterDeviceDataSourceImpl(
         return when (device.macAddress) {
             hardcodedDevice.macAddress -> Success(Unit)
             else -> original.setupAccessPoint(device, accessPointGroup, settings)
+        }
+    }
+
+    override suspend fun getWifiMotionState(device: RouterDevice): Resource<String, IoDeviceError.WifiMotion> {
+        return when (device.macAddress) {
+            hardcodedDevice.macAddress -> Success(hardcodedDevice.connectedDevices.first().macAddress)
+            else -> original.getWifiMotionState(device)
+        }
+    }
+
+    override suspend fun getWifiMotionPercent(device: RouterDevice): Resource<Int, IoDeviceError.WifiMotion> {
+        return when (device.macAddress) {
+            hardcodedDevice.macAddress -> Success(60)
+            else -> original.getWifiMotionPercent(device)
+        }
+    }
+
+    override suspend fun startWifiMotion(device: RouterDevice, connectedDevice: ConnectedDevice): Resource<Unit, IoDeviceError.WifiMotion> {
+        return when (device.macAddress) {
+            hardcodedDevice.macAddress -> Success(Unit)
+            else -> original.startWifiMotion(device, connectedDevice)
+        }
+    }
+
+    override suspend fun stopWifiMotion(device: RouterDevice): Resource<Unit, IoDeviceError.WifiMotion> {
+        return when (device.macAddress) {
+            hardcodedDevice.macAddress -> Success(Unit)
+            else -> original.stopWifiMotion(device)
+        }
+    }
+
+    override suspend fun loadWifiMotionEvents(device: RouterDevice): Resource<List<WifiMotionEvent>, IoDeviceError.WifiMotion> {
+        return when (device.macAddress) {
+            hardcodedDevice.macAddress -> Success(List(20) { eventId ->
+                WifiMotionEvent(
+                    eventId = eventId,
+                    deviceMacAddress = hardcodedDevice.macAddress,
+                    type = "MOTION_STOPPED",
+                    time = "2025-03-12T08:08:10Z",
+                )
+            })
+            else -> original.loadWifiMotionEvents(device)
+        }
+    }
+
+    override suspend fun pollWifiMotionEvents(device: RouterDevice, updateIntervalMillis: Long): Flow<Resource<List<WifiMotionEvent>, IoDeviceError.WifiMotion>> {
+        return when (device.macAddress) {
+            hardcodedDevice.macAddress -> channelFlow {
+                var events = emptyList<WifiMotionEvent>()
+                while (isActive) {
+                    events = events + WifiMotionEvent(
+                        eventId = events.size.inc(),
+                        deviceMacAddress = hardcodedDevice.macAddress,
+                        type = "MOTION_STOPPED",
+                        time = "2025-03-12T08:08:10Z"
+                    )
+                    send(Success(events))
+                    delay(updateIntervalMillis)
+                }
+            }
+            else -> original.pollWifiMotionEvents(device, updateIntervalMillis)
         }
     }
 

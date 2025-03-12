@@ -79,11 +79,9 @@ class DeviceAccessor(
             .map { it.toInt() }
     }
 
-    override suspend fun connectedDevices(): Resource<List<RdkCentralAccessorService.ConnectedDeviceAccessor>, ThrowableResourceError> = coroutineScope {
-        getConnectedDevicesCount().map { count ->
-            List(count) { index -> async {
-                connectedDevice(index + 1)
-            } }.awaitAll()
+    override suspend fun connectedDevices(): Resource<List<RdkCentralAccessorService.ConnectedDeviceAccessor>, ThrowableResourceError> {
+        return getConnectedDevicesCount().map { count ->
+            List(count) { index -> connectedDevice(index + 1) }
         }
     }
 
@@ -101,6 +99,9 @@ class DeviceAccessor(
 
     override fun accessPoint(accessPointGroupId: Int, band: Band): RdkCentralAccessorService.AccessPointAccessor =
         AccessPointAccessor(rdkCentralPropertyService, macAddress, accessPointGroupId + band.radio, band)
+
+    override fun wifiMotion(): RdkCentralAccessorService.WifiMotionAccessor =
+        WifiMotionAccessor(rdkCentralPropertyService, macAddress)
 
     companion object {
         private val accessPointGroupIndices: IntRange = 1..8

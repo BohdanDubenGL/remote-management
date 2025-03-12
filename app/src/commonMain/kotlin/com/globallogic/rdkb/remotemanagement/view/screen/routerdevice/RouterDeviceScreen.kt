@@ -28,7 +28,6 @@ import androidx.navigation.NavController
 import com.globallogic.rdkb.remotemanagement.domain.entity.AccessPointGroup
 import com.globallogic.rdkb.remotemanagement.domain.entity.AccessPointSettings
 import com.globallogic.rdkb.remotemanagement.domain.entity.RouterDevice
-import com.globallogic.rdkb.remotemanagement.domain.error.DeviceError
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.DoRouterDeviceActionUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.GetAccessPointGroupsUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.GetAccessPointSettingsUseCase
@@ -55,7 +54,6 @@ import com.globallogic.rdkb.remotemanagement.view.error.UiResourceError
 import com.globallogic.rdkb.remotemanagement.view.navigation.LocalNavController
 import com.globallogic.rdkb.remotemanagement.view.navigation.Screen
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import org.koin.compose.viewmodel.koinViewModel
@@ -285,7 +283,7 @@ class RouterDeviceViewModel(
         val routerDevice = getSelectedRouterDevice()
             .onFailure { send(Failure(UiResourceError("Error", "Can't load router data"))) }
             .dataOrElse { error -> return@launchUpdateStateFromFlow }
-        getAccessPointGroups(routerDevice).collectLatest { accessPointGroupsState ->
+        getAccessPointGroups().collectLatest { accessPointGroupsState ->
             when(accessPointGroupsState) {
                 is ResourceState.None -> send(accessPointGroupsState)
                 is ResourceState.Loading -> send(accessPointGroupsState)
@@ -298,7 +296,7 @@ class RouterDeviceViewModel(
                     val accessPointGroups = accessPointGroupsState.data
                     val accessPointGroupSettingsStateFlow = when (val currentAccessPointGroup = accessPointGroups.firstOrNull()) {
                         null -> flowOf(ResourceState.None)
-                        else -> getAccessPointSettings(routerDevice, currentAccessPointGroup)
+                        else -> getAccessPointSettings(currentAccessPointGroup)
                     }
                     accessPointGroupSettingsStateFlow
                         .map { accessPointGroupSettingsState ->
@@ -334,11 +332,7 @@ class RouterDeviceViewModel(
             currentAccessPointGroup = accessPointGroup,
             accessPointGroupSettings = ResourceState.Loading,
         )))
-
-        val routerDevice = getSelectedRouterDevice()
-            .onFailure { send(Failure(UiResourceError("Error", "Can't load router data"))) }
-            .dataOrElse { error -> return@launchUpdateStateFromFlow }
-        getAccessPointSettings(routerDevice, accessPointGroup)
+        getAccessPointSettings(accessPointGroup)
             .map { accessPointGroupSettingsState ->
                 when (accessPointGroupSettingsState) {
                     is ResourceState.None -> accessPointGroupSettingsState
@@ -359,9 +353,8 @@ class RouterDeviceViewModel(
 
     fun onRestartRouterDevice() = launchUpdateStateFromFlow { state ->
         if (state is Success) {
-            val data = state.data as? RouterDeviceUiState.DeviceLoaded ?: return@launchUpdateStateFromFlow
             send(ResourceState.Loading)
-            doRouterDeviceAction(data.routerDevice, RouterDeviceAction.Restart)
+            doRouterDeviceAction(RouterDeviceAction.Restart)
                 .onFailure { loadSelectedRouterDeviceInfo() }
             send(state)
         }
@@ -369,9 +362,8 @@ class RouterDeviceViewModel(
 
     fun onFactoryResetRouterDevice() = launchUpdateStateFromFlow { state ->
         if (state is Success) {
-            val data = state.data as? RouterDeviceUiState.DeviceLoaded ?: return@launchUpdateStateFromFlow
             send(ResourceState.Loading)
-            doRouterDeviceAction(data.routerDevice, RouterDeviceAction.FactoryReset)
+            doRouterDeviceAction(RouterDeviceAction.FactoryReset)
                 .onFailure { loadSelectedRouterDeviceInfo() }
             send(state)
         }
@@ -379,9 +371,8 @@ class RouterDeviceViewModel(
 
     fun onRemoveRouterDevice() = launchUpdateStateFromFlow { state ->
         if (state is Success) {
-            val data = state.data as? RouterDeviceUiState.DeviceLoaded ?: return@launchUpdateStateFromFlow
             send(ResourceState.Loading)
-            val newState = doRouterDeviceAction(data.routerDevice, RouterDeviceAction.Remove)
+            val newState = doRouterDeviceAction(RouterDeviceAction.Remove)
                 .onFailure { loadSelectedRouterDeviceInfo() }
                 .map { RouterDeviceUiState.DeviceRemoved }
                 .flatMapError { error -> state }

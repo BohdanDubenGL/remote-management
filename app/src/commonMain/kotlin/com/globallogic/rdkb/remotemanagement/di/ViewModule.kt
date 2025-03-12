@@ -10,6 +10,7 @@ import com.globallogic.rdkb.remotemanagement.view.screen.home.TopologyViewModel
 import com.globallogic.rdkb.remotemanagement.view.screen.routerdevice.ConnectedDeviceListViewModel
 import com.globallogic.rdkb.remotemanagement.view.screen.routerdevice.RouterDeviceViewModel
 import com.globallogic.rdkb.remotemanagement.view.screen.routerdevice.SetupRouterDeviceViewModel
+import com.globallogic.rdkb.remotemanagement.view.screen.routerdevice.WifiMotionViewModel
 import com.globallogic.rdkb.remotemanagement.view.screen.splash.SplashViewModel
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.viewModelOf
@@ -32,5 +33,6 @@ val viewModule: Module = module {
 
     viewModelOf(::RouterDeviceViewModel)
     viewModelOf(::ConnectedDeviceListViewModel)
+    viewModelOf(::WifiMotionViewModel)
     viewModelOf(::SetupRouterDeviceViewModel)
 }
