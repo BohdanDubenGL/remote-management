@@ -5,16 +5,15 @@ import com.globallogic.rdkb.remotemanagement.data.error.IoDeviceError
 import com.globallogic.rdkb.remotemanagement.data.network.service.RdkCentralAccessorService
 import com.globallogic.rdkb.remotemanagement.data.network.service.model.Band
 import com.globallogic.rdkb.remotemanagement.data.upnp.UpnpService
-import com.globallogic.rdkb.remotemanagement.data.wifi.WifiScanner
 import com.globallogic.rdkb.remotemanagement.data.wifi.model.WifiInfo
-import com.globallogic.rdkb.remotemanagement.domain.entity.ConnectedDevice
-import com.globallogic.rdkb.remotemanagement.domain.entity.FoundRouterDevice
-import com.globallogic.rdkb.remotemanagement.domain.entity.RouterDevice
-import com.globallogic.rdkb.remotemanagement.domain.entity.DeviceAccessPointSettings
 import com.globallogic.rdkb.remotemanagement.domain.entity.AccessPoint
 import com.globallogic.rdkb.remotemanagement.domain.entity.AccessPointGroup
 import com.globallogic.rdkb.remotemanagement.domain.entity.AccessPointSettings
+import com.globallogic.rdkb.remotemanagement.domain.entity.ConnectedDevice
 import com.globallogic.rdkb.remotemanagement.domain.entity.ConnectedDeviceStats
+import com.globallogic.rdkb.remotemanagement.domain.entity.DeviceAccessPointSettings
+import com.globallogic.rdkb.remotemanagement.domain.entity.FoundRouterDevice
+import com.globallogic.rdkb.remotemanagement.domain.entity.RouterDevice
 import com.globallogic.rdkb.remotemanagement.domain.entity.WifiMotionEvent
 import com.globallogic.rdkb.remotemanagement.domain.utils.Resource
 import com.globallogic.rdkb.remotemanagement.domain.utils.Resource.Failure
@@ -33,7 +32,6 @@ import kotlinx.coroutines.supervisorScope
 
 class RemoteRouterDeviceDataSourceImpl(
     private val rdkCentralAccessorService: RdkCentralAccessorService,
-    private val wifiScanner: WifiScanner,
     private val upnpService: UpnpService,
 ) : RemoteRouterDeviceDataSource {
 
@@ -50,15 +48,11 @@ class RemoteRouterDeviceDataSourceImpl(
     }
 
     private suspend fun filterAvailableDevices(devices: List<String>): List<String> {
-        val currentWifi = wifiScanner.getCurrentWifi()
         val upnpDeviceMacAddresses = upnpService.getDevices()
             .map { device -> upnpService.getDeviceMac(device) }
             .map { mac -> mac.replace(":", "").lowercase() }
         return devices
-            .filter { macAddress ->
-                macAddress in upnpDeviceMacAddresses
-                        || isMacAddressSimilarToCurrentWifi(macAddress, currentWifi)
-            }
+            .filter { macAddress -> macAddress in upnpDeviceMacAddresses }
     }
 
     private fun isMacAddressSimilarToCurrentWifi(macAddress: String, currentWifiInfo: WifiInfo?): Boolean {

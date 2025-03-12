@@ -10,6 +10,7 @@ import com.globallogic.rdkb.remotemanagement.data.preferences.dataStoreFileName
 import com.globallogic.rdkb.remotemanagement.data.upnp.UpnpService
 import com.globallogic.rdkb.remotemanagement.data.upnp.impl.UpnpServiceImpl
 import com.globallogic.rdkb.remotemanagement.data.wifi.WifiScanner
+import com.globallogic.rdkb.remotemanagement.data.wifi.impl.WifiScannerImpl
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.Module
 import org.koin.dsl.bind
@@ -19,6 +20,6 @@ actual val platformDataModule: Module = module {
     single { createDataStore(androidContext(), dataStoreFileName) }.bind<DataStore<Preferences>>()
     single { createRoomDatabase(createDatabaseBuilder<AppDatabase>(androidContext(), AppDatabase.fileName)) }.bind<AppDatabase>()
 
-    single { WifiScanner(androidContext()) }.bind<WifiScanner>()
+    single { WifiScannerImpl(androidContext()) }.bind<WifiScanner>()
     single { UpnpServiceImpl(get()) }.bind<UpnpService>()
 }

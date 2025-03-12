@@ -1,4 +1,4 @@
-package com.globallogic.rdkb.remotemanagement.data.wifi
+package com.globallogic.rdkb.remotemanagement.data.wifi.impl
 
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -8,23 +8,24 @@ import android.net.wifi.WifiManager
 import androidx.core.content.getSystemService
 import com.globallogic.rdkb.remotemanagement.data.permission.Permission
 import com.globallogic.rdkb.remotemanagement.data.permission.checkPermission
+import com.globallogic.rdkb.remotemanagement.data.wifi.WifiScanner
 import com.globallogic.rdkb.remotemanagement.data.wifi.model.WifiInfo
 import com.globallogic.rdkb.remotemanagement.domain.utils.runCatchingSafe
 import kotlinx.coroutines.CompletableDeferred
 
-actual class WifiScanner(
+class WifiScannerImpl(
     private val applicationContext: Context,
-) {
+): WifiScanner {
     private val wifiManager: WifiManager? = applicationContext.getSystemService<WifiManager>()
 
-    actual suspend fun getCurrentWifi(): WifiInfo? {
+    override suspend fun getCurrentWifi(): WifiInfo? {
         val wifiManager = wifiManager ?: return null
         val connectionInfo = wifiManager.connectionInfo
 //        return WifiInfo(connectionInfo.ssid, connectionInfo.bssid)
         return WifiInfo(ssid = "", bssid = "d8:3a:dd:40:5e:40") // fake
     }
 
-    actual suspend fun scanWifi(): List<WifiInfo> {
+    override suspend fun scanWifi(): List<WifiInfo> {
         val wifiInfosReferred = CompletableDeferred<List<WifiInfo>>()
 
         val wifiScanReceiver = wifiScanReceiver(wifiInfosReferred)

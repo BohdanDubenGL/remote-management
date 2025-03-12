@@ -15,7 +15,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Keyboard
 import androidx.compose.material.icons.filled.Router
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -23,8 +22,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
-import com.globallogic.rdkb.remotemanagement.data.permission.Permission
-import com.globallogic.rdkb.remotemanagement.data.permission.RequestResult
 import com.globallogic.rdkb.remotemanagement.domain.entity.FoundRouterDevice
 import com.globallogic.rdkb.remotemanagement.domain.entity.RouterDevice
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdeviceconnection.ConnectToRouterDeviceUseCase
@@ -46,7 +43,6 @@ import com.globallogic.rdkb.remotemanagement.view.error.UiResourceError
 import com.globallogic.rdkb.remotemanagement.view.navigation.FloatingActionButtonState
 import com.globallogic.rdkb.remotemanagement.view.navigation.LocalNavController
 import com.globallogic.rdkb.remotemanagement.view.navigation.Screen
-import com.globallogic.rdkb.remotemanagement.view.permission.LocalPermissionController
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
@@ -58,15 +54,6 @@ fun SearchRouterDeviceScreen(
 
     AppDrawResourceState(
         resourceState = uiState,
-        onNone = {
-            val permissionController = LocalPermissionController.current
-            LaunchedEffect(permissionController) {
-                when(permissionController.requestPermission(Permission.Location)) {
-                    RequestResult.Granted -> searchRouterDeviceViewModel.searchDevices()
-                    else -> searchRouterDeviceViewModel.locationPermissionDenied()
-                }
-            }
-        },
         onSuccess = { state ->
             when(state) {
                 is SearchRouterDeviceUiState.Connected -> SideEffect {
