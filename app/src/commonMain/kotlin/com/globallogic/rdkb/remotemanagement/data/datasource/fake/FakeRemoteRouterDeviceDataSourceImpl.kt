@@ -21,6 +21,14 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.isActive
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.format
+import kotlinx.datetime.toInstant
+import kotlinx.datetime.toLocalDateTime
+import kotlin.random.Random
 
 fun RemoteRouterDeviceDataSource.fake(): RemoteRouterDeviceDataSource =
     FakeRemoteRouterDeviceDataSourceImpl(this)
@@ -119,9 +127,13 @@ private class FakeRemoteRouterDeviceDataSourceImpl(
         }
     }
 
+    private var motionPercent: Int = 0
     override suspend fun getWifiMotionPercent(device: RouterDevice): Resource<Int, IoDeviceError.WifiMotion> {
         return when (device.macAddress) {
-            hardcodedDevice.macAddress -> Success(60)
+            hardcodedDevice.macAddress -> {
+                motionPercent = (motionPercent + 10) % 100
+                Success(motionPercent)
+            }
             else -> original.getWifiMotionPercent(device)
         }
     }
@@ -140,20 +152,6 @@ private class FakeRemoteRouterDeviceDataSourceImpl(
         }
     }
 
-    override suspend fun loadWifiMotionEvents(device: RouterDevice): Resource<List<WifiMotionEvent>, IoDeviceError.WifiMotion> {
-        return when (device.macAddress) {
-            hardcodedDevice.macAddress -> Success(List(20) { eventId ->
-                WifiMotionEvent(
-                    eventId = eventId,
-                    deviceMacAddress = hardcodedDevice.macAddress,
-                    type = "MOTION_STOPPED",
-                    time = "2025-03-12T08:08:10Z",
-                )
-            })
-            else -> original.loadWifiMotionEvents(device)
-        }
-    }
-
     override suspend fun pollWifiMotionEvents(device: RouterDevice, updateIntervalMillis: Long): Flow<Resource<List<WifiMotionEvent>, IoDeviceError.WifiMotion>> {
         return when (device.macAddress) {
             hardcodedDevice.macAddress -> channelFlow {
@@ -162,8 +160,8 @@ private class FakeRemoteRouterDeviceDataSourceImpl(
                     events = events + WifiMotionEvent(
                         eventId = events.size.inc(),
                         deviceMacAddress = hardcodedDevice.macAddress,
-                        type = "MOTION_STOPPED",
-                        time = "2025-03-12T08:08:10Z"
+                        type = if (Random.nextBoolean()) "MOTION_STOPPED" else "MOTION_STARTED",
+                        time = Clock.System.now().toLocalDateTime(TimeZone.UTC).toInstant(TimeZone.UTC).toString()
                     )
                     send(Success(events))
                     delay(updateIntervalMillis)
@@ -189,6 +187,7 @@ private class FakeRemoteRouterDeviceDataSourceImpl(
             FakeWifiSettings(band = "6GHz", ssid = "6 wifi"),
         ),
         val connectedDevices: List<FakeConnectedDevice> = emptyList(),
+        val webGuiUrl: String = "",
     ) {
         fun toFoundRouterDevice(): FoundRouterDevice = FoundRouterDevice(
             name = modelName,
@@ -206,7 +205,8 @@ private class FakeRemoteRouterDeviceDataSourceImpl(
             serialNumber = serialNumber,
             totalMemory = totalMemory,
             freeMemory = freeMemory,
-            availableBands = wifiSettings.map { it.band }.toSet()
+            availableBands = wifiSettings.map { it.band }.toSet(),
+            webGuiUrl = webGuiUrl,
         )
     }
 

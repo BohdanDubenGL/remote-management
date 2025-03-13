@@ -91,13 +91,16 @@ class RouterDeviceRepositoryImpl(
     private suspend fun getLocalRouterDevice(): Resource<RouterDevice, DeviceError.NoDeviceFound> {
         val email = appPreferences.currentUserEmailPref.get()
             ?: return Failure(DeviceError.NoDeviceFound)
+        val savedDevices = localRouterDeviceDataSource.loadRouterDevicesForUser(email)
+            .dataOrElse { error -> return Failure(DeviceError.NoDeviceFound) }
+        when(savedDevices.size) {
+            0 -> return Failure(DeviceError.NoDeviceFound)
+            1 -> return Success(savedDevices.first())
+        }
         val macAvailableDevices = remoteRouterDeviceDataSource.findAvailableRouterDevices()
             .dataOrElse { error -> emptyList() }
             .map { device -> device.macAddress }
-        val savedDevices = localRouterDeviceDataSource.loadRouterDevicesForUser(email)
-            .dataOrElse { error -> return Failure(DeviceError.NoDeviceFound) }
 
-        println(macAvailableDevices)
         val localDevice = savedDevices
             .reversed()
             .firstOrNull { device -> device.macAddress in macAvailableDevices }

@@ -21,6 +21,7 @@ import com.globallogic.rdkb.remotemanagement.domain.utils.Resource.Success
 import com.globallogic.rdkb.remotemanagement.domain.utils.dataOrElse
 import com.globallogic.rdkb.remotemanagement.domain.utils.map
 import com.globallogic.rdkb.remotemanagement.domain.utils.mapError
+import io.ktor.http.Url
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -51,7 +52,6 @@ class RemoteRouterDeviceDataSourceImpl(
         val upnpDeviceMacAddresses = upnpService.getDevices()
             .map { device -> upnpService.getDeviceMac(device) }
             .map { mac -> mac.replace(":", "").lowercase() }
-        println(upnpDeviceMacAddresses)
         return devices
             .filter { macAddress -> macAddress in upnpDeviceMacAddresses }
     }
@@ -89,6 +89,12 @@ class RemoteRouterDeviceDataSourceImpl(
         val totalMemory = async { deviceAccessor.getTotalMemory() }
         val freeMemory = async { deviceAccessor.getFreeMemory() }
 
+        val webGuiUrl = async {
+            val device = upnpService.getDevices().firstOrNull { upnpService.getDeviceMac(it) == macAddress }
+            if (device != null) "http://${Url(device.location).host}/"
+            else ""
+        }
+
         val device = RouterDevice(
             modelName = name.await().dataOrElse { error -> return@coroutineScope Failure(IoDeviceError.CantConnectToRouterDevice) },
             manufacturer = manufacturer.await().dataOrElse { error -> return@coroutineScope Failure(IoDeviceError.CantConnectToRouterDevice) },
@@ -100,6 +106,7 @@ class RemoteRouterDeviceDataSourceImpl(
             totalMemory = totalMemory.await().dataOrElse { error -> return@coroutineScope Failure(IoDeviceError.CantConnectToRouterDevice) },
             freeMemory = freeMemory.await().dataOrElse { error -> return@coroutineScope Failure(IoDeviceError.CantConnectToRouterDevice) },
             availableBands = bands.await().dataOrElse { error -> return@coroutineScope Failure(IoDeviceError.CantConnectToRouterDevice) },
+            webGuiUrl = webGuiUrl.await(),
         )
         return@coroutineScope Success(device)
     }
@@ -241,7 +248,7 @@ class RemoteRouterDeviceDataSourceImpl(
                     .dataOrElse { error -> return Failure(IoDeviceError.SetupDevice) }
             }
             accessPointAccessor.setWifiEnabled(band.enabled)
-            accessPointAccessor.setWifiSecurityMode( band.securityMode)
+            accessPointAccessor.setWifiSecurityMode(band.securityMode)
         }
         return Success(Unit)
     }
@@ -283,22 +290,6 @@ class RemoteRouterDeviceDataSourceImpl(
         return rdkCentralAccessorService.device(device.macAddress)
             .wifiMotion()
             .setSensingDeviceMacAddress("")
-            .mapError { error -> IoDeviceError.WifiMotion }
-    }
-
-    override suspend fun loadWifiMotionEvents(device: RouterDevice): Resource<List<WifiMotionEvent>, IoDeviceError.WifiMotion> = coroutineScope {
-        return@coroutineScope rdkCentralAccessorService.device(device.macAddress)
-            .wifiMotion()
-            .getSensingEvents()
-            .map { motionEventAccessors ->
-                motionEventAccessors
-                    .map { motionEventAccessor -> async {
-                        motionEventAccessor.getMotionEvent()
-                            .dataOrElse { error -> null }
-                    } }
-                    .awaitAll()
-                    .filterNotNull()
-            }
             .mapError { error -> IoDeviceError.WifiMotion }
     }
 

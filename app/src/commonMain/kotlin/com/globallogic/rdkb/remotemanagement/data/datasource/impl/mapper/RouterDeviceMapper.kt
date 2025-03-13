@@ -15,7 +15,8 @@ object RouterDeviceMapper {
         serialNumber = device.serialNumber,
         totalMemory = device.totalMemory,
         freeMemory = device.freeMemory,
-        availableBands = device.availableBands.split(",").toSet()
+        availableBands = device.availableBands.split(",").toSet(),
+        webGuiUrl = device.webGuiUrl,
     )
     fun toRouterDeviceInfo(device: RouterDevice): RouterDeviceDto = RouterDeviceDto(
         modelName = device.modelName,
@@ -28,6 +29,7 @@ object RouterDeviceMapper {
         totalMemory = device.totalMemory,
         freeMemory = device.freeMemory,
         availableBands = device.availableBands.joinToString(separator = ","),
+        webGuiUrl = device.webGuiUrl,
         updatedAt = Clock.System.now().toEpochMilliseconds()
     )
 }

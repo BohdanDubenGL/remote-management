@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "0d3680155e988dfbe29650974ece0f01",
+    "identityHash": "ebec4278ad945f7b3435aa2a31ba8ad2",
     "entities": [
       {
         "tableName": "user",
@@ -36,7 +36,7 @@
       },
       {
         "tableName": "router_device",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`macAddress` TEXT NOT NULL, `modelName` TEXT NOT NULL, `manufacturer` TEXT NOT NULL, `ipAddressV4` TEXT NOT NULL, `ipAddressV6` TEXT NOT NULL, `firmwareVersion` TEXT NOT NULL, `serialNumber` TEXT NOT NULL, `totalMemory` INTEGER NOT NULL, `freeMemory` INTEGER NOT NULL, `availableBands` TEXT NOT NULL, `updatedAt` INTEGER NOT NULL, PRIMARY KEY(`macAddress`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`macAddress` TEXT NOT NULL, `modelName` TEXT NOT NULL, `manufacturer` TEXT NOT NULL, `ipAddressV4` TEXT NOT NULL, `ipAddressV6` TEXT NOT NULL, `firmwareVersion` TEXT NOT NULL, `serialNumber` TEXT NOT NULL, `totalMemory` INTEGER NOT NULL, `freeMemory` INTEGER NOT NULL, `availableBands` TEXT NOT NULL, `webGuiUrl` TEXT NOT NULL, `updatedAt` INTEGER NOT NULL, PRIMARY KEY(`macAddress`))",
         "fields": [
           {
             "fieldPath": "macAddress",
@@ -95,6 +95,12 @@
           {
             "fieldPath": "availableBands",
             "columnName": "availableBands",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "webGuiUrl",
+            "columnName": "webGuiUrl",
             "affinity": "TEXT",
             "notNull": true
           },
@@ -393,7 +399,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '0d3680155e988dfbe29650974ece0f01')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'ebec4278ad945f7b3435aa2a31ba8ad2')"
     ]
   }
 }

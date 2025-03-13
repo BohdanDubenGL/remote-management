@@ -3,6 +3,7 @@ package com.globallogic.rdkb.remotemanagement.view.screen.routerdevice
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -104,7 +105,7 @@ private fun RouterDeviceContent(
 ) {
     val uriHandler = LocalUriHandler.current
     SideEffect {
-        if (uiState.openWebGui) {
+        if (uiState.openWebGui && uiState.webGuiUrl.isNotBlank()) {
             onWebGuiOpened()
             uriHandler.openUri(uiState.webGuiUrl)
         }
@@ -240,13 +241,13 @@ private fun RouterDeviceContent(
                     text = "Open WEB GUI",
                     cornerRadius = 12.dp,
                     onClick = onOpenWebGui,
-                    modifier = Modifier,
+                    modifier = Modifier.weight(1F),
                 )
                 AppButton(
                     text = "Restart",
                     cornerRadius = 12.dp,
                     onClick = onRestartDevice,
-                    modifier = Modifier,
+                    modifier = Modifier.weight(1F),
                 )
             }
             Row(
@@ -256,16 +257,17 @@ private fun RouterDeviceContent(
                     text = "Factory reset",
                     cornerRadius = 12.dp,
                     onClick = onFactoryResetDevice,
-                    modifier = Modifier,
+                    modifier = Modifier.weight(1F),
                 )
                 AppButton(
                     text = "Remove device",
                     cornerRadius = 12.dp,
                     onClick = onRemoveDevice,
-                    modifier = Modifier
+                    modifier = Modifier.weight(1F),
                 )
             }
         }
+        Spacer(modifier = Modifier.height(64.dp))
     }
 }
 

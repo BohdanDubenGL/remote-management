@@ -15,5 +15,6 @@ data class RouterDeviceDto(
     val totalMemory: Long,
     val freeMemory: Long,
     val availableBands: String,
+    val webGuiUrl: String,
     val updatedAt: Long,
 )

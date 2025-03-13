@@ -36,7 +36,5 @@ interface RemoteRouterDeviceDataSource {
 
     suspend fun stopWifiMotion(device: RouterDevice): Resource<Unit, IoDeviceError.WifiMotion>
 
-    suspend fun loadWifiMotionEvents(device: RouterDevice): Resource<List<WifiMotionEvent>, IoDeviceError.WifiMotion>
-
     suspend fun pollWifiMotionEvents(device: RouterDevice, updateIntervalMillis: Long): Flow<Resource<List<WifiMotionEvent>, IoDeviceError.WifiMotion>>
 }

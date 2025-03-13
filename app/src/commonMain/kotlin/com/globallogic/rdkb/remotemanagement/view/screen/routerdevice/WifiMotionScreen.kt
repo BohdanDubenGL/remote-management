@@ -217,14 +217,14 @@ class WifiMotionViewModel(
                                     connectedDevices = wifiMotionData.hosts,
                                     motionState = wifiMotionData.isRunning,
                                     motionPercent = wifiMotionData.motionPercent,
-                                    motionEvents = wifiMotionData.events,
+                                    motionEvents = wifiMotionData.events.reversed(),
                                 )
                                 else -> WifiMotionUiState(
                                     connectedDevices = wifiMotionData.hosts,
                                     selectedConnectedDevice = wifiMotionData.selectedHost,
                                     motionState = wifiMotionData.isRunning,
                                     motionPercent = wifiMotionData.motionPercent,
-                                    motionEvents = wifiMotionData.events,
+                                    motionEvents = wifiMotionData.events.reversed(),
                                 )
                             }
                         }

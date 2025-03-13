@@ -53,6 +53,7 @@ import com.globallogic.rdkb.remotemanagement.view.component.AppTitleTextWithIcon
 import com.globallogic.rdkb.remotemanagement.view.error.UiResourceError
 import com.globallogic.rdkb.remotemanagement.view.navigation.LocalNavController
 import com.globallogic.rdkb.remotemanagement.view.navigation.Screen
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.map
 import org.koin.compose.viewmodel.koinViewModel
@@ -372,15 +373,17 @@ class SetupRouterDeviceViewModel(
         }
     }
 
-    fun saveData() = launchUpdateState { state ->
-        when(state) {
-            is Success -> {
-                setupDeviceAccessPoint(state.data.accessPointGroup, DeviceAccessPointSettings(state.data.bandsSettings))
-                    .map { state.data.copy(dataSaved = true) }
-                    .mapErrorToData { error -> state.data }
+    fun saveData() = launchUpdateStateFromFlow { state ->
+        if (state !is Success) return@launchUpdateStateFromFlow
+        send(ResourceState.Loading)
+
+        val newState = setupDeviceAccessPoint(state.data.accessPointGroup, DeviceAccessPointSettings(state.data.bandsSettings))
+            .map {
+                delay(3_000)
+                state.data.copy(dataSaved = true)
             }
-            else -> state
-        }
+            .mapErrorToData { error -> state.data }
+        send(newState)
     }
 }
 

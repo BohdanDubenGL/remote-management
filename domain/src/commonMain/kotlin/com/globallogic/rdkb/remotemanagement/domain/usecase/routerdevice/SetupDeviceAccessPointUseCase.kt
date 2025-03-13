@@ -33,7 +33,6 @@ class SetupDeviceAccessPointUseCase(
                     )
                     else band
                 }
-                .filter { band -> band.ssid.isNotBlank() || band.password.isNotBlank() }
         )
 
         return routerDeviceRepository.setupDeviceAccessPoint(accessPointGroup, settingsToSave)
