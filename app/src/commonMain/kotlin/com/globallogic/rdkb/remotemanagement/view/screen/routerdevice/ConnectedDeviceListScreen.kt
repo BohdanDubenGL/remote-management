@@ -3,8 +3,11 @@ package com.globallogic.rdkb.remotemanagement.view.screen.routerdevice
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -24,9 +27,11 @@ import com.globallogic.rdkb.remotemanagement.domain.utils.Resource
 import com.globallogic.rdkb.remotemanagement.domain.utils.ResourceState
 import com.globallogic.rdkb.remotemanagement.domain.utils.dataOrElse
 import com.globallogic.rdkb.remotemanagement.view.base.MviViewModel
+import com.globallogic.rdkb.remotemanagement.view.component.AppButton
 import com.globallogic.rdkb.remotemanagement.view.component.AppCard
 import com.globallogic.rdkb.remotemanagement.view.component.AppDrawResourceState
 import com.globallogic.rdkb.remotemanagement.view.component.AppTextProperty
+import com.globallogic.rdkb.remotemanagement.view.component.AppTitleText
 import com.globallogic.rdkb.remotemanagement.view.component.AppTitleTextWithIcon
 import com.globallogic.rdkb.remotemanagement.view.error.UiResourceError
 import com.globallogic.rdkb.remotemanagement.view.navigation.LocalNavController
@@ -54,53 +59,85 @@ fun ConnectedDeviceListScreen(
 private fun ConnectedDeviceListContent(
     uiState: ConnectedDeviceListUiState,
 ) {
-    LazyColumn(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(6.dp, Alignment.Top),
-        modifier = Modifier.fillMaxSize(),
-    ) {
-        items(uiState.connectedDevices, ConnectedDevice::macAddress) { connectedDevice ->
-            AppCard(
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-            ) {
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
-                    modifier = Modifier.fillMaxSize().padding(horizontal = 8.dp, vertical = 8.dp),
+    if (uiState.connectedDevices.isEmpty()) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+            modifier = Modifier.fillMaxSize(),
+        ) {
+            AppTitleText(text = "No connected devices")
+        }
+    } else {
+        LazyColumn(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(6.dp, Alignment.Top),
+            modifier = Modifier.fillMaxSize(),
+        ) {
+            items(uiState.connectedDevices, ConnectedDevice::macAddress) { connectedDevice ->
+                AppCard(
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                 ) {
-                    AppTitleTextWithIcon(
-                        text = connectedDevice.hostName,
-                        imageVector = Icons.Default.Devices,
-                    )
                     Column(
                         verticalArrangement = Arrangement.spacedBy(4.dp),
-                        modifier = Modifier.padding(start = 48.dp),
+                        modifier = Modifier.fillMaxSize()
+                            .padding(horizontal = 8.dp, vertical = 8.dp),
                     ) {
-                        AppTextProperty(name = "Online:", value = connectedDevice.isActive)
-                        AppTextProperty(name = "Mac address:", value = connectedDevice.macAddress)
-                        AppTextProperty(name = "Ip address:", value = connectedDevice.ipAddress)
-                        AppTextProperty(name = "Vendor class:", value = connectedDevice.vendorClassId)
-                    }
-
-                    AnimatedVisibility (connectedDevice.stats.hasData()) {
+                        AppTitleTextWithIcon(
+                            text = connectedDevice.hostName,
+                            imageVector = Icons.Default.Devices,
+                        )
                         Column(
-                            modifier = Modifier.padding(start = 8.dp)
+                            verticalArrangement = Arrangement.spacedBy(4.dp),
+                            modifier = Modifier.padding(start = 48.dp),
                         ) {
-                            AppTitleTextWithIcon(
-                                text = "Network stats",
-                                imageVector = Icons.Default.SyncAlt,
-                                fontSize = 20.sp,
-                                iconSize = 24.dp,
-                                modifier = Modifier.padding(top = 8.dp),
+                            AppTextProperty(name = "Online:", value = connectedDevice.isActive)
+                            AppTextProperty(
+                                name = "Mac address:",
+                                value = connectedDevice.macAddress
                             )
+                            AppTextProperty(name = "Ip address:", value = connectedDevice.ipAddress)
+                            AppTextProperty(
+                                name = "Vendor class:",
+                                value = connectedDevice.vendorClassId
+                            )
+                        }
+
+                        AnimatedVisibility(connectedDevice.stats.hasData()) {
                             Column(
-                                verticalArrangement = Arrangement.spacedBy(4.dp),
-                                modifier = Modifier.padding(start = 40.dp)
+                                modifier = Modifier.padding(start = 8.dp)
                             ) {
-                                AppTextProperty(name = "Bytes sent:", value = connectedDevice.stats.bytesSent)
-                                AppTextProperty(name = "Bytes received:", value = connectedDevice.stats.bytesReceived)
-                                AppTextProperty(name = "Packets sent:", value = connectedDevice.stats.packetsSent)
-                                AppTextProperty(name = "Packets received:", value = connectedDevice.stats.packetsReceived)
-                                AppTextProperty(name = "Errors sent:", value = connectedDevice.stats.errorsSent)
+                                AppTitleTextWithIcon(
+                                    text = "Network stats",
+                                    imageVector = Icons.Default.SyncAlt,
+                                    fontSize = 20.sp,
+                                    iconSize = 24.dp,
+                                    modifier = Modifier.padding(top = 8.dp),
+                                )
+                                Column(
+                                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                                    modifier = Modifier.padding(start = 40.dp)
+                                ) {
+                                    AppTextProperty(
+                                        name = "Bytes sent:",
+                                        value = connectedDevice.stats.bytesSent
+                                    )
+                                    AppTextProperty(
+                                        name = "Bytes received:",
+                                        value = connectedDevice.stats.bytesReceived
+                                    )
+                                    AppTextProperty(
+                                        name = "Packets sent:",
+                                        value = connectedDevice.stats.packetsSent
+                                    )
+                                    AppTextProperty(
+                                        name = "Packets received:",
+                                        value = connectedDevice.stats.packetsReceived
+                                    )
+                                    AppTextProperty(
+                                        name = "Errors sent:",
+                                        value = connectedDevice.stats.errorsSent
+                                    )
+                                }
                             }
                         }
                     }
