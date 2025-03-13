@@ -3,6 +3,7 @@ package com.globallogic.rdkb.remotemanagement.data.datasource.fake
 import com.globallogic.rdkb.remotemanagement.data.datasource.RemoteRouterDeviceDataSource
 import com.globallogic.rdkb.remotemanagement.data.error.IoDeviceError
 import com.globallogic.rdkb.remotemanagement.domain.entity.AccessPoint
+import com.globallogic.rdkb.remotemanagement.domain.entity.AccessPointClient
 import com.globallogic.rdkb.remotemanagement.domain.entity.AccessPointGroup
 import com.globallogic.rdkb.remotemanagement.domain.entity.AccessPointSettings
 import com.globallogic.rdkb.remotemanagement.domain.entity.Band
@@ -22,10 +23,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.isActive
 import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
-import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
-import kotlinx.datetime.format
 import kotlinx.datetime.toInstant
 import kotlinx.datetime.toLocalDateTime
 import kotlin.random.Random
@@ -85,6 +83,13 @@ private class FakeRemoteRouterDeviceDataSourceImpl(
         }
     }
 
+    override suspend fun loadAccessPointClientsForRouterDevice(device: RouterDevice): Resource<List<AccessPointClient>, IoDeviceError.LoadConnectedDevicesForRouterDevice> {
+        return when (device.macAddress) {
+            hardcodedDevice.macAddress -> Success(hardcodedDevice.toAccessPointClients())
+            else -> original.loadAccessPointClientsForRouterDevice(device)
+        }
+    }
+
     override suspend fun loadAccessPointGroups(device: RouterDevice): Resource<List<AccessPointGroup>, IoDeviceError.WifiSettings> {
         return when (device.macAddress) {
             hardcodedDevice.macAddress -> Success(listOf("Main", "Group 1").mapIndexed { index, name -> AccessPointGroup(index + 1, name) })
@@ -138,10 +143,10 @@ private class FakeRemoteRouterDeviceDataSourceImpl(
         }
     }
 
-    override suspend fun startWifiMotion(device: RouterDevice, connectedDevice: ConnectedDevice): Resource<Unit, IoDeviceError.WifiMotion> {
+    override suspend fun startWifiMotion(device: RouterDevice, accessPointClient: AccessPointClient): Resource<Unit, IoDeviceError.WifiMotion> {
         return when (device.macAddress) {
             hardcodedDevice.macAddress -> Success(Unit)
-            else -> original.startWifiMotion(device, connectedDevice)
+            else -> original.startWifiMotion(device, accessPointClient)
         }
     }
 
@@ -195,6 +200,7 @@ private class FakeRemoteRouterDeviceDataSourceImpl(
             macAddress = macAddress
         )
         fun toConnectedDevices(): List<ConnectedDevice> = connectedDevices.map { it.toDomain() }
+        fun toAccessPointClients(): List<AccessPointClient> = connectedDevices.map { it.toAccessPointClient() }
         fun toRouterDeviceInfo(): RouterDevice = RouterDevice(
             modelName = modelName,
             manufacturer = manufacturer,
@@ -226,6 +232,10 @@ private class FakeRemoteRouterDeviceDataSourceImpl(
             vendorClassId = vendorClassId,
             stats = stats.toDomain(),
             band = band
+        )
+        fun toAccessPointClient() = AccessPointClient(
+            isActive = true,
+            macAddress = macAddress
         )
     }
 

@@ -7,6 +7,7 @@ import com.globallogic.rdkb.remotemanagement.domain.entity.Band
 import com.globallogic.rdkb.remotemanagement.data.upnp.UpnpService
 import com.globallogic.rdkb.remotemanagement.data.wifi.model.WifiInfo
 import com.globallogic.rdkb.remotemanagement.domain.entity.AccessPoint
+import com.globallogic.rdkb.remotemanagement.domain.entity.AccessPointClient
 import com.globallogic.rdkb.remotemanagement.domain.entity.AccessPointGroup
 import com.globallogic.rdkb.remotemanagement.domain.entity.AccessPointSettings
 import com.globallogic.rdkb.remotemanagement.domain.entity.ConnectedDevice
@@ -158,6 +159,29 @@ class RemoteRouterDeviceDataSourceImpl(
         )
     }
 
+    override suspend fun loadAccessPointClientsForRouterDevice(device: RouterDevice): Resource<List<AccessPointClient>, IoDeviceError.LoadConnectedDevicesForRouterDevice> = coroutineScope {
+        val deviceAccessor = rdkCentralAccessorService.device(device.macAddress)
+        val clients = deviceAccessor.accessPoints()
+            .filter { it.band == Band.Band_5 }
+            .flatMap { accessPointAccessor -> accessPointAccessor.getWifiClients().dataOrElse { emptyList() } }
+            .map { accessPointClientAccessor -> async {
+                loadAccessPointClient(accessPointClientAccessor)
+            } }
+            .awaitAll()
+            .filterNotNull()
+        return@coroutineScope Success(clients)
+    }
+
+    private suspend fun loadAccessPointClient(accessPointClientAccessor: RdkCentralAccessorService.AccessPointClientAccessor): AccessPointClient? = coroutineScope {
+        val isActive = async { accessPointClientAccessor.getClientActive() }
+        val mac = async { accessPointClientAccessor.getClientMacAddress() }
+
+        return@coroutineScope AccessPointClient(
+            macAddress = mac.await().dataOrElse { error -> return@coroutineScope null },
+            isActive = isActive.await().dataOrElse { error -> return@coroutineScope null },
+        )
+    }
+
     override suspend fun loadAccessPointGroups(device: RouterDevice): Resource<List<AccessPointGroup>, IoDeviceError.WifiSettings> = coroutineScope {
         val deviceAccessor = rdkCentralAccessorService.device(device.macAddress)
         val accessPointGroups = deviceAccessor.accessPointGroups()
@@ -279,10 +303,10 @@ class RemoteRouterDeviceDataSourceImpl(
             .mapError { error -> IoDeviceError.WifiMotion }
     }
 
-    override suspend fun startWifiMotion(device: RouterDevice, connectedDevice: ConnectedDevice): Resource<Unit, IoDeviceError.WifiMotion> {
+    override suspend fun startWifiMotion(device: RouterDevice, accessPointClient: AccessPointClient): Resource<Unit, IoDeviceError.WifiMotion> {
         return rdkCentralAccessorService.device(device.macAddress)
             .wifiMotion()
-            .setSensingDeviceMacAddress(connectedDevice.macAddress)
+            .setSensingDeviceMacAddress(accessPointClient.macAddress)
             .mapError { error -> IoDeviceError.WifiMotion }
     }
 

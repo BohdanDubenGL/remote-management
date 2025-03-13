@@ -32,8 +32,8 @@ class WifiMotionAccessor(
     }
 
 
-    override suspend fun setSensingDeviceMacAddress(macAddress: String): Resource<Unit, ThrowableResourceError> {
-        return rdkCentralPropertyService.setDeviceProperty(macAddress, DeviceProperty.MotionDetectionDeviceMacAddress, macAddress)
+    override suspend fun setSensingDeviceMacAddress(clientMacAddress: String): Resource<Unit, ThrowableResourceError> {
+        return rdkCentralPropertyService.setDeviceProperty(macAddress, DeviceProperty.MotionDetectionDeviceMacAddress, clientMacAddress)
     }
 
 

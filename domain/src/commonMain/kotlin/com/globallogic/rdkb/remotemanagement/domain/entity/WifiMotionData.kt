@@ -4,8 +4,8 @@ data class WifiMotionData(
     val currentHostMacAddress: String,
     val motionPercent: Int,
     val events: List<WifiMotionEvent>,
-    val hosts: List<ConnectedDevice>,
+    val clients: List<AccessPointClient>,
 ) {
-    val selectedHost: ConnectedDevice? get() = hosts.firstOrNull { it.macAddress == currentHostMacAddress }
+    val selectedHost: AccessPointClient? get() = clients.firstOrNull { it.macAddress == currentHostMacAddress }
     val isRunning: Boolean get() = currentHostMacAddress.isNotBlank()
 }

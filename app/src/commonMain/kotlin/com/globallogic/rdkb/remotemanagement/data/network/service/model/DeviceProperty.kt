@@ -48,6 +48,9 @@ sealed interface DeviceProperty<T: Any> {
     data class WifiAvailableSecurityModes(val accessPoint: Int) : StringProperty(name = "Device.WiFi.AccessPoint.$accessPoint.Security.ModesSupported")
     data class WifiClientsCount(val accessPoint: Int) : LongProperty(name = "Device.WiFi.AccessPoint.$accessPoint.AssociatedDeviceNumberOfEntries")
 
+    data class WifiClientsMacAddress(val accessPoint: Int, val deviceId: Int) : StringProperty(name = "Device.WiFi.AccessPoint.$accessPoint.AssociatedDevice.$deviceId.MACAddress")
+    data class WifiClientsActive(val accessPoint: Int, val deviceId: Int) : BooleanProperty(name = "Device.WiFi.AccessPoint.$accessPoint.AssociatedDevice.$deviceId.Active")
+
     data class WifiClientBytesSent(val accessPoint: Int, val clientId: Int) : LongProperty(name = "Device.WiFi.AccessPoint.$accessPoint.AssociatedDevice.$clientId.Stats.BytesSent")
     data class WifiClientBytesReceived(val accessPoint: Int, val clientId: Int) : LongProperty(name = "Device.WiFi.AccessPoint.$accessPoint.AssociatedDevice.$clientId.Stats.BytesReceived")
     data class WifiClientPacketsSent(val accessPoint: Int, val clientId: Int) : LongProperty(name = "Device.WiFi.AccessPoint.$accessPoint.AssociatedDevice.$clientId.Stats.PacketsSent")

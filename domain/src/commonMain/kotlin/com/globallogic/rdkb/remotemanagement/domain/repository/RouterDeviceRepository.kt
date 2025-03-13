@@ -1,5 +1,6 @@
 package com.globallogic.rdkb.remotemanagement.domain.repository
 
+import com.globallogic.rdkb.remotemanagement.domain.entity.AccessPointClient
 import com.globallogic.rdkb.remotemanagement.domain.entity.AccessPointGroup
 import com.globallogic.rdkb.remotemanagement.domain.entity.AccessPointSettings
 import com.globallogic.rdkb.remotemanagement.domain.entity.ConnectedDevice
@@ -28,6 +29,6 @@ interface RouterDeviceRepository {
     suspend fun getSelectRouterDevice(): Resource<RouterDevice, DeviceError.NoDeviceFound>
 
     suspend fun loadWifiMotionData(updateIntervalMillis: Long): Flow<ResourceState<WifiMotionData, DeviceError.WifiMotion>>
-    suspend fun startWifiMotion(connectedDevice: ConnectedDevice): Resource<Unit, DeviceError.WifiMotion>
+    suspend fun startWifiMotion(accessPointClient: AccessPointClient): Resource<Unit, DeviceError.WifiMotion>
     suspend fun stopWifiMotion(): Resource<Unit, DeviceError.WifiMotion>
 }

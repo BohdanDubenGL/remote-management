@@ -74,11 +74,21 @@ interface RdkCentralAccessorService {
         suspend fun getWifiSecurityMode(): Resource<String, ThrowableResourceError>
         suspend fun getWifiAvailableSecurityModes(): Resource<List<String>, ThrowableResourceError>
         suspend fun getWifiClientsCount(): Resource<Int, ThrowableResourceError>
+        suspend fun getWifiClients(): Resource<List<AccessPointClientAccessor>, ThrowableResourceError>
 
         suspend fun setWifiEnabled(enabled: Boolean): Resource<Unit, ThrowableResourceError>
         suspend fun setWifiSsid(ssid: String): Resource<Unit, ThrowableResourceError>
         suspend fun setWifiPassword(password: String): Resource<Unit, ThrowableResourceError>
         suspend fun setWifiSecurityMode(securityMode: String): Resource<Unit, ThrowableResourceError>
+
+        fun client(clientId: Int): AccessPointClientAccessor
+    }
+
+    interface AccessPointClientAccessor {
+        val clientId: Int
+
+        suspend fun getClientMacAddress(): Resource<String, ThrowableResourceError>
+        suspend fun getClientActive(): Resource<Boolean, ThrowableResourceError>
     }
 
     interface WifiMotionAccessor {
@@ -87,7 +97,7 @@ interface RdkCentralAccessorService {
         suspend fun getMotionPercent(): Resource<Int, ThrowableResourceError>
         suspend fun getSensingEvents(): Resource<List<WifiMotionEventAccessor>, ThrowableResourceError>
 
-        suspend fun setSensingDeviceMacAddress(macAddress: String): Resource<Unit, ThrowableResourceError>
+        suspend fun setSensingDeviceMacAddress(clientMacAddress: String): Resource<Unit, ThrowableResourceError>
 
         fun event(eventId: Int): WifiMotionEventAccessor
     }

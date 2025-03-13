@@ -40,7 +40,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
-import com.globallogic.rdkb.remotemanagement.domain.entity.ConnectedDevice
+import com.globallogic.rdkb.remotemanagement.domain.entity.AccessPointClient
 import com.globallogic.rdkb.remotemanagement.domain.entity.WifiMotionEvent
 import com.globallogic.rdkb.remotemanagement.domain.usecase.wifimotion.GetWifiMotionDataUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.wifimotion.StartWifiMotionUseCase
@@ -84,7 +84,7 @@ fun WifiMotionScreen(
 @Composable
 fun WifiMotionContent(
     uiState: WifiMotionUiState,
-    onConnectedDeviceSelected: (ConnectedDevice) -> Unit,
+    onConnectedDeviceSelected: (AccessPointClient) -> Unit,
 ) {
     var eventsExpanded by remember { mutableStateOf(false) }
     Column(
@@ -118,8 +118,8 @@ fun WifiMotionContent(
                     item {
                         Spacer(modifier = Modifier.width(16.dp))
                     }
-                    items(uiState.connectedDevices) { connectedDevice ->
-                        val selected = uiState.selectedConnectedDevice == connectedDevice
+                    items(uiState.accessPointClients) { accessPointClient ->
+                        val selected = uiState.selectedAccessPointClient == accessPointClient
                         Column(
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.Center,
@@ -127,7 +127,7 @@ fun WifiMotionContent(
                                 .clickable(
                                     indication = null,
                                     interactionSource = remember { MutableInteractionSource() },
-                                    onClick = { onConnectedDeviceSelected(connectedDevice) },
+                                    onClick = { onConnectedDeviceSelected(accessPointClient) },
                                 )
                         ) {
                             Icon(
@@ -141,7 +141,7 @@ fun WifiMotionContent(
                                     .background(if (selected) Color(0xff25e8d5) else MaterialTheme.colorScheme.secondaryContainer, CircleShape)
                                     .padding(all = 12.dp),
                             )
-                            Text(text = connectedDevice.hostName, fontSize = 11.sp)
+                            Text(text = accessPointClient.macAddress, fontSize = 11.sp)
                         }
                     }
                     item {
@@ -214,14 +214,14 @@ class WifiMotionViewModel(
                         .map { wifiMotionData ->
                             when (val state = uiState.value) {
                                 is Success -> state.data.copy(
-                                    connectedDevices = wifiMotionData.hosts,
+                                    accessPointClients = wifiMotionData.clients,
                                     motionState = wifiMotionData.isRunning,
                                     motionPercent = wifiMotionData.motionPercent,
                                     motionEvents = wifiMotionData.events.reversed(),
                                 )
                                 else -> WifiMotionUiState(
-                                    connectedDevices = wifiMotionData.hosts,
-                                    selectedConnectedDevice = wifiMotionData.selectedHost,
+                                    accessPointClients = wifiMotionData.clients,
+                                    selectedAccessPointClient = wifiMotionData.selectedHost,
                                     motionState = wifiMotionData.isRunning,
                                     motionPercent = wifiMotionData.motionPercent,
                                     motionEvents = wifiMotionData.events.reversed(),
@@ -233,21 +233,21 @@ class WifiMotionViewModel(
             .collectLatest(::send)
     }
 
-    fun onConnectedDeviceSelected(connectedDevice: ConnectedDevice) = launchUpdateStateFromFlow { state ->
+    fun onConnectedDeviceSelected(accessPointClient: AccessPointClient) = launchUpdateStateFromFlow { state ->
         if (state !is Success) return@launchUpdateStateFromFlow
-        if (state.data.selectedConnectedDevice == connectedDevice) {
+        if (state.data.selectedAccessPointClient == accessPointClient) {
             stopWifiMotion()
-                .onSuccess { send(Success(state.data.copy(selectedConnectedDevice = null))) }
+                .onSuccess { send(Success(state.data.copy(selectedAccessPointClient = null))) }
         } else {
-            startWifiMotion(connectedDevice)
-                .onSuccess { send(Success(state.data.copy(selectedConnectedDevice = connectedDevice))) }
+            startWifiMotion(accessPointClient)
+                .onSuccess { send(Success(state.data.copy(selectedAccessPointClient = accessPointClient))) }
         }
     }
 }
 
 data class WifiMotionUiState(
-    val connectedDevices: List<ConnectedDevice>,
-    val selectedConnectedDevice: ConnectedDevice?,
+    val accessPointClients: List<AccessPointClient>,
+    val selectedAccessPointClient: AccessPointClient?,
     val motionState: Boolean,
     val motionPercent: Int,
     val motionEvents: List<WifiMotionEvent>,

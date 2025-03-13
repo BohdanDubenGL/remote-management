@@ -379,7 +379,7 @@ class SetupRouterDeviceViewModel(
 
         val newState = setupDeviceAccessPoint(state.data.accessPointGroup, DeviceAccessPointSettings(state.data.bandsSettings))
             .map {
-                delay(3_000)
+                delay(5_000)
                 state.data.copy(dataSaved = true)
             }
             .mapErrorToData { error -> state.data }

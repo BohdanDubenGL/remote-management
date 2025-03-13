@@ -1,6 +1,7 @@
 package com.globallogic.rdkb.remotemanagement.data.datasource
 
 import com.globallogic.rdkb.remotemanagement.data.error.IoDeviceError
+import com.globallogic.rdkb.remotemanagement.domain.entity.AccessPointClient
 import com.globallogic.rdkb.remotemanagement.domain.entity.AccessPointGroup
 import com.globallogic.rdkb.remotemanagement.domain.entity.ConnectedDevice
 import com.globallogic.rdkb.remotemanagement.domain.entity.FoundRouterDevice
@@ -18,6 +19,8 @@ interface RemoteRouterDeviceDataSource {
 
     suspend fun loadConnectedDevicesForRouterDevice(device: RouterDevice): Resource<List<ConnectedDevice>, IoDeviceError.LoadConnectedDevicesForRouterDevice>
 
+    suspend fun loadAccessPointClientsForRouterDevice(device: RouterDevice): Resource<List<AccessPointClient>, IoDeviceError.LoadConnectedDevicesForRouterDevice>
+
     suspend fun factoryResetDevice(device: RouterDevice): Resource<Unit, IoDeviceError.FactoryResetDevice>
 
     suspend fun rebootDevice(device: RouterDevice): Resource<Unit, IoDeviceError.RestartDevice>
@@ -32,7 +35,7 @@ interface RemoteRouterDeviceDataSource {
 
     suspend fun getWifiMotionPercent(device: RouterDevice): Resource<Int, IoDeviceError.WifiMotion>
 
-    suspend fun startWifiMotion(device: RouterDevice, connectedDevice: ConnectedDevice): Resource<Unit, IoDeviceError.WifiMotion>
+    suspend fun startWifiMotion(device: RouterDevice, accessPointClient: AccessPointClient): Resource<Unit, IoDeviceError.WifiMotion>
 
     suspend fun stopWifiMotion(device: RouterDevice): Resource<Unit, IoDeviceError.WifiMotion>
 

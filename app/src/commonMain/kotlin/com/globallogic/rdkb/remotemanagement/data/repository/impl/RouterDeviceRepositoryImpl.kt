@@ -3,9 +3,9 @@ package com.globallogic.rdkb.remotemanagement.data.repository.impl
 import com.globallogic.rdkb.remotemanagement.data.datasource.LocalRouterDeviceDataSource
 import com.globallogic.rdkb.remotemanagement.data.datasource.RemoteRouterDeviceDataSource
 import com.globallogic.rdkb.remotemanagement.data.preferences.AppPreferences
+import com.globallogic.rdkb.remotemanagement.domain.entity.AccessPointClient
 import com.globallogic.rdkb.remotemanagement.domain.entity.AccessPointGroup
 import com.globallogic.rdkb.remotemanagement.domain.entity.AccessPointSettings
-import com.globallogic.rdkb.remotemanagement.domain.entity.Band
 import com.globallogic.rdkb.remotemanagement.domain.entity.ConnectedDevice
 import com.globallogic.rdkb.remotemanagement.domain.entity.DeviceAccessPointSettings
 import com.globallogic.rdkb.remotemanagement.domain.entity.RouterDevice
@@ -258,8 +258,6 @@ class RouterDeviceRepositoryImpl(
         val device = getSelectRouterDevice()
             .onFailure { send(Failure(DeviceError.WifiMotion)) }
             .dataOrElse { error -> return@channelFlow }
-        val connectedDevicesFlow = getRouterDeviceConnectedDevices(forceUpdate = true)
-            .stateIn(this, SharingStarted.Eagerly, ResourceState.None)
         val motionEventsFlow = remoteRouterDeviceDataSource.pollWifiMotionEvents(device, updateIntervalMillis)
             .stateIn(this, SharingStarted.Eagerly, Success(emptyList()))
 
@@ -271,18 +269,15 @@ class RouterDeviceRepositoryImpl(
             val motionPercent = remoteRouterDeviceDataSource.getWifiMotionPercent(device)
                 .dataOrElse { error -> null }
             val motionEvents = motionEventsFlow.value.data
-            val hosts = when(val hosts = connectedDevicesFlow.value) {
-                is ResourceState.None -> null
-                is ResourceState.Loading -> null
-                is Failure -> null
-                is Success -> hosts.data.filter { it.band == Band.Band_5 }
-            }
+            val clients = remoteRouterDeviceDataSource.loadAccessPointClientsForRouterDevice(device)
+                .map { clients -> clients.filter { it.isActive } }
+                .dataOrElse { error -> null }
 
-            if (currentHostMacAddress != null && motionPercent != null && hosts != null && motionEvents != null) {
+            if (currentHostMacAddress != null && motionPercent != null && clients != null && motionEvents != null) {
                 val motionData = WifiMotionData(
                     currentHostMacAddress = currentHostMacAddress,
                     motionPercent = motionPercent,
-                    hosts = hosts,
+                    clients = clients,
                     events = motionEvents,
                 )
                 send(Success(motionData))
@@ -295,11 +290,11 @@ class RouterDeviceRepositoryImpl(
     }
 
     override suspend fun startWifiMotion(
-        connectedDevice: ConnectedDevice
+        accessPointClient: AccessPointClient
     ): Resource<Unit, DeviceError.WifiMotion> {
         val device = getSelectRouterDevice()
             .dataOrElse { error -> return Failure(DeviceError.WifiMotion) }
-        return remoteRouterDeviceDataSource.startWifiMotion(device, connectedDevice)
+        return remoteRouterDeviceDataSource.startWifiMotion(device, accessPointClient)
             .mapError { error -> DeviceError.WifiMotion }
     }
 
