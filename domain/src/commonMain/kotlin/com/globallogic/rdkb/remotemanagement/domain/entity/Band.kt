@@ -1,4 +1,4 @@
-package com.globallogic.rdkb.remotemanagement.data.network.service.model
+package com.globallogic.rdkb.remotemanagement.domain.entity
 
 enum class Band(val displayedName: String, val radio: Int) {
     Band_2_4("2.4GHz", 10_000),

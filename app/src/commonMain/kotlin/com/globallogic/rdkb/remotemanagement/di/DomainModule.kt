@@ -5,10 +5,10 @@ import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.GetAcce
 import com.globallogic.rdkb.remotemanagement.domain.usecase.user.LoginUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.user.LogoutUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.user.RegistrationUseCase
-import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.GetLocalRouterDeviceUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.GetRouterDeviceConnectedDevicesUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.GetSelectedRouterDeviceUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.GetAccessPointSettingsUseCase
+import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.GetTopologyDataUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.SelectRouterDeviceUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.SetupDeviceAccessPointUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdeviceconnection.AddRouterDeviceManuallyUseCase
@@ -18,6 +18,9 @@ import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdeviceconnecti
 import com.globallogic.rdkb.remotemanagement.domain.usecase.user.ChangeAccountSettingsUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.user.GetCurrentLoggedInUserUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.user.VerifyEmailForAuthenticationUseCase
+import com.globallogic.rdkb.remotemanagement.domain.usecase.wifimotion.GetWifiMotionDataUseCase
+import com.globallogic.rdkb.remotemanagement.domain.usecase.wifimotion.StartWifiMotionUseCase
+import com.globallogic.rdkb.remotemanagement.domain.usecase.wifimotion.StopWifiMotionUseCase
 import com.globallogic.rdkb.remotemanagement.domain.verification.EmailVerifier
 import com.globallogic.rdkb.remotemanagement.domain.verification.MacAddressVerifier
 import com.globallogic.rdkb.remotemanagement.domain.verification.PasswordVerifier
@@ -35,6 +38,7 @@ val domainModule: Module = module {
     factoryOf(::GetCurrentLoggedInUserUseCase)
     factoryOf(::ChangeAccountSettingsUseCase)
 
+    factoryOf(::GetTopologyDataUseCase)
     factoryOf(::DoRouterDeviceActionUseCase)
     factoryOf(::GetRouterDeviceConnectedDevicesUseCase)
     factoryOf(::GetAccessPointGroupsUseCase)
@@ -42,12 +46,15 @@ val domainModule: Module = module {
     factoryOf(::SetupDeviceAccessPointUseCase)
     factoryOf(::SelectRouterDeviceUseCase)
     factoryOf(::GetSelectedRouterDeviceUseCase)
-    factoryOf(::GetLocalRouterDeviceUseCase)
 
     factoryOf(::ConnectToRouterDeviceUseCase)
     factoryOf(::AddRouterDeviceManuallyUseCase)
     factoryOf(::GetRouterDeviceListUseCase)
     factoryOf(::SearchRouterDevicesUseCase)
+
+    factoryOf(::GetWifiMotionDataUseCase)
+    factoryOf(::StartWifiMotionUseCase)
+    factoryOf(::StopWifiMotionUseCase)
 
     factory { UserNameVerifier() }.bind<UserNameVerifier>()
     factory { EmailVerifier() }.bind<EmailVerifier>()

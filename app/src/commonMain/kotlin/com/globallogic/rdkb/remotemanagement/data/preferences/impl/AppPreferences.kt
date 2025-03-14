@@ -6,6 +6,7 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.globallogic.rdkb.remotemanagement.data.preferences.AppPreferences
 import com.globallogic.rdkb.remotemanagement.data.preferences.Pref
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
@@ -36,6 +37,10 @@ private class PrefImpl<T: Any>(
 
     override suspend fun set(value: T) {
         dataStore.edit { it[prefKey] = value }
+        repeat(20) {
+            if (get() == value) return@repeat
+            delay(100)
+        }
     }
 
     override suspend fun reset() {

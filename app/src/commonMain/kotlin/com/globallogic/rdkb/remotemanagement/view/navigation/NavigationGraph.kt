@@ -17,6 +17,7 @@ import com.globallogic.rdkb.remotemanagement.view.screen.home.TopologyScreen
 import com.globallogic.rdkb.remotemanagement.view.screen.routerdevice.ConnectedDeviceListScreen
 import com.globallogic.rdkb.remotemanagement.view.screen.routerdevice.RouterDeviceScreen
 import com.globallogic.rdkb.remotemanagement.view.screen.routerdevice.SetupRouterDeviceScreen
+import com.globallogic.rdkb.remotemanagement.view.screen.routerdevice.WifiMotionScreen
 import com.globallogic.rdkb.remotemanagement.view.screen.splash.SplashScreen
 
 @Composable
@@ -39,6 +40,7 @@ fun rememberApplicationNavGraph(): NavGraph {
                 composable<Screen.RouterDeviceGraph.RouterDevice> { RouterDeviceScreen() }
                 composable<Screen.RouterDeviceGraph.Setup> { SetupRouterDeviceScreen() }
                 composable<Screen.RouterDeviceGraph.ConnectedDevices> { ConnectedDeviceListScreen() }
+                composable<Screen.RouterDeviceGraph.WifiMotion> { WifiMotionScreen() }
             }
         }
     }

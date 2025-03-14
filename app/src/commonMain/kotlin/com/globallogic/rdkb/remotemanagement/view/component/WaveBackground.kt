@@ -27,7 +27,7 @@ fun WaveBackground(
 }
 
 @Composable
-private fun WaveAnimation(
+fun WaveAnimation(
     modifier: Modifier = Modifier,
     delayMillis: Int,
     color: Color,

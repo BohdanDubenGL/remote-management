@@ -6,5 +6,6 @@ data class ConnectedDevice(
     val hostName: String,
     val ipAddress: String,
     val vendorClassId: String,
+    val band: Band,
     val stats: ConnectedDeviceStats,
 )

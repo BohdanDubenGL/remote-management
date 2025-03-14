@@ -22,6 +22,7 @@ class ConnectedDeviceDto(
     val hostName: String,
     val ipAddress: String,
     val vendorClassId: String,
+    val radio: Int,
     val bytesSent: Long,
     val bytesReceived: Long,
     val packetsSent: Long,

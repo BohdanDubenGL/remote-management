@@ -3,11 +3,14 @@ package com.globallogic.rdkb.remotemanagement.data.repository.impl
 import com.globallogic.rdkb.remotemanagement.data.datasource.LocalRouterDeviceDataSource
 import com.globallogic.rdkb.remotemanagement.data.datasource.RemoteRouterDeviceDataSource
 import com.globallogic.rdkb.remotemanagement.data.preferences.AppPreferences
+import com.globallogic.rdkb.remotemanagement.domain.entity.AccessPointClient
 import com.globallogic.rdkb.remotemanagement.domain.entity.AccessPointGroup
 import com.globallogic.rdkb.remotemanagement.domain.entity.AccessPointSettings
 import com.globallogic.rdkb.remotemanagement.domain.entity.ConnectedDevice
 import com.globallogic.rdkb.remotemanagement.domain.entity.DeviceAccessPointSettings
 import com.globallogic.rdkb.remotemanagement.domain.entity.RouterDevice
+import com.globallogic.rdkb.remotemanagement.domain.entity.TopologyData
+import com.globallogic.rdkb.remotemanagement.domain.entity.WifiMotionData
 import com.globallogic.rdkb.remotemanagement.domain.error.DeviceError
 import com.globallogic.rdkb.remotemanagement.domain.repository.RouterDeviceRepository
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.RouterDeviceAction
@@ -18,8 +21,15 @@ import com.globallogic.rdkb.remotemanagement.domain.utils.ResourceState
 import com.globallogic.rdkb.remotemanagement.domain.utils.dataOrElse
 import com.globallogic.rdkb.remotemanagement.domain.utils.map
 import com.globallogic.rdkb.remotemanagement.domain.utils.mapError
+import com.globallogic.rdkb.remotemanagement.domain.utils.onFailure
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.channelFlow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.isActive
 
 class RouterDeviceRepositoryImpl(
     private val appPreferences: AppPreferences,
@@ -55,7 +65,63 @@ class RouterDeviceRepositoryImpl(
         }
     }
 
+    override suspend fun getTopologyData(): Flow<ResourceState<TopologyData, DeviceError.Topology>> = channelFlow {
+        send(ResourceState.Loading)
+        val device = getLocalRouterDevice()
+            .onFailure { error -> send(Failure(DeviceError.Topology)) }
+            .dataOrElse { error -> return@channelFlow }
+        getRouterDeviceConnectedDevices(device, forceUpdate = true)
+            .map { connectedDevicesState ->
+                when(connectedDevicesState) {
+                    is ResourceState.None -> connectedDevicesState
+                    is ResourceState.Loading -> connectedDevicesState
+                    is Resource -> connectedDevicesState
+                        .mapError { error -> DeviceError.Topology }
+                        .map { connectedDevices ->
+                            TopologyData(
+                                routerDevice = device,
+                                connectedDevices = connectedDevices
+                            )
+                        }
+                }
+            }
+            .collectLatest(::send)
+    }
+
+    private suspend fun getLocalRouterDevice(): Resource<RouterDevice, DeviceError.NoDeviceFound> {
+        val email = appPreferences.currentUserEmailPref.get()
+            ?: return Failure(DeviceError.NoDeviceFound)
+        val savedDevices = localRouterDeviceDataSource.loadRouterDevicesForUser(email)
+            .dataOrElse { error -> return Failure(DeviceError.NoDeviceFound) }
+        when(savedDevices.size) {
+            0 -> return Failure(DeviceError.NoDeviceFound)
+            1 -> return Success(savedDevices.first())
+        }
+        val macAvailableDevices = remoteRouterDeviceDataSource.findAvailableRouterDevices()
+            .dataOrElse { error -> emptyList() }
+            .map { device -> device.macAddress }
+
+        val localDevice = savedDevices
+            .reversed()
+            .firstOrNull { device -> device.macAddress in macAvailableDevices }
+            ?: savedDevices.firstOrNull()
+            ?: return Failure(DeviceError.NoDeviceFound)
+        return Success(localDevice)
+    }
+
     override suspend fun getRouterDeviceConnectedDevices(
+        forceUpdate: Boolean
+    ): Flow<ResourceState<List<ConnectedDevice>, DeviceError.NoConnectedDevicesFound>> = channelFlow {
+        send(ResourceState.Loading)
+
+        val device = getSelectRouterDevice()
+            .onFailure { error -> send(Failure(DeviceError.NoConnectedDevicesFound)) }
+            .dataOrElse { error -> return@channelFlow }
+        getRouterDeviceConnectedDevices(device, forceUpdate)
+            .collectLatest(::send)
+    }
+
+    private fun getRouterDeviceConnectedDevices(
         device: RouterDevice,
         forceUpdate: Boolean
     ): Flow<ResourceState<List<ConnectedDevice>, DeviceError.NoConnectedDevicesFound>> = channelFlow {
@@ -80,10 +146,13 @@ class RouterDeviceRepositoryImpl(
     }
 
     override suspend fun loadAccessPointGroups(
-        device: RouterDevice,
         forceUpdate: Boolean
     ): Flow<ResourceState<List<AccessPointGroup>, DeviceError.WifiSettings>> = channelFlow {
         send(ResourceState.Loading)
+
+        val device = getSelectRouterDevice()
+            .onFailure { error -> send(Failure(DeviceError.WifiSettings)) }
+            .dataOrElse { error -> return@channelFlow }
 
         val savedAccessPointGroups = localRouterDeviceDataSource.loadAccessPointGroups(device)
             .mapError { error -> DeviceError.WifiSettings }
@@ -104,12 +173,14 @@ class RouterDeviceRepositoryImpl(
     }
 
     override suspend fun getDeviceAccessPointSettings(
-        device: RouterDevice,
         accessPointGroup: AccessPointGroup,
         forceUpdate: Boolean
     ): Flow<ResourceState<AccessPointSettings, DeviceError.WifiSettings>> = channelFlow {
         send(ResourceState.Loading)
 
+        val device = getSelectRouterDevice()
+            .onFailure { error -> send(Failure(DeviceError.WifiSettings)) }
+            .dataOrElse { error -> return@channelFlow }
         val savedAccessPointSettings = localRouterDeviceDataSource.loadDeviceAccessPointSettings(device, accessPointGroup)
             .mapError { error -> DeviceError.WifiSettings }
         send(savedAccessPointSettings)
@@ -140,26 +211,11 @@ class RouterDeviceRepositoryImpl(
             .mapError { error -> DeviceError.NoDeviceFound }
     }
 
-    override suspend fun getLocalRouterDevice(): Resource<RouterDevice, DeviceError.NoDeviceFound> {
-        val email = appPreferences.currentUserEmailPref.get()
-            ?: return Failure(DeviceError.NoDeviceFound)
-        val macAvailableDevices = remoteRouterDeviceDataSource.findAvailableRouterDevices()
-            .dataOrElse { error -> emptyList() }
-            .map { device -> device.macAddress }
-        val updatedDevices = localRouterDeviceDataSource.loadRouterDevicesForUser(email)
-            .dataOrElse { error -> return Failure(DeviceError.NoDeviceFound) }
-
-        val localDevice = updatedDevices
-            .firstOrNull { device -> device.macAddress in macAvailableDevices }
-            ?: updatedDevices.firstOrNull()
-            ?: return Failure(DeviceError.NoDeviceFound)
-        return Success(localDevice)
-    }
-
     override suspend fun doAction(
-        device: RouterDevice,
         action: RouterDeviceAction
     ): Resource<Unit, DeviceError.NoDeviceFound> {
+        val device = getSelectRouterDevice()
+            .dataOrElse { error -> return Failure(DeviceError.NoDeviceFound) }
         return when(action) {
             RouterDeviceAction.Restart -> remoteRouterDeviceDataSource.rebootDevice(device)
                 .mapError { error -> DeviceError.NoDeviceFound }
@@ -185,11 +241,67 @@ class RouterDeviceRepositoryImpl(
     }
 
     override suspend fun setupDeviceAccessPoint(
-        device: RouterDevice,
         accessPointGroup: AccessPointGroup,
         settings: DeviceAccessPointSettings
     ): Resource<Unit, DeviceError.SetupDevice> {
+        val device = getSelectRouterDevice()
+            .dataOrElse { error -> return Failure(DeviceError.SetupDevice) }
         return remoteRouterDeviceDataSource.setupAccessPoint(device, accessPointGroup, settings)
             .mapError { error -> DeviceError.SetupDevice }
+    }
+
+    override suspend fun loadWifiMotionData(
+        updateIntervalMillis: Long
+    ): Flow<ResourceState<WifiMotionData, DeviceError.WifiMotion>> = channelFlow {
+        send(ResourceState.Loading)
+
+        val device = getSelectRouterDevice()
+            .onFailure { send(Failure(DeviceError.WifiMotion)) }
+            .dataOrElse { error -> return@channelFlow }
+        val motionEventsFlow = remoteRouterDeviceDataSource.pollWifiMotionEvents(device, updateIntervalMillis)
+            .stateIn(this, SharingStarted.Eagerly, Success(emptyList()))
+
+        delay(updateIntervalMillis)
+
+        while(isActive) {
+            val currentHostMacAddress = remoteRouterDeviceDataSource.getWifiMotionState(device)
+                .dataOrElse { error -> null }
+            val motionPercent = remoteRouterDeviceDataSource.getWifiMotionPercent(device)
+                .dataOrElse { error -> null }
+            val motionEvents = motionEventsFlow.value.data
+            val clients = remoteRouterDeviceDataSource.loadAccessPointClientsForRouterDevice(device)
+                .map { clients -> clients.filter { it.isActive } }
+                .dataOrElse { error -> null }
+
+            if (currentHostMacAddress != null && motionPercent != null && clients != null && motionEvents != null) {
+                val motionData = WifiMotionData(
+                    currentHostMacAddress = currentHostMacAddress,
+                    motionPercent = motionPercent,
+                    clients = clients,
+                    events = motionEvents,
+                )
+                send(Success(motionData))
+            } else {
+                send(Failure(DeviceError.WifiMotion))
+            }
+
+            delay(updateIntervalMillis)
+        }
+    }
+
+    override suspend fun startWifiMotion(
+        accessPointClient: AccessPointClient
+    ): Resource<Unit, DeviceError.WifiMotion> {
+        val device = getSelectRouterDevice()
+            .dataOrElse { error -> return Failure(DeviceError.WifiMotion) }
+        return remoteRouterDeviceDataSource.startWifiMotion(device, accessPointClient)
+            .mapError { error -> DeviceError.WifiMotion }
+    }
+
+    override suspend fun stopWifiMotion(): Resource<Unit, DeviceError.WifiMotion> {
+        val device = getSelectRouterDevice()
+            .dataOrElse { error -> return Failure(DeviceError.WifiMotion) }
+        return remoteRouterDeviceDataSource.stopWifiMotion(device)
+            .mapError { error -> DeviceError.WifiMotion }
     }
 }

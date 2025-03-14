@@ -2,7 +2,7 @@ package com.globallogic.rdkb.remotemanagement.data.network.service.impl
 
 import com.globallogic.rdkb.remotemanagement.data.network.service.RdkCentralAccessorService
 import com.globallogic.rdkb.remotemanagement.data.network.service.RdkCentralPropertyService
-import com.globallogic.rdkb.remotemanagement.data.network.service.model.Band
+import com.globallogic.rdkb.remotemanagement.domain.entity.Band
 import com.globallogic.rdkb.remotemanagement.data.network.service.model.DeviceProperty
 import com.globallogic.rdkb.remotemanagement.domain.utils.Resource
 import com.globallogic.rdkb.remotemanagement.domain.utils.ThrowableResourceError
@@ -41,6 +41,12 @@ class AccessPointAccessor(
             .map { it.toInt() }
     }
 
+    override suspend fun getWifiClients(): Resource<List<RdkCentralAccessorService.AccessPointClientAccessor>, ThrowableResourceError> {
+        return getWifiClientsCount().map { count ->
+            List(count) { index -> client(index + 1) }
+        }
+    }
+
 
     override suspend fun setWifiEnabled(enabled: Boolean): Resource<Unit, ThrowableResourceError> {
         return rdkCentralPropertyService.setDeviceProperty(macAddress, DeviceProperty.WifiEnabled(accessPointId), enabled)
@@ -57,4 +63,7 @@ class AccessPointAccessor(
     override suspend fun setWifiSecurityMode(securityMode: String): Resource<Unit, ThrowableResourceError> {
         return rdkCentralPropertyService.setDeviceProperty(macAddress, DeviceProperty.WifiSecurityMode(accessPointId), securityMode)
     }
+
+    override fun client(clientId: Int): RdkCentralAccessorService.AccessPointClientAccessor =
+        AccessPointClientAccessor(rdkCentralPropertyService, macAddress, accessPointId, clientId)
 }

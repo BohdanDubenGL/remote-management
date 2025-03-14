@@ -8,11 +8,11 @@ import com.globallogic.rdkb.remotemanagement.domain.utils.Resource
 class DoRouterDeviceActionUseCase(
     private val routerDeviceRepository: RouterDeviceRepository
 ) {
-    suspend operator fun invoke(device: RouterDevice, action: RouterDeviceAction): Resource<Unit, DeviceError.NoDeviceFound> =
-        restartRouterDevice(device, action)
+    suspend operator fun invoke(action: RouterDeviceAction): Resource<Unit, DeviceError.NoDeviceFound> =
+        restartRouterDevice(action)
 
-    suspend fun restartRouterDevice(device: RouterDevice, action: RouterDeviceAction): Resource<Unit, DeviceError.NoDeviceFound> =
-        routerDeviceRepository.doAction(device, action)
+    suspend fun restartRouterDevice(action: RouterDeviceAction): Resource<Unit, DeviceError.NoDeviceFound> =
+        routerDeviceRepository.doAction(action)
 }
 
 enum class RouterDeviceAction {

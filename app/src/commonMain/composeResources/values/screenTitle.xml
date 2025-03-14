@@ -9,5 +9,6 @@
 
     <string name="screen_title_router_device">Device</string>
     <string name="screen_title_connected_devices">Connected clients</string>
+    <string name="screen_title_wifi_motion">WiFi motion</string>
     <string name="screen_title_router_device_setup">Setup device</string>
 </resources>

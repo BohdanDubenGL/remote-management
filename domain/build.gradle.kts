@@ -25,6 +25,7 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             implementation(libs.kotlinx.coroutines.core)
+            implementation(libs.kotlin.datetime)
         }
         jvmTest.dependencies {
             implementation(libs.test.junit.jupiter.api)

@@ -22,7 +22,7 @@ import kotlin.time.Duration.Companion.seconds
 
 class UpnpServiceImpl(
     private val networkUpnpDeviceDataService: NetworkUpnpDeviceDataService,
-    private val loadingTimeoutMillis: Long = 3.seconds.inWholeMilliseconds,
+    private val loadingTimeoutMillis: Long = 1.seconds.inWholeMilliseconds,
 ) : UpnpService {
     override suspend fun getDevices(): List<UpnpDevice> = coroutineScope {
         var unicastSocket: DatagramSocket? = null
@@ -44,7 +44,7 @@ class UpnpServiceImpl(
             val upnpDevices = listOf(multicastPackets, unicastPackets)
                 .awaitAll()
                 .flatten()
-                .map(DatagramPacket::toUpnpDevice)
+                .map { packet -> packet.toUpnpDevice() }
                 .distinctBy { it.ip }
 
             return@coroutineScope upnpDevices
@@ -88,9 +88,9 @@ class UpnpServiceImpl(
     }
 }
 
-private fun DatagramPacket.toUpnpDevice(): UpnpDevice {
+private suspend fun DatagramPacket.toUpnpDevice(): UpnpDevice = withContext(Dispatchers.IO){
     val body = String(data, 0, length, Charset.defaultCharset())
-    return UpnpDevice(
+    return@withContext UpnpDevice(
         ip = address.hostName,
         port = port,
         location = body.split("\r\n")

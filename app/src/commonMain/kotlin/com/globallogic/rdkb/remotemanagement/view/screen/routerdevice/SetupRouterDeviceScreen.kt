@@ -30,20 +30,16 @@ import androidx.navigation.NavController
 import com.globallogic.rdkb.remotemanagement.domain.entity.AccessPointGroup
 import com.globallogic.rdkb.remotemanagement.domain.entity.BandSettings
 import com.globallogic.rdkb.remotemanagement.domain.entity.DeviceAccessPointSettings
-import com.globallogic.rdkb.remotemanagement.domain.entity.RouterDevice
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.GetAccessPointGroupsUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.GetAccessPointSettingsUseCase
-import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.GetSelectedRouterDeviceUseCase
 import com.globallogic.rdkb.remotemanagement.domain.usecase.routerdevice.SetupDeviceAccessPointUseCase
 import com.globallogic.rdkb.remotemanagement.domain.utils.Resource
 import com.globallogic.rdkb.remotemanagement.domain.utils.Resource.Failure
 import com.globallogic.rdkb.remotemanagement.domain.utils.Resource.Success
 import com.globallogic.rdkb.remotemanagement.domain.utils.ResourceState
-import com.globallogic.rdkb.remotemanagement.domain.utils.dataOrElse
 import com.globallogic.rdkb.remotemanagement.domain.utils.map
 import com.globallogic.rdkb.remotemanagement.domain.utils.mapError
 import com.globallogic.rdkb.remotemanagement.domain.utils.mapErrorToData
-import com.globallogic.rdkb.remotemanagement.domain.utils.onFailure
 import com.globallogic.rdkb.remotemanagement.view.base.MviViewModel
 import com.globallogic.rdkb.remotemanagement.view.component.AppButton
 import com.globallogic.rdkb.remotemanagement.view.component.AppCard
@@ -57,6 +53,7 @@ import com.globallogic.rdkb.remotemanagement.view.component.AppTitleTextWithIcon
 import com.globallogic.rdkb.remotemanagement.view.error.UiResourceError
 import com.globallogic.rdkb.remotemanagement.view.navigation.LocalNavController
 import com.globallogic.rdkb.remotemanagement.view.navigation.Screen
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.map
 import org.koin.compose.viewmodel.koinViewModel
@@ -218,7 +215,6 @@ private fun SetupRouterDeviceContent(
 }
 
 class SetupRouterDeviceViewModel(
-    private val getSelectedRouterDevice: GetSelectedRouterDeviceUseCase,
     private val setupDeviceAccessPoint: SetupDeviceAccessPointUseCase,
     private val getAccessPointGroups: GetAccessPointGroupsUseCase,
     private val getAccessPointSettings: GetAccessPointSettingsUseCase,
@@ -230,10 +226,7 @@ class SetupRouterDeviceViewModel(
         send(ResourceState.Loading)
         when (originalState) {
             is Success -> {
-                val device = getSelectedRouterDevice()
-                    .onFailure { send(Failure(UiResourceError("Error", "Can't load device info"))) }
-                    .dataOrElse { error -> return@launchUpdateStateFromFlow }
-                getAccessPointSettings(device, accessPointGroup)
+                getAccessPointSettings(accessPointGroup)
                     .map { accessPointGroupSettingsState ->
                         when (accessPointGroupSettingsState) {
                             is ResourceState.None -> accessPointGroupSettingsState
@@ -242,7 +235,6 @@ class SetupRouterDeviceViewModel(
                                 .mapError { UiResourceError("Error", "Can't load access point settings") }
                                 .map { wifiSettings ->
                                     originalState.data.copy(
-                                        routerDevice = device,
                                         accessPointGroup = accessPointGroup,
                                         bandsSettings = wifiSettings.accessPoints
                                             .map { wifi -> BandSettings(
@@ -328,10 +320,8 @@ class SetupRouterDeviceViewModel(
 
     private fun loadRouterDevice() = launchUpdateStateFromFlow { originalState ->
         send(ResourceState.Loading)
-        val device = getSelectedRouterDevice()
-            .onFailure { send(Failure(UiResourceError("Error", "Can't load router data"))) }
-            .dataOrElse { error -> return@launchUpdateStateFromFlow }
-        getAccessPointGroups(device).collectLatest { accessPointGroupsState ->
+
+        getAccessPointGroups().collectLatest { accessPointGroupsState ->
             when(accessPointGroupsState) {
                 is ResourceState.None -> send(accessPointGroupsState)
                 is ResourceState.Loading -> send(accessPointGroupsState)
@@ -347,7 +337,7 @@ class SetupRouterDeviceViewModel(
                         send(Failure(UiResourceError("Error", "Can't load access point data")))
                         return@collectLatest
                     }
-                    getAccessPointSettings(device, currentAccessPointGroup)
+                    getAccessPointSettings(currentAccessPointGroup)
                         .map { accessPointGroupSettingsState ->
                             when(accessPointGroupSettingsState) {
                                 is ResourceState.None -> accessPointGroupSettingsState
@@ -356,7 +346,6 @@ class SetupRouterDeviceViewModel(
                                     .mapError { UiResourceError("Error", "Can't load access point data") }
                                     .map { wifiSettings ->
                                         SetupRouterDeviceUiState(
-                                            routerDevice = device,
                                             availableAccessPointGroups = accessPointGroups,
                                             accessPointGroup = currentAccessPointGroup,
                                             bandsSettings = wifiSettings.accessPoints
@@ -384,20 +373,21 @@ class SetupRouterDeviceViewModel(
         }
     }
 
-    fun saveData() = launchUpdateState { state ->
-        when(state) {
-            is Success -> {
-                setupDeviceAccessPoint(state.data.routerDevice, state.data.accessPointGroup, DeviceAccessPointSettings(state.data.bandsSettings))
-                    .map { state.data.copy(dataSaved = true) }
-                    .mapErrorToData { error -> state.data }
+    fun saveData() = launchUpdateStateFromFlow { state ->
+        if (state !is Success) return@launchUpdateStateFromFlow
+        send(ResourceState.Loading)
+
+        val newState = setupDeviceAccessPoint(state.data.accessPointGroup, DeviceAccessPointSettings(state.data.bandsSettings))
+            .map {
+                delay(5_000)
+                state.data.copy(dataSaved = true)
             }
-            else -> state
-        }
+            .mapErrorToData { error -> state.data }
+        send(newState)
     }
 }
 
 data class SetupRouterDeviceUiState(
-    val routerDevice: RouterDevice,
     val availableAccessPointGroups: List<AccessPointGroup> = emptyList(),
     val accessPointGroup: AccessPointGroup,
     val bandsSettings: List<BandSettings> = emptyList(),

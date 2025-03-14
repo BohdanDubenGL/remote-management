@@ -9,6 +9,7 @@ import rdkbremotemanagement.app.generated.resources.screen_bottom_nav_title_rout
 import rdkbremotemanagement.app.generated.resources.screen_bottom_nav_title_router_device_setup
 import rdkbremotemanagement.app.generated.resources.screen_bottom_nav_title_settings
 import rdkbremotemanagement.app.generated.resources.screen_bottom_nav_title_topology
+import rdkbremotemanagement.app.generated.resources.screen_bottom_nav_title_wifi_motion
 import rdkbremotemanagement.app.generated.resources.screen_title_add_router_device_manually
 import rdkbremotemanagement.app.generated.resources.screen_title_change_account_settings
 import rdkbremotemanagement.app.generated.resources.screen_title_connected_devices
@@ -18,6 +19,7 @@ import rdkbremotemanagement.app.generated.resources.screen_title_router_device_s
 import rdkbremotemanagement.app.generated.resources.screen_title_search_router_device
 import rdkbremotemanagement.app.generated.resources.screen_title_settings
 import rdkbremotemanagement.app.generated.resources.screen_title_topology
+import rdkbremotemanagement.app.generated.resources.screen_title_wifi_motion
 
 @Serializable
 sealed interface Graph : Screen
@@ -46,8 +48,9 @@ sealed interface Screen {
     @Serializable
     data object RouterDeviceGraph : Graph {
         @Serializable data object RouterDevice : Screen
-        @Serializable data object Setup : Screen
         @Serializable data object ConnectedDevices : Screen
+        @Serializable data object WifiMotion : Screen
+        @Serializable data object Setup : Screen
     }
 }
 
@@ -64,6 +67,7 @@ fun getRouteTitle(route: String?): StringResource? = when (route) {
 
     routeString<Screen.RouterDeviceGraph.RouterDevice>() -> Res.string.screen_title_router_device
     routeString<Screen.RouterDeviceGraph.ConnectedDevices>() -> Res.string.screen_title_connected_devices
+    routeString<Screen.RouterDeviceGraph.WifiMotion>() -> Res.string.screen_title_wifi_motion
     routeString<Screen.RouterDeviceGraph.Setup>() -> Res.string.screen_title_router_device_setup
 
     else -> null
@@ -81,6 +85,7 @@ fun getRouteBottomBarTitle(route: String?): StringResource? = when (route) {
 
     routeString<Screen.RouterDeviceGraph.RouterDevice>() -> Res.string.screen_bottom_nav_title_router_device
     routeString<Screen.RouterDeviceGraph.ConnectedDevices>() -> Res.string.screen_bottom_nav_title_connected_devices
+    routeString<Screen.RouterDeviceGraph.WifiMotion>() -> Res.string.screen_bottom_nav_title_wifi_motion
     routeString<Screen.RouterDeviceGraph.Setup>() -> Res.string.screen_bottom_nav_title_router_device_setup
 
     else -> null

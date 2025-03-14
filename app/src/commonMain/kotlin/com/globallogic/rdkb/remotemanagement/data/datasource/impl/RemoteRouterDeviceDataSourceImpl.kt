@@ -3,32 +3,37 @@ package com.globallogic.rdkb.remotemanagement.data.datasource.impl
 import com.globallogic.rdkb.remotemanagement.data.datasource.RemoteRouterDeviceDataSource
 import com.globallogic.rdkb.remotemanagement.data.error.IoDeviceError
 import com.globallogic.rdkb.remotemanagement.data.network.service.RdkCentralAccessorService
-import com.globallogic.rdkb.remotemanagement.data.network.service.model.Band
+import com.globallogic.rdkb.remotemanagement.domain.entity.Band
 import com.globallogic.rdkb.remotemanagement.data.upnp.UpnpService
-import com.globallogic.rdkb.remotemanagement.data.wifi.WifiScanner
 import com.globallogic.rdkb.remotemanagement.data.wifi.model.WifiInfo
-import com.globallogic.rdkb.remotemanagement.domain.entity.ConnectedDevice
-import com.globallogic.rdkb.remotemanagement.domain.entity.FoundRouterDevice
-import com.globallogic.rdkb.remotemanagement.domain.entity.RouterDevice
-import com.globallogic.rdkb.remotemanagement.domain.entity.DeviceAccessPointSettings
 import com.globallogic.rdkb.remotemanagement.domain.entity.AccessPoint
+import com.globallogic.rdkb.remotemanagement.domain.entity.AccessPointClient
 import com.globallogic.rdkb.remotemanagement.domain.entity.AccessPointGroup
 import com.globallogic.rdkb.remotemanagement.domain.entity.AccessPointSettings
+import com.globallogic.rdkb.remotemanagement.domain.entity.ConnectedDevice
 import com.globallogic.rdkb.remotemanagement.domain.entity.ConnectedDeviceStats
+import com.globallogic.rdkb.remotemanagement.domain.entity.DeviceAccessPointSettings
+import com.globallogic.rdkb.remotemanagement.domain.entity.FoundRouterDevice
+import com.globallogic.rdkb.remotemanagement.domain.entity.RouterDevice
+import com.globallogic.rdkb.remotemanagement.domain.entity.WifiMotionEvent
 import com.globallogic.rdkb.remotemanagement.domain.utils.Resource
 import com.globallogic.rdkb.remotemanagement.domain.utils.Resource.Failure
 import com.globallogic.rdkb.remotemanagement.domain.utils.Resource.Success
 import com.globallogic.rdkb.remotemanagement.domain.utils.dataOrElse
 import com.globallogic.rdkb.remotemanagement.domain.utils.map
 import com.globallogic.rdkb.remotemanagement.domain.utils.mapError
+import io.ktor.http.Url
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.channelFlow
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.supervisorScope
 
 class RemoteRouterDeviceDataSourceImpl(
     private val rdkCentralAccessorService: RdkCentralAccessorService,
-    private val wifiScanner: WifiScanner,
     private val upnpService: UpnpService,
 ) : RemoteRouterDeviceDataSource {
 
@@ -45,15 +50,11 @@ class RemoteRouterDeviceDataSourceImpl(
     }
 
     private suspend fun filterAvailableDevices(devices: List<String>): List<String> {
-        val currentWifi = wifiScanner.getCurrentWifi()
         val upnpDeviceMacAddresses = upnpService.getDevices()
             .map { device -> upnpService.getDeviceMac(device) }
             .map { mac -> mac.replace(":", "").lowercase() }
         return devices
-            .filter { macAddress ->
-                macAddress in upnpDeviceMacAddresses
-                        || isMacAddressSimilarToCurrentWifi(macAddress, currentWifi)
-            }
+            .filter { macAddress -> macAddress in upnpDeviceMacAddresses }
     }
 
     private fun isMacAddressSimilarToCurrentWifi(macAddress: String, currentWifiInfo: WifiInfo?): Boolean {
@@ -89,6 +90,12 @@ class RemoteRouterDeviceDataSourceImpl(
         val totalMemory = async { deviceAccessor.getTotalMemory() }
         val freeMemory = async { deviceAccessor.getFreeMemory() }
 
+        val webGuiUrl = async {
+            val device = upnpService.getDevices().firstOrNull { upnpService.getDeviceMac(it) == macAddress }
+            if (device != null) "http://${Url(device.location).host}/"
+            else ""
+        }
+
         val device = RouterDevice(
             modelName = name.await().dataOrElse { error -> return@coroutineScope Failure(IoDeviceError.CantConnectToRouterDevice) },
             manufacturer = manufacturer.await().dataOrElse { error -> return@coroutineScope Failure(IoDeviceError.CantConnectToRouterDevice) },
@@ -100,6 +107,7 @@ class RemoteRouterDeviceDataSourceImpl(
             totalMemory = totalMemory.await().dataOrElse { error -> return@coroutineScope Failure(IoDeviceError.CantConnectToRouterDevice) },
             freeMemory = freeMemory.await().dataOrElse { error -> return@coroutineScope Failure(IoDeviceError.CantConnectToRouterDevice) },
             availableBands = bands.await().dataOrElse { error -> return@coroutineScope Failure(IoDeviceError.CantConnectToRouterDevice) },
+            webGuiUrl = webGuiUrl.await(),
         )
         return@coroutineScope Success(device)
     }
@@ -126,6 +134,7 @@ class RemoteRouterDeviceDataSourceImpl(
         val mac = async { connectedDeviceAccessor.getConnectedDeviceMacAddress() }
         val ip = async { connectedDeviceAccessor.getConnectedDeviceIpAddress() }
         val vendorClassId = async { connectedDeviceAccessor.getConnectedDeviceVendorClassId() }
+        val band = async { connectedDeviceAccessor.getConnectedDeviceBand() }
 
         val bytesSent = async { connectedDeviceStatsAccessor?.getBytesSent() }
         val bytesReceived = async { connectedDeviceStatsAccessor?.getBytesReceived() }
@@ -139,6 +148,7 @@ class RemoteRouterDeviceDataSourceImpl(
             ipAddress = ip.await().dataOrElse { error -> return@coroutineScope null },
             isActive = isActive.await().dataOrElse { error -> return@coroutineScope null },
             vendorClassId = vendorClassId.await().dataOrElse { error -> return@coroutineScope null },
+            band = band.await().map { radio -> Band.entries.firstOrNull { it.radio == radio } ?: Band.Band_2_4 }.dataOrElse { error -> return@coroutineScope null },
             stats = ConnectedDeviceStats(
                 bytesSent = bytesSent.await()?.data ?: 0L,
                 bytesReceived = bytesReceived.await()?.data ?: 0L,
@@ -146,6 +156,29 @@ class RemoteRouterDeviceDataSourceImpl(
                 packetsReceived = packetsReceived.await()?.data ?: 0L,
                 errorsSent = errorsSent.await()?.data ?: 0L,
             )
+        )
+    }
+
+    override suspend fun loadAccessPointClientsForRouterDevice(device: RouterDevice): Resource<List<AccessPointClient>, IoDeviceError.LoadConnectedDevicesForRouterDevice> = coroutineScope {
+        val deviceAccessor = rdkCentralAccessorService.device(device.macAddress)
+        val clients = deviceAccessor.accessPoints()
+            .filter { it.band == Band.Band_5 }
+            .flatMap { accessPointAccessor -> accessPointAccessor.getWifiClients().dataOrElse { emptyList() } }
+            .map { accessPointClientAccessor -> async {
+                loadAccessPointClient(accessPointClientAccessor)
+            } }
+            .awaitAll()
+            .filterNotNull()
+        return@coroutineScope Success(clients)
+    }
+
+    private suspend fun loadAccessPointClient(accessPointClientAccessor: RdkCentralAccessorService.AccessPointClientAccessor): AccessPointClient? = coroutineScope {
+        val isActive = async { accessPointClientAccessor.getClientActive() }
+        val mac = async { accessPointClientAccessor.getClientMacAddress() }
+
+        return@coroutineScope AccessPointClient(
+            macAddress = mac.await().dataOrElse { error -> return@coroutineScope null },
+            isActive = isActive.await().dataOrElse { error -> return@coroutineScope null },
         )
     }
 
@@ -239,7 +272,7 @@ class RemoteRouterDeviceDataSourceImpl(
                     .dataOrElse { error -> return Failure(IoDeviceError.SetupDevice) }
             }
             accessPointAccessor.setWifiEnabled(band.enabled)
-            accessPointAccessor.setWifiSecurityMode( band.securityMode)
+            accessPointAccessor.setWifiSecurityMode(band.securityMode)
         }
         return Success(Unit)
     }
@@ -254,6 +287,89 @@ class RemoteRouterDeviceDataSourceImpl(
         val deviceAccessor = rdkCentralAccessorService.device(device.macAddress)
         return deviceAccessor.rebootDevice()
             .mapError { error -> IoDeviceError.RestartDevice }
+    }
+
+    override suspend fun getWifiMotionState(device: RouterDevice): Resource<String, IoDeviceError.WifiMotion> {
+        return rdkCentralAccessorService.device(device.macAddress)
+            .wifiMotion()
+            .getSensingDeviceMacAddress()
+            .mapError { error -> IoDeviceError.WifiMotion }
+    }
+
+    override suspend fun getWifiMotionPercent(device: RouterDevice): Resource<Int, IoDeviceError.WifiMotion> {
+        return rdkCentralAccessorService.device(device.macAddress)
+            .wifiMotion()
+            .getMotionPercent()
+            .mapError { error -> IoDeviceError.WifiMotion }
+    }
+
+    override suspend fun startWifiMotion(device: RouterDevice, accessPointClient: AccessPointClient): Resource<Unit, IoDeviceError.WifiMotion> {
+        return rdkCentralAccessorService.device(device.macAddress)
+            .wifiMotion()
+            .setSensingDeviceMacAddress(accessPointClient.macAddress)
+            .mapError { error -> IoDeviceError.WifiMotion }
+    }
+
+    override suspend fun stopWifiMotion(device: RouterDevice): Resource<Unit, IoDeviceError.WifiMotion> {
+        return rdkCentralAccessorService.device(device.macAddress)
+            .wifiMotion()
+            .setSensingDeviceMacAddress("")
+            .mapError { error -> IoDeviceError.WifiMotion }
+    }
+
+    override suspend fun pollWifiMotionEvents(
+        device: RouterDevice,
+        updateIntervalMillis: Long,
+    ): Flow<Resource<List<WifiMotionEvent>, IoDeviceError.WifiMotion>> = channelFlow {
+        val wifiMotionAccessor = rdkCentralAccessorService.device(device.macAddress)
+            .wifiMotion()
+        var events = wifiMotionAccessor
+            .getSensingEvents()
+            .dataOrElse { error -> emptyList() }
+            .map { motionEventAccessor -> async {
+                motionEventAccessor.getMotionEvent()
+                    .dataOrElse { error -> null }
+            } }
+            .awaitAll()
+            .filterNotNull()
+        send(Success(events))
+
+        while (isActive) {
+            val eventCount = wifiMotionAccessor.getSensingEventCount()
+                .dataOrElse { error -> 0 }
+            when {
+                eventCount == events.size -> Unit
+                eventCount > events.size -> {
+                    val eventIds = events.map { it.eventId }
+                    val newEvents = wifiMotionAccessor
+                        .getSensingEvents()
+                        .dataOrElse { error -> emptyList() }
+                        .filter { it.eventId !in eventIds }
+                        .map { motionEventAccessor -> async {
+                            motionEventAccessor.getMotionEvent()
+                                .dataOrElse { error -> null }
+                        } }
+                        .awaitAll()
+                        .filterNotNull()
+                    events = events + newEvents
+                    send(Success(events))
+                }
+                eventCount < events.size -> {
+                    events = wifiMotionAccessor
+                        .getSensingEvents()
+                        .dataOrElse { error -> emptyList() }
+                        .map { motionEventAccessor -> async {
+                            motionEventAccessor.getMotionEvent()
+                                .dataOrElse { error -> null }
+                        } }
+                        .awaitAll()
+                        .filterNotNull()
+                    send(Success(events))
+                }
+            }
+
+            delay(updateIntervalMillis)
+        }
     }
 
     companion object {
