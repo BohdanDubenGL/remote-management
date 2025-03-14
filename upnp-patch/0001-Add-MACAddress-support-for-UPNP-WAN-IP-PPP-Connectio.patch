@@ -1,0 +1,331 @@
+From fc9490b3d96f02ac1526ce0383ad4fab7f23cbe6 Mon Sep 17 00:00:00 2001
+From: Petro Krynytskyi <petro.krynytskyi@globallogic.com>
+Date: Thu, 27 Feb 2025 20:46:38 +0200
+Subject: [PATCH] Add MACAddress support for UPNP WAN(IP/PPP)ConnectionService
+
+Change-Id: Ic711bfaf5e150a496ebb9dc4eb81d80668463a38
+---
+ source/igd/src/igd_platform_independent_inf.c | 59 ++++++++++++++++
+ source/igd/src/igd_service_wan_connect.c      | 67 ++++++++++++++++++-
+ .../src/inc/WANIPConnectionServiceSCPD.xml    | 14 ++++
+ .../src/inc/WANPPPConnectionServiceSCPD.xml   | 14 ++++
+ .../src/inc/igd_platform_independent_inf.h    | 26 ++++++-
+ source/igd/src/inc/igd_service_wan_connect.h  |  6 +-
+ 6 files changed, 181 insertions(+), 5 deletions(-)
+
+diff --git a/source/igd/src/igd_platform_independent_inf.c b/source/igd/src/igd_platform_independent_inf.c
+index 24dcbcef..967d5a7e 100755
+--- a/source/igd/src/igd_platform_independent_inf.c
++++ b/source/igd/src/igd_platform_independent_inf.c
+@@ -647,6 +647,65 @@ INT32 IGD_pii_get_external_ip(IN INT32 WanDeviceIndex,
+ }
+ 
+ 
++/************************************************************
++ * Function: IGD_pii_get_wan_mac_address
++ *
++ *  Parameters:
++ *      WanDeviceIndex:                  IN. Index of WANDevice, range:1-Number of WANDevice.
++ *      WanConnectionDeviceIndex:  IN. Index of WANConnectionDevice, range:1-Number of WANConnectionDevice..
++ *      WanConnectionServiceIndex: IN. Index of WAN(IP/PPP)ConnectionService,range:1-Number of WAN(IP/PPP)ConnectionService
++ *      ServiceType:                         IN. Type of WAN(IP/PPP)connectionService.
++ *      MACAddress:                          OUT. The physical address of the WAN(IP/PPP)Connection if applicable. WAN mac address in string format.
++ *
++ *  Description:
++ *      Get physical address of WAN(IP/PPP)connectionService
++ *      specified by the input device index and service type
++ *      Related UPnP Device/Service:  WAN(IP/PPP)ConnectionService
++ *
++ *  Return Values: INT32
++ *      0 if successful else error code.
++ ************************************************************/
++#define PII_MAC_ADDRESS_STRING_LEN  18
++extern INT32 IGD_pii_get_wan_mac_address(IN INT32 WanDeviceIndex,
++                                                        IN INT32 WanConnectionDeviceIndex,
++                                                        IN INT32 WanConnectionServiceIndex,
++                                                        IN INT32 ServiceType,
++                                                        OUT CHAR *MACAddress)
++{
++    (void) WanDeviceIndex;
++    (void) WanConnectionDeviceIndex;
++    (void) WanConnectionServiceIndex;
++    (void) ServiceType;
++
++	CHAR macaddr[PII_MAC_ADDRESS_STRING_LEN];
++	char wan_physical_ifname[IFNAMSIZ];
++	UtopiaContext utctx;
++
++	if(MACAddress == NULL)
++		return -1;
++
++    /* CID 72543: Unchecked return value */
++    if (!Utopia_Init(&utctx))
++    {
++        printf("Error, in getting utctx object\n");
++        return -1;
++    }
++    Utopia_RawGet(&utctx, NULL, "wan_physical_ifname", wan_physical_ifname, sizeof(wan_physical_ifname));
++    Utopia_Free(&utctx, FALSE);
++    if (_pii_get_if_MacAddress(wan_physical_ifname, macaddr))
++    {
++        printf("PII get MAC fail\n");
++        return -1;
++    }
++
++    snprintf(MACAddress, PII_MAC_ADDRESS_STRING_LEN, "%02x:%02x:%02x:%02x:%02x:%02x",
++             (UINT8)macaddr[0], (UINT8)macaddr[1],
++             (UINT8)macaddr[2], (UINT8)macaddr[3],
++             (UINT8)macaddr[4], (UINT8)macaddr[5]);
++
++    return 0;
++}
++
+ /************************************************************
+  * Function: IGD_pii_get_link_layer_max_bitrate
+  *
+diff --git a/source/igd/src/igd_service_wan_connect.c b/source/igd/src/igd_service_wan_connect.c
+index 6b84bdd8..cd504565 100755
+--- a/source/igd/src/igd_service_wan_connect.c
++++ b/source/igd/src/igd_service_wan_connect.c
+@@ -548,6 +548,45 @@ LOCAL INT32 _get_external_ip_address(INOUT struct action_event *event)
+     return rc;
+ }
+ 
++/************************************************************
++ * Function: _get_wan_mac_address
++ *
++ *  Parameters:	
++ *      event: Input/Output. struct of action_event from PAL UPnP layer.
++ *
++ *  Description:
++ *      UPnP action handler - get physical WAN address of IGD.
++ *
++ *  Return Values: INT32
++ *      0 if successful else error code.
++ ************************************************************/
++#define GetMACAddress_PARAM_NUM (1)
++LOCAL INT32 _get_wan_mac_address(INOUT struct action_event *event)
++{
++    pal_string_pair params[GetMACAddress_PARAM_NUM];
++    INT32 rc = -1;
++
++    RDK_LOG(RDK_LOG_NOTICE, "LOG.RDK.IGD", "%s: state variables\nMACAddress: %s\n",
++                    __FUNCTION__,
++                    event->service->state_variables[MACAddress_index].value);
++
++    params[0].name = "NewMACAddress";
++    params[0].value = event->service->state_variables[MACAddress_index].value;
++
++    // construct action response
++    rc = PAL_upnp_make_action((VOID**)&event->request->action_result,
++                                                    "GetMACAddress",
++                                                    event->service->type,
++                                                    GetMACAddress_PARAM_NUM,
++                                                    params,
++                                                    PAL_UPNP_ACTION_RESPONSE);
++    if (0!=rc) {
++        RDK_LOG(RDK_LOG_NOTICE, "LOG.RDK.IGD", "PAL_upnp_make_action() fail");
++    }
++
++    return rc;
++}
++
+ /************************************************************
+  * Function: _get_link_layer_max_bit_rates
+  *
+@@ -756,6 +795,25 @@ VOID IGD_update_wan_connection_service(IN struct upnp_device  *pd,
+         }
+     }
+ 
++    OutStr[0] = 0;
++    if (0 == IGD_pii_get_wan_mac_address(pIndex->wan_device_index,
++                                                         pIndex->wan_connection_device_index,
++                                                         pIndex->wan_connection_service_index,
++                                                         (strcmp(WAN_IP_CONNECTION_SERVICE_TYPE,ps->type) == 0) ? SERVICETYPE_IP : SERVICETYPE_PPP,
++                                                         OutStr) ) {
++        if (0 != strcmp(OutStr, ps->state_variables[MACAddress_index].value)) {
++            strncpy(ps->state_variables[MACAddress_index].value, OutStr, strlen(OutStr)+1);
++            strncpy(ps->event_variables[MACAddress_event_index].value, OutStr, strlen(OutStr)+1);
++
++            var_name[eventnum] = (CHAR *)ps->event_variables[MACAddress_event_index].name;
++            var_value[eventnum] = ps->event_variables[MACAddress_event_index].value;
++            eventnum++;
++            RDK_LOG(RDK_LOG_DEBUG, "LOG.RDK.IGD", "MACAddress updated & evented");
++        }
++    } else {
++        RDK_LOG(RDK_LOG_NOTICE, "LOG.RDK.IGD", "IGD_pii_get_wan_mac_address() fail");
++    }
++
+     // notify if needed
+     if (eventnum > 0) {
+         RDK_LOG(RDK_LOG_DEBUG, "LOG.RDK.IGD", "event num: %d", eventnum);
+@@ -803,6 +861,7 @@ LOCAL struct upnp_action wan_ppp_connection_service_actions[] = {
+     {"GetSpecificPortMappingEntry", IGD_get_SpecificPortMapping_entry},
+     {"AddPortMapping", IGD_add_PortMapping},
+     {"DeletePortMapping", IGD_delete_PortMapping},
++    {"GetMACAddress", _get_wan_mac_address},
+ 	{NULL, NULL}
+ };
+ 
+@@ -819,6 +878,7 @@ LOCAL struct upnp_action wan_ip_connection_service_actions[] = {
+     {"GetSpecificPortMappingEntry", IGD_get_SpecificPortMapping_entry},
+     {"AddPortMapping", IGD_add_PortMapping},
+     {"DeletePortMapping", IGD_delete_PortMapping},
++    {"GetMACAddress", _get_wan_mac_address},
+ 	{NULL, NULL}
+ };
+ 
+@@ -849,6 +909,7 @@ variable_name_and_value_t wan_ppp_connection_service_state_variables[] =
+    {"PortMappingDescription", ""},
+    {"UpstreamMaxBitRate", ""},
+    {"DownstreamMaxBitRate", ""},
++   {"MACAddress", ""},
+    {NULL,NULL}
+ };
+ 
+@@ -871,8 +932,9 @@ variable_name_and_value_t wan_ip_connection_service_state_variables[] =
+    {"PortMappingProtocol", ""},
+    {"InternalClient", ""},
+    {"PortMappingDescription", ""},
+-   //{"UpstreamMaxBitRate", ""},
+-   //{"DownstreamMaxBitRate", ""},
++   {"UpstreamMaxBitRate", ""},
++   {"DownstreamMaxBitRate", ""},
++   {"MACAddress", ""},
+    {NULL,NULL}
+ };
+ 
+@@ -882,6 +944,7 @@ variable_name_and_value_t wan_connection_service_event_variables[] =
+     {"ConnectionStatus", ""},
+     {"ExternalIPAddress", ""},
+     {"PortMappingNumberOfEntries", "0"},
++    {"MACAddress", ""},
+     {NULL,NULL}
+ };
+ #define WAN_PPP_CONNECTION_SERVICE_STATE_VARIABLES_SIZE (sizeof(wan_ppp_connection_service_state_variables)/sizeof(variable_name_and_value_t))
+diff --git a/source/igd/src/inc/WANIPConnectionServiceSCPD.xml b/source/igd/src/inc/WANIPConnectionServiceSCPD.xml
+index e93757e7..d23b4962 100644
+--- a/source/igd/src/inc/WANIPConnectionServiceSCPD.xml
++++ b/source/igd/src/inc/WANIPConnectionServiceSCPD.xml
+@@ -280,6 +280,16 @@
+ </argument>
+ </argumentList>
+ </action>
++<action>
++<name>GetMACAddress</name>
++<argumentList>
++<argument>
++<name>NewMACAddress</name>
++<direction>out</direction>
++<relatedStateVariable>MACAddress</relatedStateVariable>
++</argument>
++</argumentList>
++</action>
+ </actionList>
+ <serviceStateTable>
+ <stateVariable sendEvents="no">
+@@ -380,5 +390,9 @@
+ <name>PortMappingDescription</name>
+ <dataType>string</dataType>
+ </stateVariable>
++<stateVariable sendEvents="yes">
++<name>MACAddress</name>
++<dataType>string</dataType>
++</stateVariable>
+ </serviceStateTable>
+ </scpd>
+diff --git a/source/igd/src/inc/WANPPPConnectionServiceSCPD.xml b/source/igd/src/inc/WANPPPConnectionServiceSCPD.xml
+index c19f1428..82898578 100644
+--- a/source/igd/src/inc/WANPPPConnectionServiceSCPD.xml
++++ b/source/igd/src/inc/WANPPPConnectionServiceSCPD.xml
+@@ -293,6 +293,16 @@
+                 </argument>
+             </argumentList>
+         </action>
++        <action>
++            <name>GetMACAddress</name>
++            <argumentList>
++                <argument>
++                    <name>NewMACAddress</name>
++                    <direction>out</direction>
++                    <relatedStateVariable>MACAddress</relatedStateVariable>
++                </argument>
++            </argumentList>
++        </action>
+     </actionList>
+     <serviceStateTable>
+ 		<stateVariable sendEvents="no">
+@@ -396,5 +406,9 @@
+ 			<name>PortMappingDescription</name>
+ 			<dataType>string</dataType>
+ 		</stateVariable>
++		<stateVariable sendEvents="yes">
++			<name>MACAddress</name>
++			<dataType>string</dataType>
++		</stateVariable>
+ 	</serviceStateTable>
+ </scpd>
+diff --git a/source/igd/src/inc/igd_platform_independent_inf.h b/source/igd/src/inc/igd_platform_independent_inf.h
+index 4d78e94e..5e3b639b 100644
+--- a/source/igd/src/inc/igd_platform_independent_inf.h
++++ b/source/igd/src/inc/igd_platform_independent_inf.h
+@@ -415,7 +415,31 @@ extern INT32 IGD_pii_get_external_ip(IN INT32 WanDeviceIndex,
+                                                         IN INT32 WanConnectionServiceIndex,
+                                                         IN INT32 ServiceType,
+                                                         OUT CHAR *ExternalIp);
+-                                                        
++
++/************************************************************
++ * Function: IGD_pii_get_wan_mac_address
++ *
++ *  Parameters:
++ *      WanDeviceIndex:                  IN. Index of WANDevice, range:1-Number of WANDevice.
++ *      WanConnectionDeviceIndex:  IN. Index of WANConnectionDevice, range:1-Number of WANConnectionDevice..
++ *      WanConnectionServiceIndex: IN. Index of WAN(IP/PPP)ConnectionService,range:1-Number of WAN(IP/PPP)ConnectionService
++ *      ServiceType:                         IN. Type of WAN(IP/PPP)connectionService.
++ *      MACAddress:                          OUT. The physical address of the WAN(IP/PPP)Connection if applicable. WAN mac address in string format.
++ *
++ *  Description:
++ *      Get physical address of WAN(IP/PPP)connectionService
++ *      specified by the input device index and service type
++ *      Related UPnP Device/Service:  WAN(IP/PPP)ConnectionService
++ *
++ *  Return Values: INT32
++ *      0 if successful else error code.
++ ************************************************************/
++extern INT32 IGD_pii_get_wan_mac_address(IN INT32 WanDeviceIndex,
++                                                        IN INT32 WanConnectionDeviceIndex,
++                                                        IN INT32 WanConnectionServiceIndex,
++                                                        IN INT32 ServiceType,
++                                                        OUT CHAR *MACAddress);
++
+ /************************************************************
+  * Function: IGD_pii_get_link_layer_max_bitrate
+  *
+diff --git a/source/igd/src/inc/igd_service_wan_connect.h b/source/igd/src/inc/igd_service_wan_connect.h
+index d1aa104f..e1738527 100644
+--- a/source/igd/src/inc/igd_service_wan_connect.h
++++ b/source/igd/src/inc/igd_service_wan_connect.h
+@@ -85,7 +85,8 @@ enum wan_connection_service_state_variables_index
+     InternalClient_index,
+     PortMappingDescription_index,
+     UpstreamMaxBitRate_index,
+-    DownstreamMaxBitRate_index
++    DownstreamMaxBitRate_index,
++    MACAddress_index,
+ };
+ 
+ // be aligned with wan_connection_service_event_variables_name
+@@ -94,7 +95,8 @@ enum wan_connection_service_event_variables_index
+     PossibleConnectionTypes_event_index=0,
+     ConnectionStatus_event_index,
+     ExternalIPAddress_event_index,
+-    PortMappingNumberOfEntries_event_index
++    PortMappingNumberOfEntries_event_index,
++    MACAddress_event_index
+ };
+ 
+ typedef struct{
+-- 
+2.34.1
+
