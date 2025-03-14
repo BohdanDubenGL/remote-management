@@ -217,14 +217,14 @@ class WifiMotionViewModel(
                                     accessPointClients = wifiMotionData.clients,
                                     motionState = wifiMotionData.isRunning,
                                     motionPercent = wifiMotionData.motionPercent,
-                                    motionEvents = wifiMotionData.events.reversed(),
+                                    motionEvents = wifiMotionData.events.sortedBy { -it.eventId },
                                 )
                                 else -> WifiMotionUiState(
                                     accessPointClients = wifiMotionData.clients,
                                     selectedAccessPointClient = wifiMotionData.selectedHost,
                                     motionState = wifiMotionData.isRunning,
                                     motionPercent = wifiMotionData.motionPercent,
-                                    motionEvents = wifiMotionData.events.reversed(),
+                                    motionEvents = wifiMotionData.events.sortedBy { -it.eventId },
                                 )
                             }
                         }
