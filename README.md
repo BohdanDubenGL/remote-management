@@ -12,11 +12,11 @@ In addition, the application provides the ability to manage Wi-Fi interfaces: ch
 
 The `/.run` directory contains run files that the IDE detects and adds to run configurations
 
-* `androidApp.run/xml` - build and run android app.
-* `dependencyUpdates.run/xml` - checks project dependencies for updates.
-* `desktopApp.run/xml` - build and run desktop app (JVM).
-* `iosApp.run/xml` - build and run ios app.
-* `jvmTests.run/xml` - build and run jvm tests.
+* `androidApp.run.xml` - build and run android app.
+* `dependencyUpdates.run.xml` - checks project dependencies for updates.
+* `desktopApp.run.xml` - build and run desktop app (JVM).
+* `iosApp.run.xml` - build and run ios app.
+* `jvmTests.run.xml` - build and run jvm tests.
 
 You can also build project without IDE from the CLI:
 
